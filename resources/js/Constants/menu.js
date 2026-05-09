@@ -17,6 +17,10 @@ import {
     CalendarClock,
     TrendingUp,
     BarChart2,
+    Clock,
+    RotateCcw,
+    ScrollText,
+    Trash2,
 } from 'lucide-vue-next';
 
 export const menuSections = [
@@ -106,10 +110,24 @@ export const menuSections = [
                 roles: ['admin', 'cashier'],
             },
             {
+                title: 'Retur Penjualan',
+                routeName: 'sale-return.index',
+                activeRoute: 'sale-return.*',
+                icon: RotateCcw,
+                roles: ['admin', 'cashier'],
+            },
+            {
                 title: 'Transaksi Midtrans',
                 routeName: 'midtrans.index',
                 activeRoute: 'midtrans.*',
                 icon: CircleDollarSign,
+                roles: ['admin', 'cashier'],
+            },
+            {
+                title: 'Manajemen Shift',
+                routeName: 'shift.index',
+                activeRoute: 'shift.*',
+                icon: Clock,
                 roles: ['admin', 'cashier'],
             },
         ],
@@ -186,6 +204,20 @@ export const menuSections = [
                 activeRoute: 'file-manager.*',
                 icon: File,
                 roles: ['admin', 'cashier', 'warehouse'],
+            },
+            {
+                title: 'Sampah',
+                routeName: 'trash.index',
+                activeRoute: 'trash.*',
+                icon: Trash2,
+                roles: ['admin'],
+            },
+            {
+                title: 'Queue Worker Logs',
+                routeName: 'queue-worker-logs.index',
+                activeRoute: 'queue-worker-logs.*',
+                icon: ScrollText,
+                roles: ['admin'],
             },
         ],
     },

@@ -69,3 +69,41 @@ it('validates photo profile upload', function () {
     $response->assertUnprocessable()
         ->assertJsonValidationErrors('photo_profile');
 });
+
+it('validates photo profile file size', function () {
+    $user = User::factory()->create();
+
+    $file = UploadedFile::fake()->create('large.jpg', 3000);
+
+    $response = $this->actingAs($user)
+        ->postJson(route('profile.photo-profile'), [
+            'photo_profile' => $file,
+        ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors('photo_profile');
+});
+
+it('validates photo profile must be an image', function () {
+    $user = User::factory()->create();
+
+    $file = UploadedFile::fake()->create('document.pdf', 100);
+
+    $response = $this->actingAs($user)
+        ->postJson(route('profile.photo-profile'), [
+            'photo_profile' => $file,
+        ]);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors('photo_profile');
+});
+
+it('validates photo profile is required', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)
+        ->postJson(route('profile.photo-profile'), []);
+
+    $response->assertUnprocessable()
+        ->assertJsonValidationErrors('photo_profile');
+});

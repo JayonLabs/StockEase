@@ -10,20 +10,6 @@ Rencana ini merinci fitur-fitur tambahan yang direkomendasikan untuk meningkatka
 - **Fitur:** Pemindahan stok antar gudang, filter laporan per gudang.
 - **Teknis:** Tabel `warehouses` dan tabel pivot `warehouse_product`.
 
-## 2. Modul Penjualan & POS (Cashier)
-
-### A. Manajemen Shift & Kas (Shift Management)
-
-- **Masalah:** Kesulitan melacak arus kas fisik saat pergantian kasir.
-- **Fitur:** Buka shift (input modal awal), tutup shift (input uang fisik), laporan selisih kas per shift.
-- **Teknis:** Tabel `shifts` dengan relasi ke `users` dan `sales`.
-
-### C. Retur Penjualan (Sales Returns)
-
-- **Masalah:** Penanganan barang yang dikembalikan oleh pelanggan.
-- **Fitur:** Form retur berdasarkan ID Transaksi, opsi pengembalian uang atau tukar barang, otomatisasi penyesuaian stok.
-- **Teknis:** Tabel `sales_returns`.
-
 ## 4. Pengalaman Pengguna & Integrasi (Technical)
 
 ### A. Progressive Web App (PWA)

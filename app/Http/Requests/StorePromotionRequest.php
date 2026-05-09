@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
+use App\Enums\PromotionType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,28 +25,28 @@ class StorePromotionRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', 'string', 'in:percentage,nominal,bogo'],
+            'type' => ['required', Rule::enum(PromotionType::class)],
             'discount_value' => [
                 Rule::when(
-                    in_array($this->input('type'), ['percentage', 'nominal']),
+                    in_array($this->input('type'), [PromotionType::Percentage->value, PromotionType::Nominal->value]),
                     ['required', 'numeric', 'min:0'],
                     ['nullable', 'numeric', 'min:0'],
                 ),
                 Rule::when(
-                    $this->input('type') === 'percentage',
+                    $this->input('type') === PromotionType::Percentage->value,
                     ['max:100'],
                 ),
             ],
             'buy_qty' => [
                 Rule::when(
-                    $this->input('type') === 'bogo',
+                    $this->input('type') === PromotionType::Bogo->value,
                     ['required', 'integer', 'min:1'],
                     ['nullable', 'integer', 'min:1'],
                 ),
             ],
             'get_qty' => [
                 Rule::when(
-                    $this->input('type') === 'bogo',
+                    $this->input('type') === PromotionType::Bogo->value,
                     ['required', 'integer', 'min:1'],
                     ['nullable', 'integer', 'min:1'],
                 ),

@@ -7,8 +7,11 @@ use App\Models\SaleItem;
 use App\Models\User;
 use App\Services\Sale\PosService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
+
+use function Pest\Laravel\assertDatabaseHas;
 
 uses(TestCase::class, RefreshDatabase::class);
 
@@ -31,6 +34,7 @@ it('can get paginated products', function () {
     Product::factory()->count(15)->create();
     $posService = new PosService;
 
+    /** @var LengthAwarePaginator $products */
     $products = $posService->getPaginatedProducts([], 10);
 
     expect($products->total())->toBe(15);
@@ -203,7 +207,7 @@ it('can checkout with QRIS successfully', function () {
     expect($pendingSale->status)->toBe('pending');
     expect($pendingSale->payment_method)->toBe('qris');
 
-    $this->assertDatabaseHas('payment_transactions', [
+    assertDatabaseHas('payment_transactions', [
         'sale_id' => $pendingSale->id,
         'external_id' => 'TRX-123',
         'status' => 'pending',

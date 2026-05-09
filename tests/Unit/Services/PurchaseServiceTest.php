@@ -7,8 +7,12 @@ use App\Models\Supplier;
 use App\Models\User;
 use App\Services\Purchase\PurchaseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
+
+use function Pest\Laravel\assertDatabaseHas;
+use function Pest\Laravel\assertSoftDeleted;
 
 uses(TestCase::class, RefreshDatabase::class);
 
@@ -21,6 +25,7 @@ it('can get paginated purchases', function () {
     Purchase::factory()->count(15)->create();
     $purchaseService = new PurchaseService;
 
+    /** @var LengthAwarePaginator */
     $purchases = $purchaseService->getPaginatedPurchases([], 10);
 
     expect($purchases->total())->toBe(15);
@@ -33,6 +38,7 @@ it('can filter purchases by search', function () {
     Purchase::factory()->count(2)->create();
     $purchaseService = new PurchaseService;
 
+    /** @var LengthAwarePaginator */
     $purchases = $purchaseService->getPaginatedPurchases(['search' => 'Abadi']);
 
     expect($purchases->total())->toBe(1);
@@ -44,6 +50,7 @@ it('can filter purchases by date range', function () {
     $targetPurchase = Purchase::factory()->create(['date' => now()->toDateString()]);
     $purchaseService = new PurchaseService;
 
+    /** @var LengthAwarePaginator */
     $purchases = $purchaseService->getPaginatedPurchases([
         'start' => now()->subDays(1)->toDateString(),
         'end' => now()->toDateString(),
@@ -113,7 +120,7 @@ it('can store a new purchase and increments stock', function () {
     expect($product2->stock)->toBe(15);
     expect((int) $product2->purchase_price)->toBe(600);
 
-    $this->assertDatabaseHas('stock_logs', [
+    assertDatabaseHas('stock_logs', [
         'product_id' => $product1->id,
         'qty' => 5,
         'type' => 'in',
@@ -151,7 +158,7 @@ it('can update an existing purchase and adjust stock', function () {
     $product->refresh();
     expect($product->stock)->toBe(25); // 20 + (15 - 10)
 
-    $this->assertDatabaseHas('stock_logs', [
+    assertDatabaseHas('stock_logs', [
         'product_id' => $product->id,
         'qty' => 5, // diff qty
         'type' => 'adjust',
@@ -171,11 +178,11 @@ it('can delete a purchase and revert stock', function () {
 
     $purchaseService->deletePurchase($purchase);
 
-    $this->assertDatabaseMissing('purchases', ['id' => $purchase->id]);
+    assertSoftDeleted('purchases', ['id' => $purchase->id]);
     $product->refresh();
     expect($product->stock)->toBe(15); // 20 - 5
 
-    $this->assertDatabaseHas('stock_logs', [
+    assertDatabaseHas('stock_logs', [
         'product_id' => $product->id,
         'qty' => 5,
         'type' => 'out',

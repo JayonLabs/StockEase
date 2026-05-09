@@ -70,5 +70,5 @@ it('can delete a user', function () {
 
     $this->userService->deleteUser($user);
 
-    $this->assertDatabaseMissing('users', ['id' => $user->id]);
+    $this->assertSoftDeleted('users', ['id' => $user->id]);
 });

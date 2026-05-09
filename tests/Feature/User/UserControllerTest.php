@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Hash;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
-use function Pest\Laravel\assertDatabaseMissing;
+use function Pest\Laravel\assertSoftDeleted;
 use function Pest\Laravel\get;
 
 uses(RefreshDatabase::class);
@@ -230,7 +230,7 @@ it('allows admin to delete a user', function () {
 
     $response->assertRedirect();
     $response->assertSessionHas('success', 'User berhasil dihapus');
-    assertDatabaseMissing('users', ['id' => $user->id]);
+    assertSoftDeleted('users', ['id' => $user->id]);
 });
 
 it('denies non-admin to delete a user', function ($role) {

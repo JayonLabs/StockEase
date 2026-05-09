@@ -36,7 +36,7 @@ const props = defineProps({
         type: Object,
         required: true,
     },
-    active_promotions: {
+    activePromotions: {
         type: Array,
         default: () => [],
     },
@@ -136,7 +136,7 @@ const handleScanResult = async (barcode) => {
                                         v-for="product in products.data"
                                         :key="product.id"
                                         :product="product"
-                                        :active-promotions="active_promotions"
+                                        :active-promotions="activePromotions"
                                         @cart-updated="fetchCart()"
                                     />
                                 </template>

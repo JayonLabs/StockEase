@@ -25,14 +25,20 @@ class PurchaseController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->integer('per_page', 10);
+        $filters = $request->only(['search', 'start', 'end']);
 
         $purchases = $this->purchaseService->getPaginatedPurchases(
-            $request->only(['search', 'start', 'end']),
+            $filters,
             $perPage
         );
 
         return Inertia::render('Purchase/Index', [
             'purchases' => $purchases,
+            'filters' => [
+                'start' => $filters['start'] ?? '',
+                'end' => $filters['end'] ?? '',
+                'search' => $filters['search'] ?? '',
+            ],
         ]);
     }
 

@@ -90,9 +90,60 @@
 - fix Form edit pembelian produk di tanggal Kadaluwarsa itu pakai date shadcn vue (Done)
 - refactor route web buatkan folder web dengan route sesuai fitur (Done)
 
+<!-- TODO: 10/05/2026 -->
+
+- fix ci github (Done)
+- fitur Manajemen Shift & Kas (Shift Management) (Done)
+- fix input number yang ada di modal tambah pembelian produk dan editnya (Done)
+- fitur Retur Penjualan (Sales Returns) (Done)
+- refactor form pengembalian penjualan untuk di dark mode tabelnya tidak terlihat dan input Qty Retur pakai number field shadcn vue (Done)
+- buatkan enum class untuk tabel yang ada enumnya biar konsisten (Done)
+- fix type enum database yang masih hardcode di logic (Done)
+- refactor untuk implementasi soft delete karena yang sekarang semuanya hard delete backend (Done)
+- fitur trash, restore dan remove permanent, buatkan page sendiri (Done)
+- fitur show di trash page (Done)
+- refactor ui/ux di halaman profile user (Done)
+- refactor date filter di Pembelian / Purchase itu pakai component DateRangePicker dan isikan reset filter (Done)
+- refactor date filter di Penjualan / Sale itu pakai component DateRangePicker dan isikan reset filter (Done)
+- refactor date filter di Return Penjualan / Sales Return itu pakai component DateRangePicker dan isikan reset filter (Done)
+- refactor date filter di Transaksi Midtrans itu pakai component DateRangePicker dan isikan reset filter (Done)
+- refactor date filter di Log Stock page itu pakai component DateRangePicker dan isikan reset filter (Done)
+- tambahkan lagi test case di unit/service itu untuk setiap servicenya (Done)
+- fitur kirim email ke user jika ingin invoice dari POS (Done)
+- fitur schedule untuk kirim email dan notification dashboard (Done)
+- buatkan view untuk logs/queue-worker.log yang ada di route console (Done)
+- fix warning component vue (Done)
+- buatin service class untuk controller QueueWorkerLogController (Done)
+- fix struktur tabel di profit loss report (Done)
+- normalisasi database untuk performa (Done)
+- fix error di queue worker log page (Done)
+
 <!-- TODO: -->
 
+- fitur activity log di aplikasi ini
+- pertimbangkan role atau permission untuk melihat log
+- pertimbangkan menggunakan pacage role permission dari spatie
+- cek issue yang ada suruh claude dan buatkan ISSUE.md
 - tambahin lagi beberapa laporan atau fitur di laporan penjualan
 - tambahkan test case untuk semua logic
 - fix github CD ke cpanel
 - bikin API untuk mobile app
+
+- fitur Multi-Gudang (Multi-Warehouse)
+  **Masalah:** Pengelolaan stok di beberapa lokasi fisik (misal: Toko A, Toko B, Gudang Pusat).
+  **Fitur:** Pemindahan stok antar gudang, filter laporan per gudang.
+  **Teknis:** Tabel `warehouses` dan tabel pivot `warehouse_product`.
+
+- fix npm run build
+  [plugin builtin:vite-reporter]
+  (!) Some chunks are larger than 500 kB after minification. Consider:
+    - Using dynamic import() to code-split the application
+    - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
+    - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+      [PLUGIN_TIMINGS] Warning: Your build spent significant time in plugins. Here is a breakdown:
+        - laravel (59%)
+        - rolldown:vite-resolve (22%)
+        - vite:vue (12%)
+          See https://rolldown.rs/options/checks#plugintimings for more details.
+
+    ✓ built in 26.27s

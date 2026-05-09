@@ -4,11 +4,17 @@ namespace App\Services\Sale;
 
 use App\Actions\Product\ReduceProductStock;
 use App\Actions\Sale\RecalculateSaleTotal;
+use App\Enums\PaymentGateway;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentType;
+use App\Enums\SaleStatus;
+use App\Enums\ShiftStatus;
 use App\Models\Category;
 use App\Models\PaymentTransaction;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
+use App\Models\Shift;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -53,24 +59,38 @@ class PosService
     }
 
     /**
+     * Get the active shift for the current user.
+     */
+    private function getActiveShiftId(): ?int
+    {
+        $shift = Shift::where('user_id', Auth::id())
+            ->where('status', ShiftStatus::Open->value)
+            ->latest()
+            ->first();
+
+        return $shift?->id;
+    }
+
+    /**
      * Get the current active cart (draft sale) for the authenticated user.
      */
     public function getOrCreateCart(): Sale
     {
         $cart = Sale::with('saleItems.product')
             ->where('user_id', Auth::id())
-            ->where('status', 'draft')
+            ->where('status', SaleStatus::Draft->value)
             ->first();
 
         if (! $cart) {
             $cart = Sale::create([
                 'user_id' => Auth::id(),
+                'shift_id' => $this->getActiveShiftId(),
                 'total' => 0,
-                'payment_method' => 'pending',
+                'payment_method' => PaymentMethod::Pending->value,
                 'paid' => 0,
                 'change' => 0,
                 'date' => now(),
-                'status' => 'draft',
+                'status' => SaleStatus::Draft->value,
             ]);
             $cart->setRelation('saleItems', collect());
         }
@@ -144,7 +164,7 @@ class PosService
         }
 
         if ($qty <= 0) {
-            $cart->saleItems()->where('product_id', $productId)->delete();
+            $cart->saleItems()->where('product_id', $productId)->forceDelete();
             $cart->setRelation('saleItems', $cart->saleItems->reject(fn ($item) => $item->product_id === $productId)->values());
         } else {
             $saleItem = $cart->saleItems->firstWhere('product_id', $productId);
@@ -164,7 +184,7 @@ class PosService
     public function removeFromCart(int $productId): array
     {
         $cart = $this->getOrCreateCart();
-        $cart->saleItems()->where('product_id', $productId)->delete();
+        $cart->saleItems()->where('product_id', $productId)->forceDelete();
         $cart->setRelation('saleItems', $cart->saleItems->reject(fn ($item) => $item->product_id === $productId)->values());
 
         resolve(RecalculateSaleTotal::class)->execute($cart);
@@ -178,7 +198,7 @@ class PosService
     public function emptyCart(): array
     {
         $cart = $this->getOrCreateCart();
-        $cart->saleItems()->delete();
+        $cart->saleItems()->forceDelete();
         $cart->setRelation('saleItems', collect());
 
         resolve(RecalculateSaleTotal::class)->execute($cart);
@@ -194,7 +214,7 @@ class PosService
         return DB::transaction(function () use ($data) {
             $sale = Sale::with('saleItems.product')
                 ->where('user_id', Auth::id())
-                ->where('status', 'draft')
+                ->where('status', SaleStatus::Draft->value)
                 ->firstOrFail();
 
             if ($sale->saleItems->isEmpty()) {
@@ -207,24 +227,25 @@ class PosService
                 }
             }
 
-            if ($data['payment_method'] === 'qris') {
+            if ($data['payment_method'] === PaymentMethod::Qris->value) {
                 $sale->update([
-                    'payment_method' => 'qris',
+                    'payment_method' => PaymentMethod::Qris->value,
+                    'shift_id' => $this->getActiveShiftId(),
                     'customer_name' => $data['customer_name'] ?? null,
                     'paid' => $sale->total, // QRIS total matches sale total
-                    'status' => 'pending',   // QRIS stays pending until webhook
+                    'status' => SaleStatus::Pending->value,   // QRIS stays pending until webhook
                     'date' => now(),
                 ]);
 
                 PaymentTransaction::create([
                     'sale_id' => $sale->id,
-                    'gateway' => 'midtrans',
+                    'gateway' => PaymentGateway::Midtrans->value,
                     'external_id' => $data['order_id'] ?? null,
                     'status' => 'pending',
                     'amount' => $sale->total,
-                    'payment_type' => 'qris',
+                    'payment_type' => PaymentType::Qris->value,
                 ]);
-            } elseif ($data['payment_method'] === 'cash') {
+            } elseif ($data['payment_method'] === PaymentMethod::Cash->value) {
                 if ($data['paid'] < $sale->total) {
                     throw new \Exception('Jumlah uang pembayaran kurang dari total belanja.');
                 }
@@ -232,11 +253,12 @@ class PosService
                 $change = $data['paid'] - $sale->total;
 
                 $sale->update([
-                    'payment_method' => 'cash',
+                    'payment_method' => PaymentMethod::Cash->value,
+                    'shift_id' => $this->getActiveShiftId(),
                     'customer_name' => $data['customer_name'] ?? null,
                     'paid' => $data['paid'],
                     'change' => $change,
-                    'status' => 'completed',
+                    'status' => SaleStatus::Completed->value,
                     'date' => now(),
                 ]);
 

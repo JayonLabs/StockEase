@@ -110,6 +110,16 @@ function remove(index) {
     updated.splice(index, 1);
     emit('update:modelValue', updated);
 }
+
+function formatCurrency(value) {
+    if (!value && value !== 0) return '';
+    return new Intl.NumberFormat('id-ID').format(Number(value));
+}
+
+function parseCurrency(value) {
+    const raw = String(value).replace(/[^0-9]/g, '');
+    return raw ? Number(raw) : 0;
+}
 </script>
 
 <template>
@@ -246,10 +256,14 @@ function remove(index) {
                                 >Rp</span
                             >
                             <Input
-                                v-model.number="item.price"
-                                type="number"
+                                :model-value="formatCurrency(item.price)"
+                                type="text"
+                                inputmode="numeric"
                                 placeholder="0"
-                                class="pl-8 [&::-webkit-inner-spin-button]:appearance-none font-mono"
+                                class="pl-8 font-mono"
+                                @update:model-value="
+                                    (val) => (item.price = parseCurrency(val))
+                                "
                             />
                             <div
                                 class="hidden group-focus-within:block absolute top-full inset-s-0 mt-1 bg-zinc-900 text-white text-[10px] px-2 py-1 rounded shadow-lg z-10 whitespace-nowrap"
@@ -273,10 +287,18 @@ function remove(index) {
                                 >Rp</span
                             >
                             <Input
-                                v-model.number="item.selling_price"
-                                type="number"
+                                :model-value="
+                                    formatCurrency(item.selling_price)
+                                "
+                                type="text"
+                                inputmode="numeric"
                                 placeholder="0"
-                                class="pl-8 [&::-webkit-inner-spin-button]:appearance-none font-mono text-blue-600 dark:text-blue-400"
+                                class="pl-8 font-mono text-blue-600 dark:text-blue-400"
+                                @update:model-value="
+                                    (val) =>
+                                        (item.selling_price =
+                                            parseCurrency(val))
+                                "
                             />
                             <div
                                 class="hidden group-focus-within:block absolute top-full inset-s-0 mt-1 bg-zinc-900 text-white text-[10px] px-2 py-1 rounded shadow-lg z-10 whitespace-nowrap"

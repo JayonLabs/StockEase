@@ -3,6 +3,7 @@
 namespace App\Services\Stock;
 
 use App\Actions\Product\UpdateProductExpiryDate;
+use App\Enums\StockLogType;
 use App\Models\Product;
 use App\Models\PurchaseItem;
 use App\Models\StockAdjustment;
@@ -80,8 +81,8 @@ class StockAdjustmentService
 
             StockLog::create([
                 'product_id' => $product->id,
-                'qty' => $diff,
-                'type' => 'adjust',
+                'qty' => abs($diff),
+                'type' => StockLogType::Adjust->value,
                 'reference_type' => 'StockAdjustment',
                 'reference_id' => $adjustment->id,
                 'note' => "Penyesuaian stok (Stock Opname): {$data['reason']}",

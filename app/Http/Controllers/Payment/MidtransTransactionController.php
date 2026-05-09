@@ -22,14 +22,20 @@ class MidtransTransactionController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->integer('per_page', 10);
+        $filters = $request->only(['search', 'start', 'end']);
 
         $midtransTransactions = $this->paymentService->getPaginatedTransactions(
-            $request->only(['search', 'start', 'end']),
+            $filters,
             $perPage
         );
 
         return Inertia::render('MidtransTransaction/Index', [
             'midtransTransactions' => $midtransTransactions,
+            'filters' => [
+                'start' => $filters['start'] ?? '',
+                'end' => $filters['end'] ?? '',
+                'search' => $filters['search'] ?? '',
+            ],
         ]);
     }
 }

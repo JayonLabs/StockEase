@@ -20,6 +20,7 @@ class SaleFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'shift_id' => null,
             'customer_name' => fake()->name(),
             'total' => 0,
             'payment_method' => 'cash',

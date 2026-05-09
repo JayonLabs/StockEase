@@ -21,8 +21,10 @@ class DatabaseSeeder extends Seeder
             PromotionSeeder::class,
             PurchaseSeeder::class,
             SaleSeeder::class,
+            SaleReturnSeeder::class,
             StockAdjustmentSeeder::class,
             PriceHistorySeeder::class,
+            ShiftSeeder::class,
         ]);
     }
 }

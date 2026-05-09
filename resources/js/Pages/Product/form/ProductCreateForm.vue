@@ -285,7 +285,7 @@ const parseInput = (val) => {
                 </Link>
             </div>
 
-            <form @submit.prevent="submit" class="grid gap-6">
+            <form class="grid gap-6" @submit.prevent="submit">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Left Column: General Info & Pricing -->
                     <div class="lg:col-span-2 space-y-6">
@@ -349,10 +349,9 @@ const parseInput = (val) => {
                                                         class="absolute left-3 top-3 size-4 text-muted-foreground"
                                                     />
                                                 </div>
-                                                <ComboboxEmpty
-                                                    >Tidak ada
-                                                    kategori.</ComboboxEmpty
-                                                >
+                                                <ComboboxEmpty>
+                                                    Tidak ada kategori.
+                                                </ComboboxEmpty>
                                                 <ComboboxGroup>
                                                     <ComboboxItem
                                                         v-for="cat in categories"
@@ -409,10 +408,9 @@ const parseInput = (val) => {
                                                         class="absolute left-3 top-3 size-4 text-muted-foreground"
                                                     />
                                                 </div>
-                                                <ComboboxEmpty
-                                                    >Tidak ada
-                                                    satuan.</ComboboxEmpty
-                                                >
+                                                <ComboboxEmpty>
+                                                    Tidak ada satuan.
+                                                </ComboboxEmpty>
                                                 <ComboboxGroup>
                                                     <ComboboxItem
                                                         v-for="u in units"
@@ -466,8 +464,8 @@ const parseInput = (val) => {
                                                 type="button"
                                                 variant="secondary"
                                                 size="icon"
-                                                @click="showScannerModal = true"
                                                 title="Scan Barcode"
+                                                @click="showScannerModal = true"
                                             >
                                                 <ScanBarcode class="h-4 w-4" />
                                             </Button>
@@ -722,9 +720,12 @@ const parseInput = (val) => {
                             <Button
                                 variant="outline"
                                 @click="showCropperModal = false"
-                                >Batal</Button
                             >
-                            <Button @click="handleCrop">Simpan Potongan</Button>
+                                Batal
+                            </Button>
+                            <Button @click="handleCrop">
+                                Simpan Potongan
+                            </Button>
                         </div>
                     </div>
                 </DialogContent>
@@ -743,8 +744,9 @@ const parseInput = (val) => {
                         <Button
                             variant="outline"
                             @click="showScannerModal = false"
-                            >Tutup</Button
                         >
+                            Tutup
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>

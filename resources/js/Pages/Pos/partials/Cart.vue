@@ -1,6 +1,6 @@
 <script setup>
 import { Button } from '@/Components/ui/button';
-import { Loader2, Trash2 } from 'lucide-vue-next';
+import { Loader2, Send, Trash2 } from 'lucide-vue-next';
 import { RadioGroup, RadioGroupItem } from '@/Components/ui/radio-group';
 import { Label } from '@/Components/ui/label';
 import { formatPrice, formatNumber } from '@/lib/utils';
@@ -152,8 +152,22 @@ watch(paymentMethod, (newValue) => {
 const customerName = ref(null);
 
 const isCheckoutLoading = ref(false);
+const showInvoiceSection = ref(false);
+const completedSaleId = ref(null);
+const invoiceEmail = ref('');
+const isSendingInvoice = ref(false);
 
 const emit = defineEmits(['checkout-success']);
+
+watch(
+    () => cartItems.value.length,
+    (newLength) => {
+        if (newLength > 0 && showInvoiceSection.value) {
+            showInvoiceSection.value = false;
+            invoiceEmail.value = '';
+        }
+    },
+);
 
 const checkout = () => {
     isCheckoutLoading.value = true;
@@ -186,6 +200,11 @@ const checkout = () => {
                 displayCashPayment.value = '';
                 change.value = 0;
                 customerName.value = null;
+
+                if (response.data.completed_sale_id) {
+                    completedSaleId.value = response.data.completed_sale_id;
+                    showInvoiceSection.value = true;
+                }
 
                 emit('checkout-success');
             })
@@ -232,6 +251,12 @@ const checkout = () => {
                                 change.value = 0;
                                 customerName.value = null;
 
+                                if (response.data.completed_sale_id) {
+                                    completedSaleId.value =
+                                        response.data.completed_sale_id;
+                                    showInvoiceSection.value = true;
+                                }
+
                                 emit('checkout-success');
                             })
                             .catch((error) => {
@@ -259,6 +284,33 @@ const checkout = () => {
                 isCheckoutLoading.value = false;
             });
     }
+};
+const sendInvoice = () => {
+    if (!invoiceEmail.value || !completedSaleId.value) {
+        toast.error('Email tidak boleh kosong');
+        return;
+    }
+
+    isSendingInvoice.value = true;
+
+    axios
+        .post(route('pos.send-invoice'), {
+            sale_id: completedSaleId.value,
+            email: invoiceEmail.value,
+        })
+        .then((response) => {
+            toast.success(response.data.message);
+            invoiceEmail.value = '';
+            showInvoiceSection.value = false;
+        })
+        .catch((error) => {
+            toast.error(
+                error.response?.data?.message ?? 'Gagal mengirim invoice',
+            );
+        })
+        .finally(() => {
+            isSendingInvoice.value = false;
+        });
 };
 </script>
 
@@ -432,6 +484,30 @@ const checkout = () => {
                         </TooltipContent>
                     </Tooltip>
                 </TooltipProvider>
+            </div>
+
+            <div v-if="showInvoiceSection" class="border-t pt-3 mt-3">
+                <p class="text-sm font-medium mb-2">Kirim Invoice ke Email</p>
+                <div class="flex gap-2">
+                    <Input
+                        v-model="invoiceEmail"
+                        type="email"
+                        placeholder="email@example.com"
+                        class="flex-1"
+                    />
+                    <Button
+                        size="sm"
+                        :disabled="!invoiceEmail || isSendingInvoice"
+                        @click="sendInvoice"
+                    >
+                        <Loader2
+                            v-if="isSendingInvoice"
+                            class="w-4 h-4 animate-spin mr-1"
+                        />
+                        <Send v-else class="w-4 h-4 mr-1" />
+                        Kirim
+                    </Button>
+                </div>
             </div>
         </div>
     </div>

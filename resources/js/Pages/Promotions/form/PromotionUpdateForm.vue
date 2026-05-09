@@ -186,15 +186,15 @@ const submit = () => {
                             <SelectValue placeholder="Pilih Tipe Promo" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="percentage"
-                                >Persentase (%)</SelectItem
-                            >
-                            <SelectItem value="nominal"
-                                >Nominal (Rp)</SelectItem
-                            >
-                            <SelectItem value="bogo"
-                                >Beli X Gratis Y</SelectItem
-                            >
+                            <SelectItem value="percentage">
+                                Persentase (%)
+                            </SelectItem>
+                            <SelectItem value="nominal">
+                                Nominal (Rp)
+                            </SelectItem>
+                            <SelectItem value="bogo">
+                                Beli X Gratis Y
+                            </SelectItem>
                         </SelectContent>
                     </Select>
                     <span v-if="form.errors.type" class="text-sm text-red-500">
@@ -218,8 +218,8 @@ const submit = () => {
                     </Label>
                     <Input
                         id="edit-discount_value"
-                        type="text"
                         v-model="formattedDiscountValue"
+                        type="text"
                         placeholder="Contoh: 10"
                         required
                     />
@@ -236,9 +236,9 @@ const submit = () => {
                         <Label for="edit-buy_qty">Syarat Beli (Qty)</Label>
                         <Input
                             id="edit-buy_qty"
+                            v-model="form.buy_qty"
                             type="number"
                             min="1"
-                            v-model="form.buy_qty"
                             placeholder="Contoh: 2"
                             required
                         />
@@ -253,9 +253,9 @@ const submit = () => {
                         <Label for="edit-get_qty">Gratis (Qty)</Label>
                         <Input
                             id="edit-get_qty"
+                            v-model="form.get_qty"
                             type="number"
                             min="1"
-                            v-model="form.get_qty"
                             placeholder="Contoh: 1"
                             required
                         />
@@ -278,9 +278,9 @@ const submit = () => {
                                 <SelectValue placeholder="Semua Kategori" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem :value="null"
-                                    >Semua Kategori</SelectItem
-                                >
+                                <SelectItem :value="null">
+                                    Semua Kategori
+                                </SelectItem>
                                 <SelectItem
                                     v-for="cat in categories"
                                     :key="cat.id"
@@ -298,9 +298,9 @@ const submit = () => {
                                 <SelectValue placeholder="Semua Produk" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem :value="null"
-                                    >Semua Produk</SelectItem
-                                >
+                                <SelectItem :value="null">
+                                    Semua Produk
+                                </SelectItem>
                                 <SelectItem
                                     v-for="prod in products"
                                     :key="prod.id"
@@ -352,7 +352,7 @@ const submit = () => {
 
             <DialogFooter class="flex justify-between">
                 <DialogClose as-child>
-                    <Button type="button" variant="secondary">Batal</Button>
+                    <Button type="button" variant="secondary"> Batal </Button>
                 </DialogClose>
                 <Button
                     type="submit"

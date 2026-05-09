@@ -69,5 +69,5 @@ it('can delete a supplier', function () {
 
     $this->service->deleteSupplier($supplier);
 
-    $this->assertDatabaseMissing('suppliers', ['id' => $supplier->id]);
+    $this->assertSoftDeleted('suppliers', ['id' => $supplier->id]);
 });

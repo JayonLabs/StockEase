@@ -1,10 +1,10 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
-import { Separator } from '@/Components/ui/separator';
 import ProfileInformation from './Partials/ProfileInformation.vue';
 import UpdateProfileInformationForm from './Partials/UpdateProfileInformationForm.vue';
 import UpdatePasswordForm from './Partials/UpdatePasswordForm.vue';
+import DeleteUserForm from './Partials/DeleteUserForm.vue';
 
 import {
     Breadcrumb,
@@ -55,22 +55,13 @@ defineProps({
 
         <div class="flex flex-1 flex-col gap-4 p-4">
             <div class="rounded-xl bg-muted/50 h-full p-4">
-                <div class="flex justify-between items-center">
-                    <h4 class="font-semibold">Profile</h4>
-                </div>
-                <Separator class="my-4" />
+                <ProfileInformation />
 
-                <div class="mt-4">
-                    <ProfileInformation />
-                </div>
+                <UpdateProfileInformationForm />
 
-                <div class="mt-4">
-                    <UpdateProfileInformationForm />
-                </div>
+                <UpdatePasswordForm />
 
-                <div class="mt-4">
-                    <UpdatePasswordForm />
-                </div>
+                <DeleteUserForm />
             </div>
         </div>
     </AuthenticatedLayout>

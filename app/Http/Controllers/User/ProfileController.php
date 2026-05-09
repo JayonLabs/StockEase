@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\User\DeleteAccountRequest;
 use App\Http\Requests\User\ProfileUpdateRequest;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Http\JsonResponse;
@@ -11,7 +12,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -47,12 +47,8 @@ class ProfileController extends Controller
     /**
      * Delete the user's account.
      */
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(DeleteAccountRequest $request): RedirectResponse
     {
-        $request->validate([
-            'password' => ['required', 'current_password'],
-        ]);
-
         $user = $request->user();
 
         Auth::logout();
@@ -67,14 +63,9 @@ class ProfileController extends Controller
 
     /**
      * Store a new photo for the user's profile.
-     *
-     * @return JsonResponse
-     *
-     * @throws ValidationException
      */
-    public function storePhotoProfile(Request $request)
+    public function storePhotoProfile(Request $request): JsonResponse
     {
-
         $request->validate([
             'photo_profile' => 'required|image|mimes:jpeg,png,jpg|max:2048',
         ]);
@@ -112,12 +103,9 @@ class ProfileController extends Controller
 
     /**
      * Delete the user's photo profile.
-     *
-     * @return JsonResponse
      */
-    public function destroyPhotoProfile(Request $request)
+    public function destroyPhotoProfile(Request $request): JsonResponse
     {
-
         $user = $request->user();
 
         if ($user->photo_profile) {

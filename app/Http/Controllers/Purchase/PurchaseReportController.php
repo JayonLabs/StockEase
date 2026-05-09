@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Purchase;
 
+use App\Enums\Role;
 use App\Exports\PurchaseExportExcel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Report\PurchaseReportExportRequest;
@@ -110,7 +111,7 @@ class PurchaseReportController extends Controller
                 $q->where('name', 'like', "%{$request->search}%")
                     ->orWhere('id', 'like', "%{$request->search}%");
             })
-                ->whereIn('role', ['warehouse', 'admin'])
+                ->whereIn('role', [Role::Warehouse->value, Role::Admin->value])
                 ->select('id as value', 'name as label')
                 ->get();
 

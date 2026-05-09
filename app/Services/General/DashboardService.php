@@ -2,6 +2,9 @@
 
 namespace App\Services\General;
 
+use App\Enums\Role;
+use App\Enums\SaleStatus;
+use App\Enums\StockLogType;
 use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\Purchase;
@@ -20,9 +23,9 @@ class DashboardService
     public function getDashboardData(string $role): array
     {
         return match ($role) {
-            'admin' => $this->adminData(),
-            'cashier' => $this->cashierData(),
-            'warehouse' => $this->warehouseData(),
+            Role::Admin->value => $this->adminData(),
+            Role::Cashier->value => $this->cashierData(),
+            Role::Warehouse->value => $this->warehouseData(),
             default => [],
         };
     }
@@ -32,11 +35,11 @@ class DashboardService
      */
     private function adminData(): array
     {
-        $todaySales = (float) Sale::where('status', 'completed')
+        $todaySales = (float) Sale::where('status', SaleStatus::Completed->value)
             ->whereDate('created_at', Carbon::today())
             ->sum('total');
 
-        $monthSales = (float) Sale::where('status', 'completed')
+        $monthSales = (float) Sale::where('status', SaleStatus::Completed->value)
             ->whereYear('created_at', Carbon::now()->year)
             ->whereMonth('created_at', Carbon::now()->month)
             ->sum('total');
@@ -72,19 +75,19 @@ class DashboardService
      */
     private function cashierData(): array
     {
-        $totalTransactionPerWeek = Sale::where('status', 'completed')
+        $totalTransactionPerWeek = Sale::where('status', SaleStatus::Completed->value)
             ->whereBetween('created_at', [
                 Carbon::now()->startOfWeek(),
                 Carbon::now()->endOfWeek(),
             ])->count();
 
-        $todaysIncome = (float) Sale::where('status', 'completed')
+        $todaysIncome = (float) Sale::where('status', SaleStatus::Completed->value)
             ->whereDate('created_at', Carbon::today())
             ->sum('total');
 
         $bestSellingProductItem = SaleItem::whereHas('sale', function ($q) {
             $q->whereDate('created_at', Carbon::today())
-                ->where('status', 'completed');
+                ->where('status', SaleStatus::Completed->value);
         })
             ->select('product_id', DB::raw('SUM(qty) as total_qty'))
             ->groupBy('product_id')
@@ -94,12 +97,12 @@ class DashboardService
 
         $bestSellingProduct = $bestSellingProductItem ? $bestSellingProductItem->product->name : 'Tidak ada transaksi hari ini';
 
-        $averagePerCustomer = Sale::where('status', 'completed')
+        $averagePerCustomer = Sale::where('status', SaleStatus::Completed->value)
             ->whereDate('created_at', Carbon::today())
             ->avg('total');
         $averagePerCustomer = $averagePerCustomer !== null ? (float) $averagePerCustomer : null;
 
-        $recentTransaction = Sale::where('status', 'completed')
+        $recentTransaction = Sale::where('status', SaleStatus::Completed->value)
             ->latest()
             ->take(5)
             ->get()
@@ -165,7 +168,7 @@ class DashboardService
     {
         Carbon::setLocale('id');
 
-        $latestSales = Sale::where('status', 'completed')
+        $latestSales = Sale::where('status', SaleStatus::Completed->value)
             ->select(['id', 'total', 'created_at'])
             ->with([
                 'saleItems:id,sale_id,qty,product_id',
@@ -212,7 +215,7 @@ class DashboardService
             ->take(10)
             ->get()
             ->map(function ($log) {
-                $isIncreasing = $log->type === 'in' || ($log->type === 'adjust' && $log->qty > 0);
+                $isIncreasing = $log->type === StockLogType::In->value || ($log->type === StockLogType::Adjust->value && $log->qty > 0);
                 $action = $isIncreasing ? 'bertambah' : 'berkurang';
                 $absQty = abs($log->qty);
 
@@ -264,7 +267,7 @@ class DashboardService
             'date',
             DB::raw('SUM(total) as total')
         )
-            ->where('status', 'completed')
+            ->where('status', SaleStatus::Completed->value)
             ->whereBetween('date', [$start->toDateString(), $end->toDateString()])
             ->groupBy('date')
             ->orderBy('date', 'asc')
@@ -329,11 +332,11 @@ class DashboardService
         $startDate = Carbon::now()->subDays(6)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
 
-        $rawMovement = StockLog::selectRaw("
+        $rawMovement = StockLog::selectRaw('
             DATE(created_at) as date,
-            SUM(CASE WHEN type = 'in' THEN qty ELSE 0 END) as masuk,
-            SUM(CASE WHEN type = 'out' THEN qty ELSE 0 END) as keluar
-        ")
+            SUM(CASE WHEN type = ? THEN qty ELSE 0 END) as masuk,
+            SUM(CASE WHEN type = ? THEN qty ELSE 0 END) as keluar
+        ', [StockLogType::In->value, StockLogType::Out->value])
             ->whereBetween('created_at', [$startDate, $endDate])
             ->groupBy('date')
             ->orderBy('date')

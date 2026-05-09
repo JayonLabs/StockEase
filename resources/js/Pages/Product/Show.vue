@@ -171,9 +171,9 @@ const destroy = () => {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle
-                                    >Hapus Produk?</AlertDialogTitle
-                                >
+                                <AlertDialogTitle>
+                                    Hapus Produk?
+                                </AlertDialogTitle>
                                 <AlertDialogDescription>
                                     Apakah Anda yakin ingin menghapus produk
                                     <span class="font-bold text-foreground">{{
@@ -186,8 +186,8 @@ const destroy = () => {
                                 <AlertDialogCancel>Batal</AlertDialogCancel>
                                 <AlertDialogAction
                                     class="bg-red-600 hover:bg-red-700 text-white"
-                                    @click="destroy"
                                     :disabled="isLoading"
+                                    @click="destroy"
                                 >
                                     <Loader2
                                         v-if="isLoading"
@@ -244,11 +244,12 @@ const destroy = () => {
                         <CardHeader class="p-6">
                             <CardTitle
                                 class="text-xl line-clamp-2 leading-tight"
-                                >{{ product.name }}</CardTitle
                             >
-                            <CardDescription class="font-mono text-xs">{{
-                                product.sku
-                            }}</CardDescription>
+                                {{ product.name }}
+                            </CardTitle>
+                            <CardDescription class="font-mono text-xs">
+                                {{ product.sku }}
+                            </CardDescription>
                         </CardHeader>
                         <CardContent class="px-6 pb-6 pt-0">
                             <div
@@ -276,9 +277,9 @@ const destroy = () => {
                                     <Warehouse
                                         class="h-4 w-4 text-muted-foreground"
                                     />
-                                    <CardTitle class="text-sm font-medium"
-                                        >Inventaris</CardTitle
-                                    >
+                                    <CardTitle class="text-sm font-medium">
+                                        Inventaris
+                                    </CardTitle>
                                 </div>
                             </CardHeader>
                             <CardContent class="grid gap-4">
@@ -313,11 +314,9 @@ const destroy = () => {
                                     <span class="text-sm text-muted-foreground"
                                         >Satuan</span
                                     >
-                                    <Badge
-                                        variant="outline"
-                                        class="capitalize"
-                                        >{{ product.unit?.name ?? '-' }}</Badge
-                                    >
+                                    <Badge variant="outline" class="capitalize">
+                                        {{ product.unit?.name ?? '-' }}
+                                    </Badge>
                                 </div>
                             </CardContent>
                         </Card>
@@ -329,9 +328,9 @@ const destroy = () => {
                                     <TrendingUp
                                         class="h-4 w-4 text-muted-foreground"
                                     />
-                                    <CardTitle class="text-sm font-medium"
-                                        >Informasi Harga</CardTitle
-                                    >
+                                    <CardTitle class="text-sm font-medium">
+                                        Informasi Harga
+                                    </CardTitle>
                                 </div>
                             </CardHeader>
                             <CardContent class="grid gap-4">
@@ -377,9 +376,9 @@ const destroy = () => {
                     <!-- General Info Card -->
                     <Card>
                         <CardHeader class="pb-3">
-                            <CardTitle class="text-sm font-medium"
-                                >Spesifikasi Lainnya</CardTitle
-                            >
+                            <CardTitle class="text-sm font-medium">
+                                Spesifikasi Lainnya
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div

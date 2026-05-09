@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
-use function Pest\Laravel\assertDatabaseMissing;
+use function Pest\Laravel\assertSoftDeleted;
 use function Pest\Laravel\get;
 
 uses(RefreshDatabase::class);
@@ -247,7 +247,7 @@ it('allows admin and warehouse to delete a product', function ($role) {
 
     $response->assertRedirect(route('product.index'));
     $response->assertSessionHas('success', 'Product berhasil dihapus');
-    assertDatabaseMissing('products', ['id' => $product->id]);
+    assertSoftDeleted('products', ['id' => $product->id]);
 })->with(['admin', 'warehouse']);
 
 it('denies cashier to delete a product', function () {

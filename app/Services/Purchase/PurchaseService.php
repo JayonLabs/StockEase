@@ -3,6 +3,7 @@
 namespace App\Services\Purchase;
 
 use App\Actions\Product\UpdateProductExpiryDate;
+use App\Enums\StockLogType;
 use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
@@ -118,7 +119,7 @@ class PurchaseService
                 StockLog::create([
                     'product_id' => $product->id,
                     'qty' => $item['qty'],
-                    'type' => 'in',
+                    'type' => StockLogType::In->value,
                     'reference_type' => 'Purchase',
                     'reference_id' => $purchase->id,
                     'note' => "Pembelian produk {$product->name}",
@@ -156,7 +157,7 @@ class PurchaseService
                     if ($product) {
                         $product->decrement('stock', $existingItem->qty);
                     }
-                    $existingItem->delete();
+                    $existingItem->forceDelete();
                     if ($product) {
                         resolve(UpdateProductExpiryDate::class)->execute($product);
                     }
@@ -212,8 +213,8 @@ class PurchaseService
 
                 StockLog::create([
                     'product_id' => $product->id,
-                    'qty' => $diffQty,
-                    'type' => 'adjust',
+                    'qty' => abs($diffQty),
+                    'type' => StockLogType::Adjust->value,
                     'reference_type' => 'Purchase',
                     'reference_id' => $purchase->id,
                     'note' => 'Perubahan pembelian produk '.$product->name,
@@ -241,7 +242,7 @@ class PurchaseService
                     StockLog::create([
                         'product_id' => $product->id,
                         'qty' => $purchaseItem->qty,
-                        'type' => 'out',
+                        'type' => StockLogType::Out->value,
                         'reference_type' => 'Purchase',
                         'reference_id' => $purchase->id,
                         'note' => "Penghapusan pembelian and pengurangan stok produk {$product->name}",

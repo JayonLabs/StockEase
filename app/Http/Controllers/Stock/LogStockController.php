@@ -41,6 +41,11 @@ class LogStockController extends Controller
 
         return Inertia::render('LogStock/Index', [
             'logStocks' => $logStocks,
+            'filters' => [
+                'start' => $request->start,
+                'end' => $request->end,
+                'search' => $request->search,
+            ],
         ]);
     }
 }

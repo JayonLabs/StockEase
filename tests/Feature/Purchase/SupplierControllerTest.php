@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
-use function Pest\Laravel\assertDatabaseMissing;
+use function Pest\Laravel\assertSoftDeleted;
 use function Pest\Laravel\get;
 
 uses(RefreshDatabase::class);
@@ -193,7 +193,7 @@ it('allows admin and warehouse to delete a supplier', function ($role) {
         ->assertRedirect()
         ->assertSessionHas('success', 'Supplier berhasil dihapus');
 
-    assertDatabaseMissing('suppliers', ['id' => $supplier->id]);
+    assertSoftDeleted('suppliers', ['id' => $supplier->id]);
 })->with(['admin', 'warehouse']);
 
 it('returns error flash when deleting a supplier that has purchases', function () {

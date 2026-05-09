@@ -12,6 +12,7 @@ uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
     config(['midtrans.server_key' => 'test_server_key']);
+
     $this->paymentService = new PaymentService;
 });
 

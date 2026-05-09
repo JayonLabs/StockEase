@@ -327,6 +327,57 @@ describe('Search filter', function () {
 });
 
 // ============================================================
+// Index — combined search and date filter
+// ============================================================
+
+describe('Combined search and date filter', function () {
+    it('filters by both search and date range simultaneously', function () {
+        /** @var TestCase&object{admin:User} $this */
+        completedSale(['customer_name' => 'Budi Customer', 'date' => '2024-04-01']);
+        completedSale(['customer_name' => 'Budi Customer', 'date' => '2024-04-15']);
+        completedSale(['customer_name' => 'Budi Customer', 'date' => '2024-05-01']); // outside date
+        completedSale(['customer_name' => 'Rina Customer', 'date' => '2024-04-10']);
+
+        actingAs($this->admin)
+            ->get(route('sale.index', [
+                'search' => 'Budi',
+                'start' => '2024-04-01',
+                'end' => '2024-04-30',
+            ]))
+            ->assertInertia(fn ($page) => $page->has('sales.data', 2));
+    });
+
+    it('preserves search when date filter returns empty', function () {
+        /** @var TestCase&object{admin:User} $this */
+        completedSale(['customer_name' => 'Target Customer', 'date' => '2024-06-01']);
+
+        actingAs($this->admin)
+            ->get(route('sale.index', [
+                'search' => 'Target',
+                'start' => '2024-04-01',
+                'end' => '2024-04-30',
+            ]))
+            ->assertInertia(fn ($page) => $page->has('sales.data', 0));
+    });
+
+    it('passes filters prop back to Vue component', function () {
+        /** @var TestCase&object{admin:User} $this */
+        actingAs($this->admin)
+            ->get(route('sale.index', [
+                'search' => 'ABC',
+                'start' => '2024-04-01',
+                'end' => '2024-04-30',
+            ]))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->where('filters.search', 'ABC')
+                    ->where('filters.start', '2024-04-01')
+                    ->where('filters.end', '2024-04-30')
+            );
+    });
+});
+
+// ============================================================
 // Show
 // ============================================================
 

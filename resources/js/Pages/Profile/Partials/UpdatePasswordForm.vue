@@ -4,7 +4,7 @@ import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { useForm } from '@inertiajs/vue3';
-import { Eye, Loader2, Pencil } from 'lucide-vue-next';
+import { Eye, EyeOff, Loader2, KeyRound } from 'lucide-vue-next';
 import { ref } from 'vue';
 
 const passwordInput = ref(null);
@@ -89,14 +89,26 @@ const updatePassword = () => {
                                 />
                                 <button
                                     type="button"
-                                    class="absolute inset-y-0 right-0 flex items-center pr-3"
+                                    class="absolute inset-y-0 right-0 flex items-center pr-3 hover:text-foreground"
+                                    :aria-label="
+                                        showPassword.current_password
+                                            ? 'Sembunyikan kata sandi'
+                                            : 'Tampilkan kata sandi'
+                                    "
                                     @click="
                                         togglePasswordVisibility(
                                             'current_password',
                                         )
                                     "
                                 >
-                                    <Eye class="size-5 text-muted-foreground" />
+                                    <EyeOff
+                                        v-if="showPassword.current_password"
+                                        class="size-4 text-muted-foreground"
+                                    />
+                                    <Eye
+                                        v-else
+                                        class="size-4 text-muted-foreground"
+                                    />
                                 </button>
                             </div>
                             <InputError
@@ -118,12 +130,24 @@ const updatePassword = () => {
                                 />
                                 <button
                                     type="button"
-                                    class="absolute inset-y-0 right-0 flex items-center pr-3"
+                                    class="absolute inset-y-0 right-0 flex items-center pr-3 hover:text-foreground"
+                                    :aria-label="
+                                        showPassword.password
+                                            ? 'Sembunyikan kata sandi'
+                                            : 'Tampilkan kata sandi'
+                                    "
                                     @click="
                                         togglePasswordVisibility('password')
                                     "
                                 >
-                                    <Eye class="size-5 text-muted-foreground" />
+                                    <EyeOff
+                                        v-if="showPassword.password"
+                                        class="size-4 text-muted-foreground"
+                                    />
+                                    <Eye
+                                        v-else
+                                        class="size-4 text-muted-foreground"
+                                    />
                                 </button>
                             </div>
                             <InputError :message="form.errors.password" />
@@ -144,14 +168,28 @@ const updatePassword = () => {
                                 />
                                 <button
                                     type="button"
-                                    class="absolute inset-y-0 right-0 flex items-center pr-3"
+                                    class="absolute inset-y-0 right-0 flex items-center pr-3 hover:text-foreground"
+                                    :aria-label="
+                                        showPassword.password_confirmation
+                                            ? 'Sembunyikan kata sandi'
+                                            : 'Tampilkan kata sandi'
+                                    "
                                     @click="
                                         togglePasswordVisibility(
                                             'password_confirmation',
                                         )
                                     "
                                 >
-                                    <Eye class="size-5 text-muted-foreground" />
+                                    <EyeOff
+                                        v-if="
+                                            showPassword.password_confirmation
+                                        "
+                                        class="size-4 text-muted-foreground"
+                                    />
+                                    <Eye
+                                        v-else
+                                        class="size-4 text-muted-foreground"
+                                    />
                                 </button>
                             </div>
                             <InputError
@@ -166,11 +204,11 @@ const updatePassword = () => {
                 type="submit"
                 form="passwordForm"
                 variant="secondary"
-                class="shadow-theme-xs flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 lg:inline-flex lg:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+                class="shadow-theme-xs flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-800 lg:inline-flex lg:w-auto dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/3 dark:hover:text-gray-200"
                 :disabled="form.processing"
             >
                 <Loader2 v-if="form.processing" class="w-4 h-4 animate-spin" />
-                <Pencil v-else class="w-4 h-4" />
+                <KeyRound v-else class="w-4 h-4" />
                 Simpan
             </Button>
         </div>

@@ -2,8 +2,8 @@
 import { Avatar, AvatarFallback, AvatarImage } from '@/Components/ui/avatar';
 import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-const page = usePage();
-const user = computed(() => page.props.auth.user ?? null);
+
+const user = computed(() => usePage().props.auth.user ?? null);
 
 function getColorFromName(name) {
     const colors = [
@@ -34,32 +34,35 @@ function getColorFromName(name) {
     return colors[index];
 }
 
-let avatarColor;
-if (user.value) {
-    avatarColor = getColorFromName(user.value.name);
-}
+const avatarColor = computed(() => {
+    if (!user.value) return 'bg-blue-500';
+    return getColorFromName(user.value.name);
+});
+
+const initials = computed(() => {
+    if (!user.value) return '?';
+    return user.value.name
+        .split(' ')
+        .map((n) => n[0])
+        .join('')
+        .toUpperCase()
+        .substring(0, 2);
+});
 </script>
 
 <template>
-    <div
-        class="w-20 h-20 overflow-hidden border rounded-full border-gray-800 flex items-center justify-center"
-    >
-        <Avatar class="h-full w-full">
-            <AvatarImage v-if="user.avatar" :src="user.avatar" />
-            <AvatarFallback
-                :class="[
-                    avatarColor,
-                    'text-white font-bold w-full h-full flex items-center justify-center rounded-full',
-                ]"
-            >
-                {{
-                    user.name
-                        .split(' ')
-                        .map((n) => n[0])
-                        .join('')
-                        .toUpperCase()
-                }}
-            </AvatarFallback>
-        </Avatar>
-    </div>
+    <Avatar class="h-full w-full">
+        <AvatarImage
+            v-if="user?.photo_profile"
+            :src="`/${user.photo_profile}`"
+        />
+        <AvatarFallback
+            :class="[
+                avatarColor,
+                'text-white font-bold w-full h-full flex items-center justify-center rounded-full',
+            ]"
+        >
+            {{ initials }}
+        </AvatarFallback>
+    </Avatar>
 </template>
