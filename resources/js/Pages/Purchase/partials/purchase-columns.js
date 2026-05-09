@@ -58,7 +58,7 @@ export const purchaseColumns = [
     },
     {
         accessorKey: 'action',
-        header: 'Aksi',
+        header: () => h('div', { class: 'text-center w-full' }, 'Aksi'),
         cell: ({ row }) =>
             h(PurchaseActionRow, {
                 row: row.original,

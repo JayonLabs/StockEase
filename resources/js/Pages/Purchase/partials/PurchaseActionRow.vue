@@ -50,7 +50,7 @@ const destroy = (id) => {
 </script>
 
 <template>
-    <div class="flex items-center justify-start">
+    <div class="flex items-center justify-center">
         <PurchaseEditForm :purchase="row" />
 
         <AlertDialog v-model:open="isDialogOpen">
@@ -71,9 +71,8 @@ const destroy = (id) => {
                         Apakah anda yakin ingin data pembelian ini?
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                        Data yang telah dihapus tidak dapat dikembalikan!
-                        <br />
-                        Tindakan ini tidak dapat dibatalkan!
+                        Data akan dipindahkan ke <strong>Sampah</strong> dan
+                        dapat dipulihkan kembali.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
