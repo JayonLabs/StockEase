@@ -3,6 +3,8 @@
 namespace Database\Seeders;
 
 use App\Actions\Product\ReduceProductStock;
+use App\Enums\PaymentMethod;
+use App\Enums\SaleStatus;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -40,11 +42,11 @@ class SaleSeeder extends Seeder
                         'customer_name' => fake()->name(),
                         'total' => 0,
                         'total_cost' => 0,
-                        'payment_method' => fake()->randomElement(['cash', 'qris']),
+                        'payment_method' => fake()->randomElement([PaymentMethod::Cash->value, PaymentMethod::Qris->value]),
                         'paid' => 0,
                         'change' => 0,
                         'date' => $date->format('Y-m-d'),
-                        'status' => 'completed',
+                        'status' => SaleStatus::Completed->value,
                         'created_at' => $date,
                         'updated_at' => $date,
                     ]);
