@@ -13,6 +13,13 @@ class SalesReportExport implements FromView
 
     protected $summary;
 
+    /**
+     * Create a new export instance.
+     *
+     * @param  mixed  $sales
+     * @param  mixed  $filters
+     * @param  mixed  $summary
+     */
     public function __construct($sales, $filters, $summary)
     {
         $this->sales = $sales;
@@ -20,6 +27,9 @@ class SalesReportExport implements FromView
         $this->summary = $summary;
     }
 
+    /**
+     * Render the view for the export.
+     */
     public function view(): View
     {
         return view('exports.sales.excel', [

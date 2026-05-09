@@ -2,6 +2,7 @@
 
 namespace App\Actions\Sale;
 
+use App\Enums\PromotionType;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Sale;
@@ -92,11 +93,11 @@ class RecalculateSaleTotal
      */
     private function calculateDiscount(Promotion $promo, float $price, int $qty): float
     {
-        if ($promo->type === 'percentage') {
+        if ($promo->type === PromotionType::Percentage->value) {
             return $price * ($promo->discount_value / 100) * $qty;
         }
 
-        if ($promo->type === 'nominal') {
+        if ($promo->type === PromotionType::Nominal->value) {
             // Nominal is per item
             $discount = $promo->discount_value * $qty;
             // Prevent discount from being higher than price
@@ -105,7 +106,7 @@ class RecalculateSaleTotal
             return min($discount, $maxDiscount);
         }
 
-        if ($promo->type === 'bogo' && $promo->buy_qty > 0 && $promo->get_qty > 0) {
+        if ($promo->type === PromotionType::Bogo->value && $promo->buy_qty > 0 && $promo->get_qty > 0) {
             // How many times does the BOGO trigger?
             // E.g., buy 2 get 1. Group size = buy_qty.
             // Wait, usually BOGO means if you have 3 items in cart, you pay for 2.
