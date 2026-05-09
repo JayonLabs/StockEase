@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentStatus;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PaymentTransaction extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'sale_id',
@@ -20,11 +21,6 @@ class PaymentTransaction extends Model
         'raw_response',
     ];
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
@@ -34,19 +30,12 @@ class PaymentTransaction extends Model
 
     /**
      * Check if the payment has been paid.
-     *
-     * @return bool
      */
-    public function isPaid()
+    public function isPaid(): bool
     {
-        return in_array($this->status, ['settlement', 'success', 'capture']);
+        return in_array($this->status, [PaymentStatus::Settlement->value, PaymentStatus::Success->value, PaymentStatus::Capture->value]);
     }
 
-    /**
-     * Get the sale that owns the payment transaction.
-     *
-     * @return BelongsTo
-     */
     public function sale()
     {
         return $this->belongsTo(Sale::class);
