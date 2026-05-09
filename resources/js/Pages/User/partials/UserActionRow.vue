@@ -49,7 +49,7 @@ const destroy = (id, name) => {
 </script>
 
 <template>
-    <div class="flex items-center justify-start">
+    <div class="flex items-center justify-center">
         <UserUpdateForm :row="row" />
 
         <AlertDialog v-model:open="isDialogOpen">
@@ -72,8 +72,8 @@ const destroy = (id, name) => {
                         ?
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                        Data yang telah dihapus tidak dapat dikembalikan!
-                        Tindakan ini tidak dapat dibatalkan!
+                        Data akan dipindahkan ke <strong>Sampah</strong> dan
+                        dapat dipulihkan kembali.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

@@ -26,12 +26,11 @@ export const userColumns = [
             h(DataTableColumnHeader, {
                 column: column,
                 title: 'Role',
-                class: 'justify-center',
             }),
         cell: ({ row }) =>
             h(
                 'div',
-                { class: 'flex justify-center' },
+                { class: 'flex' },
                 h(UserRoleRow, {
                     row: row.original,
                 }),

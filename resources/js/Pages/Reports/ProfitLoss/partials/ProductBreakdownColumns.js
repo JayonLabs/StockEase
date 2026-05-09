@@ -50,12 +50,11 @@ export const columns = [
             h(DataTableColumnHeader, {
                 column: column,
                 title: 'Pendapatan',
-                class: 'justify-end',
             }),
         cell: ({ row }) =>
             h(
                 'div',
-                { class: 'text-right' },
+
                 formatCurrency(row.original.revenue),
             ),
     },
@@ -65,12 +64,11 @@ export const columns = [
             h(DataTableColumnHeader, {
                 column: column,
                 title: 'HPP (Modal)',
-                class: 'justify-end',
             }),
         cell: ({ row }) =>
             h(
                 'div',
-                { class: 'text-right text-muted-foreground' },
+                { class: 'text-muted-foreground' },
                 formatCurrency(row.original.cost),
             ),
     },
@@ -80,14 +78,13 @@ export const columns = [
             h(DataTableColumnHeader, {
                 column: column,
                 title: 'Laba Kotor',
-                class: 'justify-end',
             }),
         cell: ({ row }) => {
             const profit = row.original.profit;
             return h(
                 'div',
                 {
-                    class: `text-right font-bold ${
+                    class: `font-bold ${
                         profit >= 0 ? 'text-emerald-600' : 'text-red-600'
                     }`,
                 },
@@ -101,14 +98,13 @@ export const columns = [
             h(DataTableColumnHeader, {
                 column: column,
                 title: 'Margin',
-                class: 'justify-center',
             }),
         cell: ({ row }) => {
             const profit = row.original.profit;
             const revenue = row.original.revenue;
             const margin = revenue > 0 ? (profit / revenue) * 100 : 0;
 
-            return h('div', { class: 'flex justify-center' }, [
+            return h('div', { class: 'flex ' }, [
                 h(
                     Badge,
                     {

@@ -1,6 +1,13 @@
 <script setup>
 import { Head, Link, useForm } from '@inertiajs/vue3';
+import { Button } from '@/Components/ui/button';
+import { Badge } from '@/Components/ui/badge';
+import Chart from './partials/Chart.vue';
+import DateRangePicker from '@/Components/DateRangePicker.vue';
+import { DataTable } from '@/Components/ui/data-table';
+import { columns } from './partials/ProductBreakdownColumns';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+
 import {
     Card,
     CardContent,
@@ -8,12 +15,6 @@ import {
     CardTitle,
     CardDescription,
 } from '@/Components/ui/card';
-import { Button } from '@/Components/ui/button';
-import { Badge } from '@/Components/ui/badge';
-import Chart from './partials/Chart.vue';
-import DateRangePicker from '@/Components/DateRangePicker.vue';
-import { DataTable } from '@/Components/ui/data-table';
-import { columns } from './partials/ProductBreakdownColumns';
 
 import {
     LayoutDashboard,

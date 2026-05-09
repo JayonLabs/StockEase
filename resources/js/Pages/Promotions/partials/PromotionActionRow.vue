@@ -51,7 +51,7 @@ const destroy = () => {
 </script>
 
 <template>
-    <div class="flex items-center justify-start gap-1">
+    <div class="flex items-center justify-center gap-1">
         <PromotionUpdateForm
             :row="row"
             :categories="categories"
@@ -76,7 +76,8 @@ const destroy = () => {
                     <AlertDialogDescription>
                         Apakah Anda yakin ingin menghapus promo
                         <strong>{{ row.name }}</strong
-                        >? Tindakan ini tidak dapat dibatalkan.
+                        >? Data akan dipindahkan ke Sampah dan dapat dipulihkan
+                        kembali.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

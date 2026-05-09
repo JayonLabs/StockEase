@@ -1,7 +1,6 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Separator } from '@/Components/ui/separator';
 import { DataTable } from '@/Components/ui/data-table';
 import { Badge } from '@/Components/ui/badge';
 import { h, ref, watch } from 'vue';
@@ -106,8 +105,7 @@ const columns = [
     {
         accessorKey: 'qty',
         header: 'Stok Masuk',
-        cell: ({ row }) =>
-            h('div', { class: 'text-center' }, row.getValue('qty')),
+        cell: ({ row }) => h('div', row.getValue('qty')),
     },
 ];
 </script>
@@ -148,8 +146,9 @@ const columns = [
                 >
                     <span
                         class="text-xs font-semibold uppercase text-muted-foreground px-2"
-                        >Filter Status:</span
                     >
+                        Filter Status:
+                    </span>
                     <Select v-model="status">
                         <SelectTrigger
                             class="w-48 h-9 border-none shadow-none focus:ring-0"

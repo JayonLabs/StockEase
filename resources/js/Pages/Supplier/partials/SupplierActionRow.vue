@@ -2,6 +2,10 @@
 import { Button } from '@/Components/ui/button';
 import { Loader2, Trash2 } from 'lucide-vue-next';
 import { router, usePage } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { toast } from 'vue-sonner';
+import SupplierUpdateForm from '../form/SupplierUpdateForm.vue';
+
 import {
     AlertDialog,
     AlertDialogAction,
@@ -13,9 +17,6 @@ import {
     AlertDialogTitle,
     AlertDialogTrigger,
 } from '@/Components/ui/alert-dialog';
-import { ref } from 'vue';
-import { toast } from 'vue-sonner';
-import SupplierUpdateForm from '../form/SupplierUpdateForm.vue';
 
 const props = defineProps({
     row: { type: Object, required: true },
@@ -49,7 +50,7 @@ const destroy = (slug) => {
 </script>
 
 <template>
-    <div class="flex items-center justify-start">
+    <div class="flex items-center justify-center">
         <SupplierUpdateForm :row="row" />
 
         <AlertDialog v-model:open="isDialogOpen">
@@ -70,8 +71,8 @@ const destroy = (slug) => {
                         Apakah anda yakin ingin menghapus?
                     </AlertDialogTitle>
                     <AlertDialogDescription>
-                        Data yang telah dihapus tidak dapat dikembalikan!
-                        Tindakan ini tidak dapat dibatalkan!
+                        Data akan dipindahkan ke <strong>Sampah</strong> dan
+                        dapat dipulihkan kembali.
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
