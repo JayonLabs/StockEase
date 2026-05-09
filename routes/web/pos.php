@@ -13,5 +13,6 @@ Route::prefix('pos')->middleware('auth', 'role:admin, cashier')->group(function 
     Route::delete('/remove-from-cart', [PosController::class, 'removeFromCart'])->name('pos.remove-from-cart');
     Route::delete('/empty-cart', [PosController::class, 'emptyCart'])->name('pos.empty-cart');
     Route::put('/checkout', [PosController::class, 'checkout'])->name('pos.checkout');
+    Route::post('/send-invoice', [PosController::class, 'sendInvoice'])->name('pos.send-invoice');
     Route::post('/qris-token', [PaymentController::class, 'createMidtransTransaction'])->name('pos.qris-token');
 });
