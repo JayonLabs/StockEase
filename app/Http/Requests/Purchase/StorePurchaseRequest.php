@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Purchase;
 
+use App\Enums\Role;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -14,7 +15,7 @@ class StorePurchaseRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && in_array(Auth::user()->role, ['admin', 'warehouse']);
+        return Auth::check() && in_array(Auth::user()->role, [Role::Admin->value, Role::Warehouse->value]);
     }
 
     /**
