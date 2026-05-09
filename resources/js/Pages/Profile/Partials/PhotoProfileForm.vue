@@ -5,6 +5,8 @@ import VueCropper from 'vue-cropperjs/VueCropper.js';
 import 'cropperjs/dist/cropper.css';
 import { ref, nextTick } from 'vue';
 import { toast } from 'vue-sonner';
+import { DotsVerticalIcon } from '@radix-icons/vue';
+import axios from 'axios';
 
 import {
     Dialog,
@@ -21,8 +23,6 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/Components/ui/dropdown-menu';
-import { DotsVerticalIcon } from '@radix-icons/vue';
-import axios from 'axios';
 
 const showCropperModal = ref(false);
 
@@ -113,7 +113,7 @@ const deletePhotoProfile = () => {
     <!-- Tombol Edit -->
     <DropdownMenu>
         <DropdownMenuTrigger>
-            <DotsVerticalIcon class="w-4 h-4" />
+            <DotsVerticalIcon class="w-4 h-4 cursor-pointer" />
         </DropdownMenuTrigger>
         <DropdownMenuContent>
             <DropdownMenuLabel>Profile</DropdownMenuLabel>

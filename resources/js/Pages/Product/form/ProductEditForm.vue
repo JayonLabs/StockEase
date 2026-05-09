@@ -296,7 +296,7 @@ const expiryDateFormatted = computed(() => {
                 </Link>
             </div>
 
-            <form @submit.prevent="submit" class="grid gap-6">
+            <form class="grid gap-6" @submit.prevent="submit">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Left Column: General Info & Inventory -->
                     <div class="lg:col-span-2 space-y-6">
@@ -359,10 +359,9 @@ const expiryDateFormatted = computed(() => {
                                                         class="absolute left-3 top-3 size-4 text-muted-foreground"
                                                     />
                                                 </div>
-                                                <ComboboxEmpty
-                                                    >Tidak ada
-                                                    kategori.</ComboboxEmpty
-                                                >
+                                                <ComboboxEmpty>
+                                                    Tidak ada kategori.
+                                                </ComboboxEmpty>
                                                 <ComboboxGroup>
                                                     <ComboboxItem
                                                         v-for="cat in categories"
@@ -419,10 +418,9 @@ const expiryDateFormatted = computed(() => {
                                                         class="absolute left-3 top-3 size-4 text-muted-foreground"
                                                     />
                                                 </div>
-                                                <ComboboxEmpty
-                                                    >Tidak ada
-                                                    satuan.</ComboboxEmpty
-                                                >
+                                                <ComboboxEmpty>
+                                                    Tidak ada satuan.
+                                                </ComboboxEmpty>
                                                 <ComboboxGroup>
                                                     <ComboboxItem
                                                         v-for="u in units"
@@ -476,8 +474,8 @@ const expiryDateFormatted = computed(() => {
                                                 type="button"
                                                 variant="secondary"
                                                 size="icon"
-                                                @click="showScannerModal = true"
                                                 title="Scan Barcode"
+                                                @click="showScannerModal = true"
                                             >
                                                 <ScanBarcode class="h-4 w-4" />
                                             </Button>
@@ -595,7 +593,7 @@ const expiryDateFormatted = computed(() => {
                     <!-- Right Column: Image & Pricing Link -->
                     <div class="space-y-6">
                         <Card class="overflow-hidden border-primary/20">
-                            <CardHeader class="bg-primary/5 dark:bg-primary/10">
+                            <CardHeader>
                                 <div class="flex items-center gap-2">
                                     <TrendingUp class="h-5 w-5 text-primary" />
                                     <CardTitle>Manajemen Harga</CardTitle>
@@ -604,13 +602,14 @@ const expiryDateFormatted = computed(() => {
                                     Harga beli & jual dikelola secara terpisah.
                                 </CardDescription>
                             </CardHeader>
-                            <CardContent class="pt-6 grid gap-4">
+                            <CardContent class="pt-6 grid gap-4 border-t">
                                 <div class="grid grid-cols-2 gap-4 text-center">
                                     <div class="grid gap-1">
                                         <span
                                             class="text-[10px] text-muted-foreground uppercase"
-                                            >Beli</span
                                         >
+                                            Beli
+                                        </span>
                                         <span
                                             class="font-mono font-medium truncate"
                                             >{{
@@ -776,9 +775,12 @@ const expiryDateFormatted = computed(() => {
                             <Button
                                 variant="outline"
                                 @click="showCropperModal = false"
-                                >Batal</Button
                             >
-                            <Button @click="handleCrop">Simpan Potongan</Button>
+                                Batal
+                            </Button>
+                            <Button @click="handleCrop">
+                                Simpan Potongan
+                            </Button>
                         </div>
                     </div>
                 </DialogContent>
@@ -797,8 +799,9 @@ const expiryDateFormatted = computed(() => {
                         <Button
                             variant="outline"
                             @click="showScannerModal = false"
-                            >Tutup</Button
                         >
+                            Tutup
+                        </Button>
                     </div>
                 </DialogContent>
             </Dialog>

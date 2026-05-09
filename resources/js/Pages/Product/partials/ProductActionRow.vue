@@ -122,15 +122,16 @@ const handleDelete = () => {
                                 <span class="font-bold text-foreground">{{
                                     row.name
                                 }}</span
-                                >? Tindakan ini tidak dapat dibatalkan.
+                                >? Data akan dipindahkan ke Sampah dan dapat
+                                dipulihkan kembali.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Batal</AlertDialogCancel>
                             <AlertDialogAction
                                 class="bg-red-600 hover:bg-red-700 text-white"
-                                @click="handleDelete"
                                 :disabled="isLoading"
+                                @click="handleDelete"
                             >
                                 <Loader2
                                     v-if="isLoading"
