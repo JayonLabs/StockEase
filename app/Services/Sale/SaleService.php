@@ -2,6 +2,7 @@
 
 namespace App\Services\Sale;
 
+use App\Enums\PaymentMethod;
 use App\Models\Sale;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -19,7 +20,7 @@ class SaleService
         $endDate = $filters['end'] ?? null;
 
         return Sale::with('user', 'saleItems', 'saleItems.product', 'paymentTransaction')
-            ->where('payment_method', '!=', 'pending')
+            ->where('payment_method', '!=', PaymentMethod::Pending->value)
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('customer_name', 'like', "%{$search}%")

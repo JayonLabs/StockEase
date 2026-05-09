@@ -2,6 +2,7 @@
 
 namespace App\Services\Report;
 
+use App\Enums\SaleStatus;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use Carbon\Carbon;
@@ -20,7 +21,7 @@ class ProfitLossReportService
         $end = Carbon::parse($endDate)->endOfDay();
 
         $query = Sale::query()
-            ->where('status', 'completed')
+            ->where('status', SaleStatus::Completed->value)
             ->whereBetween('date', [
                 $start->toDateString(),
                 $end->toDateString(),
@@ -49,7 +50,7 @@ class ProfitLossReportService
         return SaleItem::query()
             ->join('sales', 'sale_items.sale_id', '=', 'sales.id')
             ->join('products', 'sale_items.product_id', '=', 'products.id')
-            ->where('sales.status', 'completed')
+            ->where('sales.status', SaleStatus::Completed->value)
             ->whereBetween('sales.date', [
                 $start->toDateString(),
                 $end->toDateString(),
@@ -77,7 +78,7 @@ class ProfitLossReportService
         $end = Carbon::parse($endDate)->endOfDay();
 
         return Sale::query()
-            ->where('status', 'completed')
+            ->where('status', SaleStatus::Completed->value)
             ->whereBetween('date', [
                 $start->toDateString(),
                 $end->toDateString(),

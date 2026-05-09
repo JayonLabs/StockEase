@@ -3,6 +3,8 @@
 namespace App\Services\Payment;
 
 use App\Actions\Product\ReduceProductStock;
+use App\Enums\PaymentStatus;
+use App\Enums\SaleStatus;
 use App\Models\PaymentTransaction;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -109,10 +111,10 @@ class PaymentService
                 'raw_response' => $rawBody,
             ]);
 
-            if (in_array($paymentStatus, ['settlement', 'success', 'capture'])) {
+            if (in_array($paymentStatus, [PaymentStatus::Settlement->value, PaymentStatus::Success->value, PaymentStatus::Capture->value])) {
                 $sale = $paymentTransaction->sale;
-                if ($sale && $sale->status !== 'completed') {
-                    $sale->update(['status' => 'completed']);
+                if ($sale && $sale->status !== SaleStatus::Completed->value) {
+                    $sale->update(['status' => SaleStatus::Completed->value]);
                     resolve(ReduceProductStock::class)->execute($sale->saleItems);
                 }
             }

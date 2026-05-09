@@ -2,6 +2,7 @@
 
 namespace App\Services\Sale;
 
+use App\Enums\SaleStatus;
 use App\Models\Sale;
 use App\Models\User;
 use Carbon\Carbon;
@@ -15,7 +16,7 @@ class SaleReportService
     public function getFilteredSales(array $filters): Collection
     {
         return Sale::with('user', 'saleItems', 'saleItems.product', 'paymentTransaction')
-            ->where('status', '!=', 'draft')
+            ->where('status', '!=', SaleStatus::Draft->value)
             ->when($filters['start'] ?? null, function ($query, $start) {
                 return $query->whereDate('date', '>=', $start);
             })
@@ -41,7 +42,7 @@ class SaleReportService
         }
 
         $sumTotalSale = $sales->sum('total');
-        $transactionCount = $sales->where('status', 'completed')->count();
+        $transactionCount = $sales->where('status', SaleStatus::Completed->value)->count();
         $countProductSale = $sales->flatMap->saleItems->sum('qty');
 
         $bestSellingProduct = $sales
@@ -100,7 +101,7 @@ class SaleReportService
         $cashierUser = User::find($filters['cashier'] ?? null);
 
         $totalSale = $sales->sum('total');
-        $transactionCount = $sales->where('status', 'completed')->count();
+        $transactionCount = $sales->where('status', SaleStatus::Completed->value)->count();
         $productSold = $sales->flatMap->saleItems->sum('qty');
 
         $bestSellingProduct = $sales
