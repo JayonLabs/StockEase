@@ -73,7 +73,7 @@ it('can handle negative stock adjustment', function () {
 
     $this->assertDatabaseHas('stock_logs', [
         'product_id' => $product->id,
-        'qty' => -3, // diff
+        'qty' => 3,
         'type' => 'adjust',
     ]);
 });

@@ -9,18 +9,20 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
-/** @property ProductService $service */
+use function Pest\Laravel\assertDatabaseHas;
+use function Pest\Laravel\assertSoftDeleted;
+
 uses(TestCase::class, RefreshDatabase::class);
 
 beforeEach(function () {
-    $this->service = new ProductService;
     Storage::fake('public');
 });
 
 it('can get paginated products', function () {
     Product::factory()->count(15)->create();
 
-    $result = $this->service->getPaginatedProducts([], 10);
+    $service = new ProductService;
+    $result = $service->getPaginatedProducts([], 10);
 
     expect($result->items())->toHaveCount(10);
     expect($result->total())->toBe(15);
@@ -31,16 +33,18 @@ it('can filter products by search query', function () {
     Product::factory()->create(['name' => 'Laptop', 'category_id' => $category->id]);
     Product::factory()->create(['name' => 'Bread', 'sku' => 'FOOD001']);
 
+    $service = new ProductService;
+
     // Search by name
-    $result = $this->service->getPaginatedProducts(['search' => 'Laptop']);
+    $result = $service->getPaginatedProducts(['search' => 'Laptop']);
     expect($result->items())->toHaveCount(1);
 
     // Search by SKU
-    $result = $this->service->getPaginatedProducts(['search' => 'FOOD001']);
+    $result = $service->getPaginatedProducts(['search' => 'FOOD001']);
     expect($result->items())->toHaveCount(1);
 
     // Search by Category
-    $result = $this->service->getPaginatedProducts(['search' => 'Tech']);
+    $result = $service->getPaginatedProducts(['search' => 'Tech']);
     expect($result->items())->toHaveCount(1);
 });
 
@@ -58,12 +62,13 @@ it('can store a product without image', function () {
         'unit_id' => Unit::factory()->create()->id,
     ];
 
-    $product = $this->service->storeProduct($data);
+    $service = new ProductService;
+    $product = $service->storeProduct($data);
 
     expect($product)->toBeInstanceOf(Product::class);
     expect($product->name)->toBe('New Product');
     expect($product->slug)->toBe('new-product');
-    $this->assertDatabaseHas('products', ['name' => 'New Product']);
+    assertDatabaseHas('products', ['name' => 'New Product']);
 });
 
 it('can store a product with image', function () {
@@ -80,11 +85,12 @@ it('can store a product with image', function () {
         'unit_id' => Unit::factory()->create()->id,
     ];
 
-    $product = $this->service->storeProduct($data, $image);
+    $service = new ProductService;
+    $product = $service->storeProduct($data, $image);
 
     expect($product->image_path)->not->toBeNull();
     expect($product->image_path)->toContain('product/');
-    Storage::disk('public')->assertExists(str_replace('storage/', '', $product->image_path));
+    expect(Storage::disk('public')->exists(str_replace('storage/', '', $product->image_path)))->toBeTrue();
 });
 
 it('can update a product and replace image', function () {
@@ -98,22 +104,24 @@ it('can update a product and replace image', function () {
     $newImage = UploadedFile::fake()->image('new.jpg');
     $data = ['name' => 'Updated Product', 'category_id' => $category->id];
 
-    $this->service->updateProduct($product, $data, $newImage);
+    $service = new ProductService;
+    $service->updateProduct($product, $data, $newImage);
 
     $product->refresh();
     expect($product->name)->toBe('Updated Product');
     expect($product->slug)->toBe('updated-product');
 
-    Storage::disk('public')->assertMissing('product/old.jpg');
-    Storage::disk('public')->assertExists(str_replace('storage/', '', $product->image_path));
+    expect(Storage::disk('public')->exists('product/old.jpg'))->toBeFalse();
+    expect(Storage::disk('public')->exists(str_replace('storage/', '', $product->image_path)))->toBeTrue();
 });
 
 it('can delete a product and clean up image', function () {
     $product = Product::factory()->create(['image_path' => 'storage/product/delete.jpg']);
     Storage::disk('public')->put('product/delete.jpg', 'content');
 
-    $this->service->deleteProduct($product);
+    $service = new ProductService;
+    $service->deleteProduct($product);
 
-    $this->assertDatabaseMissing('products', ['id' => $product->id]);
-    Storage::disk('public')->assertMissing('product/delete.jpg');
+    assertSoftDeleted('products', ['id' => $product->id]);
+    expect(Storage::disk('public')->exists('product/delete.jpg'))->toBeFalse();
 });

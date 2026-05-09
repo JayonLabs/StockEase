@@ -66,5 +66,5 @@ it('can delete a unit', function () {
 
     $this->unitService->deleteUnit($unit);
 
-    $this->assertDatabaseMissing('units', ['id' => $unit->id]);
+    $this->assertSoftDeleted('units', ['id' => $unit->id]);
 });

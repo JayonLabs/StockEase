@@ -9,7 +9,7 @@ use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
-use function Pest\Laravel\assertDatabaseMissing;
+use function Pest\Laravel\assertSoftDeleted;
 
 beforeEach(function () {
     /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
@@ -276,6 +276,60 @@ describe('Search filter', function () {
         actingAs($this->admin)
             ->get(route('purchase.index', ['search' => 'xyznonexistent']))
             ->assertInertia(fn ($page) => $page->has('purchases.data', 0));
+    });
+});
+
+// ============================================================
+// Index — combined search and date filter
+// ============================================================
+
+describe('Combined search and date filter', function () {
+    it('filters by both search and date range simultaneously', function () {
+        $supplierA = Supplier::factory()->create(['name' => 'Supplier ABC']);
+        $supplierB = Supplier::factory()->create(['name' => 'Supplier XYZ']);
+
+        Purchase::factory()->create(['supplier_id' => $supplierA->id, 'date' => '2024-04-01']);
+        Purchase::factory()->create(['supplier_id' => $supplierA->id, 'date' => '2024-04-15']);
+        Purchase::factory()->create(['supplier_id' => $supplierA->id, 'date' => '2024-05-01']); // outside date range
+        Purchase::factory()->create(['supplier_id' => $supplierB->id, 'date' => '2024-04-10']);
+
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        actingAs($this->admin)
+            ->get(route('purchase.index', [
+                'search' => 'ABC',
+                'start' => '2024-04-01',
+                'end' => '2024-04-30',
+            ]))
+            ->assertInertia(fn ($page) => $page->has('purchases.data', 2));
+    });
+
+    it('preserves search when date filter returns empty', function () {
+        Purchase::factory()->create(['supplier_id' => Supplier::factory()->create(['name' => 'Target Co'])->id, 'date' => '2024-06-01']);
+
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        actingAs($this->admin)
+            ->get(route('purchase.index', [
+                'search' => 'Target Co',
+                'start' => '2024-04-01',
+                'end' => '2024-04-30',
+            ]))
+            ->assertInertia(fn ($page) => $page->has('purchases.data', 0));
+    });
+
+    it('passes filters prop back to Vue component', function () {
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        actingAs($this->admin)
+            ->get(route('purchase.index', [
+                'search' => 'ABC',
+                'start' => '2024-04-01',
+                'end' => '2024-04-30',
+            ]))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->where('filters.search', 'ABC')
+                    ->where('filters.start', '2024-04-01')
+                    ->where('filters.end', '2024-04-30')
+            );
     });
 });
 
@@ -601,7 +655,7 @@ describe('Destroy', function () {
             ->assertRedirect(route('purchase.index'))
             ->assertSessionHas('success');
 
-        assertDatabaseMissing('purchases', ['id' => $purchase->id]);
+        assertSoftDeleted('purchases', ['id' => $purchase->id]);
     });
 
     it('decrements product stock on delete', function () {
@@ -638,7 +692,7 @@ describe('Destroy', function () {
         actingAs($this->admin)
             ->delete(route('purchase.destroy', $purchase));
 
-        assertDatabaseMissing('purchase_items', ['purchase_id' => $purchase->id]);
+        assertSoftDeleted('purchase_items', ['purchase_id' => $purchase->id]);
     });
 
     it('returns 404 for non-existent purchase on delete', function () {

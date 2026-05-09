@@ -7,7 +7,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
-use function Pest\Laravel\assertDatabaseMissing;
+use function Pest\Laravel\assertSoftDeleted;
 use function Pest\Laravel\get;
 
 uses(RefreshDatabase::class);
@@ -188,5 +188,5 @@ it('allows admin to delete a category', function () {
         ->assertRedirect()
         ->assertSessionHas('success', 'Kategory berhasil dihapus');
 
-    assertDatabaseMissing('categories', ['id' => $category->id]);
+    assertSoftDeleted('categories', ['id' => $category->id]);
 });

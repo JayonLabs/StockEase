@@ -7,8 +7,8 @@ use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
-use function Pest\Laravel\assertDatabaseMissing;
 use function Pest\Laravel\assertModelExists;
+use function Pest\Laravel\assertSoftDeleted;
 
 uses(RefreshDatabase::class);
 
@@ -383,7 +383,7 @@ describe('Destroy', function () {
             ->assertRedirect()
             ->assertSessionHas('success');
 
-        assertDatabaseMissing('units', ['id' => $unit->id]);
+        assertSoftDeleted('units', ['id' => $unit->id]);
     });
 
     it('returns 404 for non-existent unit on delete', function () {

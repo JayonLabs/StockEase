@@ -72,7 +72,7 @@ test('user can delete their account', function () {
         ->assertRedirect('/');
 
     assertGuest();
-    expect($user->fresh())->toBeNull();
+    expect($user->fresh()->trashed())->toBeTrue();
 });
 
 test('correct password must be provided to delete account', function () {
@@ -90,4 +90,74 @@ test('correct password must be provided to delete account', function () {
         ->assertRedirect('/profile');
 
     expect($user->fresh())->not->toBeNull();
+});
+
+test('validates profile update with empty name', function () {
+    /** @var User $user */
+    $user = User::factory()->create();
+
+    $response = actingAs($user)
+        ->patch('/profile', [
+            'name' => '',
+            'email' => 'valid@example.com',
+        ]);
+
+    $response
+        ->assertSessionHasErrors('name')
+        ->assertRedirect('/');
+});
+
+test('validates profile update with invalid email', function () {
+    /** @var User $user */
+    $user = User::factory()->create();
+
+    $response = actingAs($user)
+        ->patch('/profile', [
+            'name' => 'Valid Name',
+            'email' => 'not-an-email',
+        ]);
+
+    $response
+        ->assertSessionHasErrors('email')
+        ->assertRedirect('/');
+});
+
+test('validates profile update with duplicate email', function () {
+    $user = User::factory()->create();
+    $other = User::factory()->create(['email' => 'other@example.com']);
+
+    $response = actingAs($user)
+        ->patch('/profile', [
+            'name' => 'Valid Name',
+            'email' => 'other@example.com',
+        ]);
+
+    $response
+        ->assertSessionHasErrors('email')
+        ->assertRedirect('/');
+});
+
+test('validates profile update with missing fields', function () {
+    /** @var User $user */
+    $user = User::factory()->create();
+
+    $response = actingAs($user)
+        ->patch('/profile', []);
+
+    $response
+        ->assertSessionHasErrors(['name', 'email'])
+        ->assertRedirect('/');
+});
+
+test('validates account deletion with missing password', function () {
+    /** @var User $user */
+    $user = User::factory()->create();
+
+    $response = actingAs($user)
+        ->from('/profile')
+        ->delete('/profile', []);
+
+    $response
+        ->assertSessionHasErrors('password')
+        ->assertRedirect('/profile');
 });

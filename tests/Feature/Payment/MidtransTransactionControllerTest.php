@@ -77,6 +77,42 @@ describe('Midtrans Transaction Filtering', function () {
         );
     });
 
+    it('filters by both search and date range simultaneously', function () {
+        /** @var TestCase&object{admin: User} $this */
+        PaymentTransaction::factory()->create(['external_id' => 'ORDER-AAA', 'created_at' => '2024-04-01 10:00:00']);
+        PaymentTransaction::factory()->create(['external_id' => 'ORDER-AAA', 'created_at' => '2024-04-15 10:00:00']);
+        PaymentTransaction::factory()->create(['external_id' => 'ORDER-AAA', 'created_at' => '2024-05-01 10:00:00']); // outside date
+        PaymentTransaction::factory()->create(['external_id' => 'ORDER-BBB', 'created_at' => '2024-04-10 10:00:00']);
+
+        $response = actingAs($this->admin)->get(route('midtrans.index', [
+            'search' => 'AAA',
+            'start' => '2024-04-01',
+            'end' => '2024-04-30',
+        ]));
+
+        $response->assertSuccessful();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->component('MidtransTransaction/Index')
+            ->has('midtransTransactions.data', 2)
+        );
+    });
+
+    it('passes filters prop back to Vue component', function () {
+        /** @var TestCase&object{admin: User} $this */
+        $response = actingAs($this->admin)->get(route('midtrans.index', [
+            'search' => 'ABC',
+            'start' => '2024-04-01',
+            'end' => '2024-04-30',
+        ]));
+
+        $response->assertSuccessful();
+        $response->assertInertia(fn (Assert $page) => $page
+            ->where('filters.search', 'ABC')
+            ->where('filters.start', '2024-04-01')
+            ->where('filters.end', '2024-04-30')
+        );
+    });
+
     it('handles pagination', function () {
         /** @var TestCase&object{admin: User} $this */
         PaymentTransaction::factory()->count(15)->create();

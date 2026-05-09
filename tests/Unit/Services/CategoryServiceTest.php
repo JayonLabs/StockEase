@@ -58,5 +58,5 @@ it('can delete a category', function () {
 
     $this->service->deleteCategory($category);
 
-    $this->assertDatabaseMissing('categories', ['id' => $category->id]);
+    $this->assertSoftDeleted('categories', ['id' => $category->id]);
 });

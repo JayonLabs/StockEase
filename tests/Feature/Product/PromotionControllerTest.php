@@ -11,7 +11,7 @@ use App\Models\User;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertModelExists;
-use function Pest\Laravel\assertModelMissing;
+use function Pest\Laravel\assertSoftDeleted;
 use function Pest\Laravel\get;
 
 // ─── Discount Calculation Tests ───────────────────────────────────────────────
@@ -448,7 +448,7 @@ it('admin can delete a promotion', function () {
     actingAs($admin)->delete(route('promotions.destroy', $promotion->id))
         ->assertRedirect(route('promotions.index'));
 
-    assertModelMissing($promotion);
+    assertSoftDeleted('promotions', ['id' => $promotion->id]);
 });
 
 it('non-admin cannot delete a promotion', function () {
