@@ -24,14 +24,20 @@ class SaleHistoryController extends Controller
     public function index(Request $request)
     {
         $perPage = $request->integer('per_page', 10);
+        $filters = $request->only(['search', 'start', 'end']);
 
         $sales = $this->saleService->getPaginatedSales(
-            $request->only(['search', 'start', 'end']),
+            $filters,
             $perPage
         );
 
         return Inertia::render('Sale/Index', [
             'sales' => $sales,
+            'filters' => [
+                'start' => $filters['start'] ?? '',
+                'end' => $filters['end'] ?? '',
+                'search' => $filters['search'] ?? '',
+            ],
         ]);
     }
 

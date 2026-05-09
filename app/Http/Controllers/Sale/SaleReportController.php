@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Sale;
 
+use App\Enums\Role;
 use App\Exports\SalesReportExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Report\SaleReportExportRequest;
@@ -70,7 +71,7 @@ class SaleReportController extends Controller
                 $q->where('name', 'like', "%{$request->search}%")
                     ->orWhere('id', 'like', "%{$request->search}%");
             })
-                ->whereIn('role', ['cashier', 'admin'])
+                ->whereIn('role', [Role::Cashier->value, Role::Admin->value])
                 ->select('id as value', 'name as label')
                 ->get();
 

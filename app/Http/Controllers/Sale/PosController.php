@@ -7,23 +7,20 @@ use App\Http\Requests\Sale\PosBarcodeCartItemRequest;
 use App\Http\Requests\Sale\PosCartItemRequest;
 use App\Http\Requests\Sale\PosChangeQtyRequest;
 use App\Http\Requests\Sale\PosCheckoutRequest;
+use App\Http\Requests\Sale\PosSendInvoiceRequest;
 use App\Models\Promotion;
+use App\Models\Sale;
 use App\Services\Sale\PosService;
+use App\Services\Sale\SaleEmailService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PosController extends Controller
 {
-    /**
-     * Create a new controller instance.
-     */
     public function __construct(
         protected PosService $posService
     ) {}
 
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
         $categories = $this->posService->getCategories();
@@ -39,13 +36,10 @@ class PosController extends Controller
             'products' => $products,
             'categories' => $categories,
             'cart' => $this->posService->getOrCreateCart(),
-            'active_promotions' => $promotions,
+            'activePromotions' => $promotions,
         ]);
     }
 
-    /**
-     * Return the cart data in JSON format.
-     */
     public function getCartJson()
     {
         if (request()->expectsJson()) {
@@ -57,9 +51,6 @@ class PosController extends Controller
         return abort(403, 'Invalid request.');
     }
 
-    /**
-     * Update the qty of a product in the current cart.
-     */
     public function changeQty(PosChangeQtyRequest $request)
     {
         try {
@@ -176,7 +167,6 @@ class PosController extends Controller
         try {
             $data = $request->validated();
 
-            // Add order_id if present for Midtrans
             if ($request->has('order_id')) {
                 $data['order_id'] = $request->input('order_id');
             }
@@ -188,6 +178,9 @@ class PosController extends Controller
                     'message' => 'Checkout berhasil',
                     'total' => $result['total'],
                     'cart' => $result['cart'],
+                    'completed_sale_id' => $result['sale']->status === 'completed'
+                        ? $result['sale']->id
+                        : null,
                 ]);
             }
         } catch (\Throwable $th) {
@@ -195,5 +188,26 @@ class PosController extends Controller
         }
 
         return back();
+    }
+
+    /**
+     * Kirim invoice via email.
+     */
+    public function sendInvoice(PosSendInvoiceRequest $request, SaleEmailService $saleEmailService)
+    {
+        try {
+            $validated = $request->validated();
+
+            $sale = Sale::with('saleItems.product')->findOrFail($validated['sale_id']);
+
+            $saleEmail = $saleEmailService->sendInvoice($sale, $validated['email']);
+
+            return response()->json([
+                'message' => 'Invoice berhasil dikirim ke email.',
+                'sale_email' => $saleEmail,
+            ]);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()], 400);
+        }
     }
 }
