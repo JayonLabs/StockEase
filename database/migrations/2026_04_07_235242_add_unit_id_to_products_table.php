@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\Unit;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
@@ -40,19 +39,28 @@ return new class extends Migration
         ];
 
         foreach ($units as $key => $name) {
-            Unit::updateOrCreate(
-                ['short_name' => $key],
-                [
+            $existing = DB::table('units')->where('short_name', $key)->first();
+
+            if ($existing) {
+                DB::table('units')->where('id', $existing->id)->update([
                     'name' => $name,
                     'slug' => Str::slug($name),
-                ]
-            );
+                ]);
+            } else {
+                DB::table('units')->insert([
+                    'short_name' => $key,
+                    'name' => $name,
+                    'slug' => Str::slug($name),
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
         }
 
         // 3. Update products.unit_id berdasarkan products.unit_old
         $products = DB::table('products')->get();
         foreach ($products as $product) {
-            $unit = Unit::where('short_name', $product->unit_old)->first();
+            $unit = DB::table('units')->where('short_name', $product->unit_old)->first();
             if ($unit) {
                 DB::table('products')->where('id', $product->id)->update(['unit_id' => $unit->id]);
             }
