@@ -2,16 +2,17 @@
 
 use App\Http\Middleware\RoleMiddleware;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Tests\TestCase;
 
-uses(TestCase::class);
+uses(TestCase::class, RefreshDatabase::class);
 
 it('allows user with correct role', function ($role) {
-    $user = User::factory()->make(['role' => $role]);
+    $user = User::factory()->create(['role' => $role]);
     Auth::shouldReceive('check')->once()->andReturn(true);
     Auth::shouldReceive('user')->once()->andReturn($user);
 
@@ -26,7 +27,7 @@ it('allows user with correct role', function ($role) {
 })->with(['admin', 'cashier', 'warehouse']);
 
 it('aborts if user does not have correct role', function () {
-    $user = User::factory()->make(['role' => 'cashier']);
+    $user = User::factory()->create(['role' => 'cashier']);
     Auth::shouldReceive('check')->once()->andReturn(true);
     Auth::shouldReceive('user')->once()->andReturn($user);
 

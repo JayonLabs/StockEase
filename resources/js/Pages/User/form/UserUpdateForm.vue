@@ -53,6 +53,7 @@ const user = usePage().props.auth.user.name;
 const isDialogOpen = ref(false);
 
 const roles = [
+    { value: 'super_admin', label: 'Super Admin' },
     { value: 'admin', label: 'Admin' },
     { value: 'cashier', label: 'Kasir' },
     { value: 'warehouse', label: 'Gudang' },

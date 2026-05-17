@@ -268,9 +268,9 @@ const encodedStats = computed(() => {
                             >
                                 {{ index + 1 }}
                             </span>
-                            <span class="break-all whitespace-pre-wrap">{{
-                                line.text
-                            }}</span>
+                            <span class="break-all whitespace-pre-wrap">
+                                {{ line.text }}
+                            </span>
                         </div>
                     </template>
 

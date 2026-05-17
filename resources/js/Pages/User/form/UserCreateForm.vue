@@ -51,6 +51,7 @@ const showPassword = (input) => {
 };
 
 const roles = [
+    { value: 'super_admin', label: 'Super Admin' },
     { value: 'admin', label: 'Admin' },
     { value: 'cashier', label: 'Kasir' },
     { value: 'warehouse', label: 'Gudang' },

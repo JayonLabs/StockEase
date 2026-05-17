@@ -26,6 +26,24 @@ it('allows admin to view users list', function () {
     );
 });
 
+it('includes role attribute in users list response', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    /** @var User $cashier */
+    $cashier = User::factory()->create(['role' => 'cashier']);
+
+    $response = actingAs($admin)->get(route('users.index'));
+
+    $response->assertSuccessful();
+    $response->assertInertia(
+        fn ($page) => $page
+            ->component('User/Index')
+            ->has('users.data', 2)
+            ->where('users.data.0.role', 'admin')
+            ->where('users.data.1.role', 'cashier')
+    );
+});
+
 it('redirects unauthenticated users to login', function () {
     get(route('users.index'))->assertRedirect(route('login'));
 });
@@ -64,8 +82,9 @@ it('allows admin to create a user', function () {
     assertDatabaseHas('users', [
         'name' => 'New User',
         'email' => 'newuser@example.com',
-        'role' => 'cashier',
     ]);
+    $createdUser = User::where('email', 'newuser@example.com')->first();
+    expect($createdUser->hasRole('cashier'))->toBeTrue();
 });
 
 it('validates user creation', function ($data, $errors) {
@@ -133,8 +152,9 @@ it('allows admin to update user details', function () {
     assertDatabaseHas('users', [
         'id' => $user->id,
         'name' => 'Updated Name',
-        'role' => 'admin',
     ]);
+    $user->refresh();
+    expect($user->hasRole('admin'))->toBeTrue();
 });
 
 it('validates user update', function ($data, $errors) {

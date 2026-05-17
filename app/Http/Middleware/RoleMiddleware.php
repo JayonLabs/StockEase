@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Enums\Role;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,7 +19,17 @@ class RoleMiddleware
     {
         $roles = array_map('trim', $roles);
 
-        if (! Auth::check() || ! in_array(Auth::user()->role, $roles)) {
+        if (! Auth::check()) {
+            abort(403, 'Unauthorized access.');
+        }
+
+        $user = Auth::user();
+
+        if ($user->hasRole(Role::SuperAdmin->value)) {
+            return $next($request);
+        }
+
+        if (! $user->hasAnyRole($roles)) {
             abort(403, 'Unauthorized access.');
         }
 
