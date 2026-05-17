@@ -69,7 +69,7 @@ class ShiftService
         $endDate = $filters['end'] ?? null;
 
         return Shift::with('user')
-            ->when($user && $user->role === Role::Cashier->value, function ($query) use ($user) {
+            ->when($user && $user->hasRole(Role::Cashier->value), function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
             ->when($filters['search'] ?? null, function ($query, $search) {

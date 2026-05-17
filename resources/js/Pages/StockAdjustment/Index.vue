@@ -1,5 +1,11 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, Link } from '@inertiajs/vue3';
+import { Separator } from '@/Components/ui/separator';
+import { DataTable } from '@/Components/ui/data-table';
+import { stockAdjustmentColumns } from './partials/StockAdjustmentColumn';
+import StockAdjustmentCreateForm from './partials/StockAdjustmentCreateForm.vue';
+
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -8,11 +14,6 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/Components/ui/breadcrumb';
-import { Head, Link } from '@inertiajs/vue3';
-import { Separator } from '@/Components/ui/separator';
-import { DataTable } from '@/Components/ui/data-table';
-import { stockAdjustmentColumns } from './partials/StockAdjustmentColumn';
-import StockAdjustmentCreateForm from './partials/StockAdjustmentCreateForm.vue';
 
 const props = defineProps({
     adjustments: {

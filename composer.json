@@ -27,6 +27,8 @@
         "midtrans/midtrans-php": "^2.6",
         "pusher/pusher-php-server": "^7.2",
         "resend/resend-laravel": "^1.4",
+        "spatie/laravel-activitylog": "^5.0",
+        "spatie/laravel-permission": "^7.4",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {

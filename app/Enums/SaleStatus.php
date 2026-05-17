@@ -9,6 +9,9 @@ enum SaleStatus: string
     case Completed = 'completed';
     case Canceled = 'canceled';
 
+    /**
+     * Get the Indonesian label for the sale status.
+     */
     public function label(): string
     {
         return match ($this) {

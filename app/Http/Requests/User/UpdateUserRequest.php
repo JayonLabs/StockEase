@@ -14,7 +14,7 @@ class UpdateUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && Auth::user()->role === Role::Admin->value;
+        return Auth::check() && Auth::user()->hasRole([Role::SuperAdmin->value, Role::Admin->value]);
     }
 
     /**

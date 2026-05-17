@@ -1,14 +1,7 @@
 import { h } from 'vue';
 import { Badge } from '@/Components/ui/badge';
 import { DataTableColumnHeader } from '@/Components/ui/data-table';
-
-const formatCurrency = (value) => {
-    return new Intl.NumberFormat('id-ID', {
-        style: 'currency',
-        currency: 'IDR',
-        minimumFractionDigits: 0,
-    }).format(value);
-};
+import { formatPrice } from '@/lib/utils';
 
 export const columns = [
     {
@@ -55,7 +48,7 @@ export const columns = [
             h(
                 'div',
 
-                formatCurrency(row.original.revenue),
+                formatPrice(row.original.revenue),
             ),
     },
     {
@@ -69,7 +62,7 @@ export const columns = [
             h(
                 'div',
                 { class: 'text-muted-foreground' },
-                formatCurrency(row.original.cost),
+                formatPrice(row.original.cost),
             ),
     },
     {
@@ -88,7 +81,7 @@ export const columns = [
                         profit >= 0 ? 'text-emerald-600' : 'text-red-600'
                     }`,
                 },
-                formatCurrency(profit),
+                formatPrice(profit),
             );
         },
     },

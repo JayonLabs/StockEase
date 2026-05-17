@@ -14,7 +14,7 @@ class StoreProductRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return Auth::check() && in_array(Auth::user()->role, [Role::Admin->value, Role::Warehouse->value]);
+        return Auth::check() && Auth::user()->hasRole([Role::SuperAdmin->value, Role::Admin->value, Role::Warehouse->value]);
     }
 
     /**

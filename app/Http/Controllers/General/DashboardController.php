@@ -21,9 +21,7 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $role = Auth::user()->role;
-
-        $data = $this->dashboardService->getDashboardData($role);
+        $data = $this->dashboardService->getDashboardData(Auth::user());
 
         return Inertia::render('Dashboard/Index', [
             'data' => $data,

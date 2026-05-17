@@ -11,6 +11,7 @@ import {
 } from '@/Components/ui/sidebar';
 
 const user = usePage().props.auth.user;
+const userPermissions = user?.permissions || [];
 </script>
 
 <template>
@@ -33,6 +34,7 @@ const user = usePage().props.auth.user;
                 :title="section.label"
                 :items="section.items"
                 :user-role="user.role"
+                :user-permissions="userPermissions"
                 :collapsible="section.collapsible"
             />
         </SidebarContent>

@@ -197,9 +197,9 @@ const priceChartSeries = computed(() => [
                     class="flex flex-row items-center justify-between space-y-0 pb-2"
                 >
                     <CardTitle class="text-sm font-medium">
-                        Pengeluaran Bulan Ini
+                        Pembelian Bulan Ini
                     </CardTitle>
-                    <CreditCard class="h-5 w-5 text-red-500" />
+                    <CreditCard class="h-5 w-5 text-purple-500" />
                 </CardHeader>
                 <CardContent>
                     <div class="text-2xl font-bold">

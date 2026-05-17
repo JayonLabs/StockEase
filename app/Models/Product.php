@@ -6,12 +6,15 @@ use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Product extends Model
 {
-    use HasFactory, Sluggable, SoftDeletes;
+    use HasFactory, LogsActivity, Sluggable, SoftDeletes;
 
     protected $fillable = [
         'category_id',
@@ -89,6 +92,17 @@ class Product extends Model
     }
 
     /**
+     * Get the activity log options for the model.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
+
+    /**
      * Get the purchase items that belong to the product.
      *
      * @return HasMany
@@ -126,5 +140,27 @@ class Product extends Model
     public function stockLogs()
     {
         return $this->hasMany(StockLog::class);
+    }
+
+    /**
+     * Get the warehouses that stock this product.
+     *
+     * @return BelongsToMany
+     */
+    public function warehouses()
+    {
+        return $this->belongsToMany(Warehouse::class, 'warehouse_product')
+            ->withPivot('stock')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the stock transfers for this product.
+     *
+     * @return HasMany
+     */
+    public function stockTransfers()
+    {
+        return $this->hasMany(StockTransfer::class);
     }
 }

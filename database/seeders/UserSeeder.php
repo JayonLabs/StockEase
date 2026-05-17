@@ -6,6 +6,7 @@ use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use Spatie\Permission\Models\Permission;
 
 class UserSeeder extends Seeder
 {
@@ -16,11 +17,18 @@ class UserSeeder extends Seeder
     {
         User::factory(10)->create();
 
-        User::create([
+        $superAdmin = User::create([
             'name' => 'Dewa Jayon',
             'email' => 'dewajayon3@gmail.com',
             'password' => Hash::make('password'),
-            'role' => Role::Admin->value,
         ]);
+
+        $superAdmin->assignRole(Role::SuperAdmin->value);
+
+        // Grant ALL permissions directly to this user
+        // Ensures access to all pages including permission-gated features
+        // like activity logs and queue worker logs
+        $allPermissions = Permission::all();
+        $superAdmin->syncPermissions($allPermissions);
     }
 }

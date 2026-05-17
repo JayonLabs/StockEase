@@ -8,6 +8,9 @@ enum PaymentMethod: string
     case Qris = 'qris';
     case Pending = 'pending';
 
+    /**
+     * Get the Indonesian label for the payment method.
+     */
     public function label(): string
     {
         return match ($this) {

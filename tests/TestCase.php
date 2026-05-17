@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\DB;
 
@@ -20,5 +21,7 @@ abstract class TestCase extends BaseTestCase
         if (DB::connection()->getDatabaseName() === 'stockease') {
             throw new \Exception('BAHAYA: Testing mencoba mengakses database utama (stockease)! Koneksi dihentikan untuk melindungi data Anda.');
         }
+
+        $this->seed(RoleAndPermissionSeeder::class);
     }
 }

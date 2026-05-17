@@ -52,7 +52,7 @@ const role = page.props.auth.user.role;
         </template>
 
         <AdminDashboard
-            v-if="role === 'admin'"
+            v-if="role === 'admin' || role === 'super_admin'"
             :sales-summary="salesSummary"
             :low-stock="lowStock"
             :activities="activities"

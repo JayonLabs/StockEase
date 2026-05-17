@@ -12,22 +12,39 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\StockLog;
 use App\Models\Supplier;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class DashboardService
 {
     /**
-     * Get dashboard data based on user role.
+     * Get dashboard data based on user or role string.
      */
-    public function getDashboardData(string $role): array
+    public function getDashboardData(User|string $role): array
     {
-        return match ($role) {
-            Role::Admin->value => $this->adminData(),
-            Role::Cashier->value => $this->cashierData(),
-            Role::Warehouse->value => $this->warehouseData(),
-            default => [],
-        };
+        if (is_string($role)) {
+            return match ($role) {
+                Role::SuperAdmin->value, Role::Admin->value => $this->adminData(),
+                Role::Cashier->value => $this->cashierData(),
+                Role::Warehouse->value => $this->warehouseData(),
+                default => [],
+            };
+        }
+
+        if ($role->hasRole([Role::SuperAdmin->value, Role::Admin->value])) {
+            return $this->adminData();
+        }
+
+        if ($role->hasRole(Role::Cashier->value)) {
+            return $this->cashierData();
+        }
+
+        if ($role->hasRole(Role::Warehouse->value)) {
+            return $this->warehouseData();
+        }
+
+        return [];
     }
 
     /**
@@ -36,18 +53,18 @@ class DashboardService
     private function adminData(): array
     {
         $todaySales = (float) Sale::where('status', SaleStatus::Completed->value)
-            ->whereDate('created_at', Carbon::today())
+            ->whereDate('date', Carbon::today())
             ->sum('total');
 
         $monthSales = (float) Sale::where('status', SaleStatus::Completed->value)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('date', Carbon::now()->year)
+            ->whereMonth('date', Carbon::now()->month)
             ->sum('total');
 
         $activeProducts = Product::count();
 
-        $monthPurchases = (float) Purchase::whereYear('created_at', Carbon::now()->year)
-            ->whereMonth('created_at', Carbon::now()->month)
+        $monthPurchases = (float) Purchase::whereYear('date', Carbon::now()->year)
+            ->whereMonth('date', Carbon::now()->month)
             ->sum('total');
 
         $lowStock = Product::whereColumn('stock', '<=', 'alert_stock')
@@ -76,17 +93,17 @@ class DashboardService
     private function cashierData(): array
     {
         $totalTransactionPerWeek = Sale::where('status', SaleStatus::Completed->value)
-            ->whereBetween('created_at', [
-                Carbon::now()->startOfWeek(),
-                Carbon::now()->endOfWeek(),
+            ->whereBetween('date', [
+                Carbon::now()->startOfWeek()->toDateString(),
+                Carbon::now()->endOfWeek()->toDateString(),
             ])->count();
 
         $todaysIncome = (float) Sale::where('status', SaleStatus::Completed->value)
-            ->whereDate('created_at', Carbon::today())
+            ->whereDate('date', Carbon::today())
             ->sum('total');
 
         $bestSellingProductItem = SaleItem::whereHas('sale', function ($q) {
-            $q->whereDate('created_at', Carbon::today())
+            $q->whereDate('date', Carbon::today())
                 ->where('status', SaleStatus::Completed->value);
         })
             ->select('product_id', DB::raw('SUM(qty) as total_qty'))
@@ -98,7 +115,7 @@ class DashboardService
         $bestSellingProduct = $bestSellingProductItem ? $bestSellingProductItem->product->name : 'Tidak ada transaksi hari ini';
 
         $averagePerCustomer = Sale::where('status', SaleStatus::Completed->value)
-            ->whereDate('created_at', Carbon::today())
+            ->whereDate('date', Carbon::today())
             ->avg('total');
         $averagePerCustomer = $averagePerCustomer !== null ? (float) $averagePerCustomer : null;
 

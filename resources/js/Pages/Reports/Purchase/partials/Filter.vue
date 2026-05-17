@@ -415,7 +415,9 @@ const handleExportExcel = () => {
         <CardFooter
             class="flex flex-col sm:flex-row justify-end items-center gap-3 pt-4 border-t mt-4"
         >
-            <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div
+                class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto"
+            >
                 <Button
                     variant="outline"
                     :disabled="!checkFilter()"

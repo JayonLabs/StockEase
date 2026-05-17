@@ -16,10 +16,10 @@ class UserService
     public function getPaginatedUsers(array $filters, int $perPage = 10): LengthAwarePaginator
     {
         return User::query()
+            ->with('roles')
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('email', 'like', '%'.$search.'%')
-                    ->orWhere('role', 'like', '%'.$search.'%');
+                    ->orWhere('email', 'like', '%'.$search.'%');
             })
             ->latest()
             ->paginate($perPage)
@@ -33,10 +33,19 @@ class UserService
      */
     public function storeUser(array $data): User
     {
+        $role = $data['role'] ?? null;
+        unset($data['role']);
+
         $data['email_verified_at'] = now();
         $data['password'] = Hash::make($data['password']);
 
-        return User::create($data);
+        $user = User::create($data);
+
+        if ($role) {
+            $user->assignRole($role);
+        }
+
+        return $user;
     }
 
     /**
@@ -46,6 +55,11 @@ class UserService
      */
     public function updateUser(User $user, array $data): bool
     {
+        if (isset($data['role'])) {
+            $user->syncRoles($data['role']);
+            unset($data['role']);
+        }
+
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }

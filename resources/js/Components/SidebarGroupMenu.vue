@@ -1,5 +1,5 @@
 <script setup>
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { filterMenuByRole } from '@/lib/utils';
 import { ChevronDown } from 'lucide-vue-next';
 import { computed } from 'vue';
@@ -23,16 +23,31 @@ const props = defineProps({
     title: String,
     items: Array,
     userRole: String,
+    userPermissions: {
+        type: Array,
+        default: () => [],
+    },
     collapsible: {
         type: Boolean,
         default: false,
     },
 });
 
+const page = usePage();
+
 const filteredItems = computed(() =>
-    filterMenuByRole(props.items, props.userRole),
+    filterMenuByRole(props.items, props.userRole, props.userPermissions),
 );
+
 const hasItems = computed(() => filteredItems.value.length > 0);
+
+const isItemActive = (item) => {
+    const _ = page.url;
+
+    return item.activeRoute
+        ? route().current(item.activeRoute)
+        : route().current(item.routeName);
+};
 </script>
 
 <template>
@@ -61,11 +76,7 @@ const hasItems = computed(() => filteredItems.value.length > 0);
                             >
                                 <SidebarMenuButton
                                     as-child
-                                    :is-active="
-                                        item.activeRoute
-                                            ? route().current(item.activeRoute)
-                                            : route().current(item.routeName)
-                                    "
+                                    :is-active="isItemActive(item)"
                                 >
                                     <Link
                                         :href="
@@ -96,11 +107,7 @@ const hasItems = computed(() => filteredItems.value.length > 0);
                     >
                         <SidebarMenuButton
                             as-child
-                            :is-active="
-                                item.activeRoute
-                                    ? route().current(item.activeRoute)
-                                    : route().current(item.routeName)
-                            "
+                            :is-active="isItemActive(item)"
                         >
                             <Link
                                 :href="
