@@ -2,6 +2,9 @@
 import { Head, Link } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { PackageSearch } from 'lucide-vue-next';
+import Filter from './partials/Filter.vue';
+import { DataTable } from '@/Components/ui/data-table';
+import { filteredStockColumns } from './partials/filtered-stock-column';
 
 import {
     Breadcrumb,
@@ -19,9 +22,6 @@ import {
     CardTitle,
     CardDescription,
 } from '@/Components/ui/card';
-import Filter from './partials/Filter.vue';
-import { DataTable } from '@/Components/ui/data-table';
-import { filteredStockColumns } from './partials/filtered-stock-column';
 
 const props = defineProps({
     filteredStocks: {

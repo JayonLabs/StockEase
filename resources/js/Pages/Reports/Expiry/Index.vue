@@ -142,16 +142,16 @@ const columns = [
                     </p>
                 </div>
                 <div
-                    class="flex items-center gap-2 bg-card p-2 rounded-lg border shadow-sm"
+                    class="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-card p-2 rounded-lg border shadow-sm w-full sm:w-auto"
                 >
                     <span
-                        class="text-xs font-semibold uppercase text-muted-foreground px-2"
+                        class="text-xs font-semibold uppercase text-muted-foreground px-2 pt-1 sm:pt-0"
                     >
                         Filter Status:
                     </span>
-                    <Select v-model="status">
+                    <Select v-model="status" class="w-full sm:w-48">
                         <SelectTrigger
-                            class="w-48 h-9 border-none shadow-none focus:ring-0"
+                            class="h-9 border-none shadow-none focus:ring-0"
                         >
                             <SelectValue placeholder="Pilih Status" />
                         </SelectTrigger>
