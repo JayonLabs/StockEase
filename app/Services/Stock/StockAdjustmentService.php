@@ -2,6 +2,7 @@
 
 namespace App\Services\Stock;
 
+use App\Actions\NotifyStockAlert;
 use App\Actions\Product\UpdateProductExpiryDate;
 use App\Enums\StockLogType;
 use App\Models\Product;
@@ -77,7 +78,13 @@ class StockAdjustmentService
                 }
             }
 
+            $product->refresh();
+
             resolve(UpdateProductExpiryDate::class)->execute($product);
+
+            if ($product->stock <= $product->alert_stock) {
+                resolve(NotifyStockAlert::class)->execute($product);
+            }
 
             StockLog::create([
                 'product_id' => $product->id,
