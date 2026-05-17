@@ -20,23 +20,26 @@ uses(TestCase::class);
 // ============================================================
 
 describe('Role enum', function () {
-    it('has three cases', function () {
-        expect(Role::cases())->toHaveCount(3);
+    it('has four cases', function () {
+        expect(Role::cases())->toHaveCount(4);
     });
 
     it('has correct values', function () {
+        expect(Role::SuperAdmin->value)->toBe('super_admin');
         expect(Role::Admin->value)->toBe('admin');
         expect(Role::Cashier->value)->toBe('cashier');
         expect(Role::Warehouse->value)->toBe('warehouse');
     });
 
     it('has correct labels', function () {
+        expect(Role::SuperAdmin->label())->toBe('Super Administrator');
         expect(Role::Admin->label())->toBe('Administrator');
         expect(Role::Cashier->label())->toBe('Kasir');
         expect(Role::Warehouse->label())->toBe('Gudang');
     });
 
     it('tryFrom returns enum for valid value', function () {
+        expect(Role::tryFrom('super_admin'))->toBe(Role::SuperAdmin);
         expect(Role::tryFrom('admin'))->toBe(Role::Admin);
         expect(Role::tryFrom('cashier'))->toBe(Role::Cashier);
     });
@@ -48,7 +51,7 @@ describe('Role enum', function () {
     it('can be converted to array of values', function () {
         $values = array_column(Role::cases(), 'value');
 
-        expect($values)->toContain('admin', 'cashier', 'warehouse');
+        expect($values)->toContain('super_admin', 'admin', 'cashier', 'warehouse');
     });
 });
 
@@ -81,20 +84,22 @@ describe('SaleStatus enum', function () {
 // ============================================================
 
 describe('StockLogType enum', function () {
-    it('has three cases', function () {
-        expect(StockLogType::cases())->toHaveCount(3);
+    it('has four cases', function () {
+        expect(StockLogType::cases())->toHaveCount(4);
     });
 
     it('has correct values', function () {
         expect(StockLogType::In->value)->toBe('in');
         expect(StockLogType::Out->value)->toBe('out');
         expect(StockLogType::Adjust->value)->toBe('adjust');
+        expect(StockLogType::Transfer->value)->toBe('transfer');
     });
 
     it('has correct labels', function () {
         expect(StockLogType::In->label())->toBe('Masuk');
         expect(StockLogType::Out->label())->toBe('Keluar');
         expect(StockLogType::Adjust->label())->toBe('Penyesuaian');
+        expect(StockLogType::Transfer->label())->toBe('Pemindahan');
     });
 });
 
