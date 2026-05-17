@@ -18,8 +18,16 @@ it('renders admin dashboard with correct data', function () {
     $admin = User::factory()->create(['role' => 'admin']);
 
     // Create sales for today and this month
-    Sale::factory()->create(['total' => 1000, 'created_at' => Carbon::today()]);
-    Sale::factory()->create(['total' => 2000, 'created_at' => Carbon::now()->subMonth()->startOfMonth()]); // Should not be in this month's total
+    Sale::factory()->create([
+        'user_id' => $admin->id,
+        'total' => 1000,
+        'date' => Carbon::today()->toDateString(),
+    ]);
+    Sale::factory()->create([
+        'user_id' => $admin->id,
+        'total' => 2000,
+        'date' => Carbon::now()->subMonth()->startOfMonth()->toDateString(),
+    ]); // Should not be in this month's total
 
     // Create low stock products
     Product::factory()->create(['name' => 'Low Stock Item', 'stock' => 5, 'alert_stock' => 10]);
@@ -49,7 +57,12 @@ it('renders cashier dashboard with correct data', function () {
 
     // Create a sale for today
     $product = Product::factory()->create(['name' => 'Best Seller']);
-    $sale = Sale::factory()->create(['total' => 5000, 'created_at' => Carbon::today(), 'payment_method' => 'cash']);
+    $sale = Sale::factory()->create([
+        'user_id' => $cashier->id,
+        'total' => 5000,
+        'date' => Carbon::today()->toDateString(),
+        'payment_method' => 'cash',
+    ]);
     $sale->saleItems()->create(['product_id' => $product->id, 'qty' => 2, 'price' => 2500]);
 
     $response = actingAs($cashier)->get(route('dashboard'));
