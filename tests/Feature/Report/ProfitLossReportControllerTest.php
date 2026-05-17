@@ -21,17 +21,17 @@ beforeEach(function () {
  */
 function admin(): User
 {
-    return User::where('role', 'admin')->first() ?? User::factory()->create(['role' => 'admin']);
+    return User::role('admin')->first() ?? User::factory()->create(['role' => 'admin']);
 }
 
 function warehouse(): User
 {
-    return User::where('role', 'warehouse')->first() ?? User::factory()->create(['role' => 'warehouse']);
+    return User::role('warehouse')->first() ?? User::factory()->create(['role' => 'warehouse']);
 }
 
 function cashier(): User
 {
-    return User::where('role', 'cashier')->first() ?? User::factory()->create(['role' => 'cashier']);
+    return User::role('cashier')->first() ?? User::factory()->create(['role' => 'cashier']);
 }
 
 /**
