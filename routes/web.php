@@ -12,3 +12,5 @@ require __DIR__.'/web/reports.php';
 require __DIR__.'/web/stock.php';
 require __DIR__.'/web/shift.php';
 require __DIR__.'/web/trash.php';
+require __DIR__.'/web/activity-log.php';
+require __DIR__.'/web/warehouse.php';

@@ -21,6 +21,6 @@ Route::middleware('auth')->group(function () {
     Route::post('/file-manager/upload', [FileManagerController::class, 'store'])->name('file-manager.store');
 
     Route::get('/queue-worker-logs', [QueueWorkerLogController::class, 'index'])
-        ->middleware('role:admin')
+        ->middleware('can:view_queue_worker_logs')
         ->name('queue-worker-logs.index');
 });
