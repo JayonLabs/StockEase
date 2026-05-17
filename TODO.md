@@ -118,32 +118,34 @@
 - normalisasi database untuk performa (Done)
 - fix error di queue worker log page (Done)
 
+<!-- TODO: 17/05/2026 -->
+
+- fix bug di dashboard logic admin Penjualan Hari Ini, Penjualan Bulan Ini, Pengeluaran Bulan Ini itu masih 0 padahal ada transaksi (Done)
+- fix bug yang dimana ketika adjust stock di product opname ketika dibawah stock minimal itu ga mau ada notifikasi (Done)
+- fix Status column di Penjualan page (Done)
+- fix sidebar ketika pindah page itu malah viewnya loncat ke atas ga mau stay di sidebar (Done)
+- refactor Product Movement page buatih component terpisah biar tidak panjang codenya (Done)
+- refactor Profit Loss Report page buatih component terpisah biar tidak panjang codenya (Done)
+- fix filter di folder laporan/report itu di mobile karena itu belum mobile friendly dan component DateRangeFilter tidak mobile friendly (Done)
+- refactor component DateRangeFilter untuk mobile itu tanggalnya pakai Date atau calendar dari shadcn vue dan pisahin juga componentnya biar tidak panjang (Done)
+- refactor role menggunakan role permission dari spatie (Done)
+- bisa crud permission untuk role dan permission untuk setiap user (Done)
+- fix datatable pagination lompat 2 kali (Done)
+- fix di datatable bagian Rows per page itu bug ga mau di pilih misal milih 50 itu tetap 10 (Done)
+- fitur activity log di aplikasi ini (Done)
+- refactor bagian Edit Direct Permission itu biar isi search dan pakaikan component switch aja buatin page jangan page dialog (Done)
+- refactor di bagian Queue Worker Logs itu untuk permissionnya harus spesifik (Done)
+- fix npm run build (Done)
+- fitur Multi-Gudang (Multi-Warehouse) (Done)
+
 <!-- TODO: -->
 
-- fitur activity log di aplikasi ini
-- pertimbangkan role atau permission untuk melihat log
-- pertimbangkan menggunakan pacage role permission dari spatie
+- fix pencarian di stock-transfer
+- fix tabel di page penjualan bagian kasir itu rata kirikan
+- fix query duplikat di page stock opname atau https://stockease.test/stock-adjustment
+- rafactor controller trash untuk cek yang soft delete karena ada penambahan
+- buatkan landing page
 - cek issue yang ada suruh claude dan buatkan ISSUE.md
 - tambahin lagi beberapa laporan atau fitur di laporan penjualan
-- tambahkan test case untuk semua logic
 - fix github CD ke cpanel
 - bikin API untuk mobile app
-
-- fitur Multi-Gudang (Multi-Warehouse)
-  **Masalah:** Pengelolaan stok di beberapa lokasi fisik (misal: Toko A, Toko B, Gudang Pusat).
-  **Fitur:** Pemindahan stok antar gudang, filter laporan per gudang.
-  **Teknis:** Tabel `warehouses` dan tabel pivot `warehouse_product`.
-
-- fix npm run build
-  [plugin builtin:vite-reporter]
-  (!) Some chunks are larger than 500 kB after minification. Consider:
-    - Using dynamic import() to code-split the application
-    - Use build.rolldownOptions.output.codeSplitting to improve chunking: https://rolldown.rs/reference/OutputOptions.codeSplitting
-    - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
-      [PLUGIN_TIMINGS] Warning: Your build spent significant time in plugins. Here is a breakdown:
-        - laravel (59%)
-        - rolldown:vite-resolve (22%)
-        - vite:vue (12%)
-          See https://rolldown.rs/options/checks#plugintimings for more details.
-
-    ✓ built in 26.27s
