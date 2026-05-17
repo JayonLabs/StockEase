@@ -21,7 +21,7 @@ import {
     TableRow,
 } from "@/Components/ui/table";
 
-import { computed, ref, watch } from "vue";
+import { computed, ref } from "vue";
 import {
     Select,
     SelectContent,
@@ -62,20 +62,6 @@ const props = defineProps({
     },
 });
 
-const pagination = ref({
-    pageIndex: props.pagination.current_page - 1,
-    pageSize: props.pagination.per_page,
-});
-
-watch(
-    () => props.pagination,
-    (newPagination) => {
-        pagination.value.pageIndex = newPagination.current_page - 1;
-        pagination.value.pageSize = newPagination.per_page;
-    },
-    { immediate: true, deep: true },
-);
-
 const table = useVueTable({
     get data() {
         return props.data;
@@ -89,87 +75,53 @@ const table = useVueTable({
     getFilteredRowModel: getFilteredRowModel(),
     getExpandedRowModel: getExpandedRowModel(),
     manualPagination: true,
-    onPaginationChange: (updater) => {
-        if (typeof updater === "function") {
-            pagination.value = updater(pagination.value);
-        } else {
-            pagination.value = updater;
-        }
-
-        const query = {
-            ...Object.fromEntries(new URLSearchParams(window.location.search)),
-            [props.pageParam]: pagination.value.pageIndex + 1,
-            [props.perPageParam]: pagination.value.pageSize,
-            search: search.value,
-        };
-
-        router.get(route(props.routeName, props.routeParams), query, {
-            preserveState: true,
-            preserveScroll: true,
-            replace: true,
-        });
-    },
-
     state: {
         get pagination() {
-            return pagination.value;
+            return {
+                pageIndex: props.pagination.current_page - 1,
+                pageSize: props.pagination.per_page,
+            };
         },
     },
 });
 
-const currentPage = computed({
-    get: () => props.pagination.current_page,
-    set: (val) => {
-        pagination.value.pageIndex = val - 1;
-    },
-});
-const goToNextPage = () => {
-    if (!isLastPage.value) {
-        pagination.value.pageIndex += 1;
-    }
+const search = ref(new URLSearchParams(window.location.search).get("search") || "");
+
+const goToPage = (pageIndex, pageSize = null) => {
+    const query = {
+        ...Object.fromEntries(new URLSearchParams(window.location.search)),
+        [props.pageParam]: pageIndex + 1,
+        [props.perPageParam]: pageSize ?? props.pagination.per_page,
+        search: search.value,
+    };
+
+    router.get(route(props.routeName, props.routeParams), query, {
+        preserveState: true,
+        preserveScroll: true,
+        replace: true,
+    });
 };
 
-const goToFirstPage = () => {
-    pagination.value.pageIndex = 0;
-};
-
-const goToLastPage = () => {
-    pagination.value.pageIndex = props.pagination.last_page - 1;
-};
+const goToFirstPage = () => goToPage(0);
+const goToPreviousPage = () => goToPage(props.pagination.current_page - 2);
+const goToNextPage = () => goToPage(props.pagination.current_page);
+const goToLastPage = () => goToPage(props.pagination.last_page - 1);
 
 const isLastPage = computed(() => {
-    return pagination.value.pageIndex + 1 >= props.pagination.last_page;
+    return props.pagination.current_page >= props.pagination.last_page;
 });
 
-watch(
-    () => pagination.value.pageIndex,
-    (newPage) => {
-        const query = {
-            ...Object.fromEntries(new URLSearchParams(window.location.search)),
-            [props.pageParam]: newPage + 1,
-            [props.perPageParam]: pagination.value.pageSize,
-            search: search.value,
-        };
-
-        router.get(route(props.routeName, props.routeParams), query, {
-            preserveScroll: true,
-            preserveState: true,
-            replace: true,
-        });
-    },
-);
-
-const search = ref(new URLSearchParams(window.location.search).get("search") || "");
+const canGoPrevious = computed(() => {
+    return props.pagination.current_page > 1;
+});
 
 watchDebounced(
     search,
     (newSearch) => {
-        pagination.value.pageIndex = 0;
-
         const query = {
             ...Object.fromEntries(new URLSearchParams(window.location.search)),
             [props.pageParam]: 1,
-            [props.perPageParam]: pagination.value.pageSize,
+            [props.perPageParam]: props.pagination.per_page,
             search: newSearch,
         };
 
@@ -268,8 +220,8 @@ watchDebounced(
           Rows per page
         </p>
         <Select
-          :model-value="`${table.getState().pagination.pageSize}`"
-          @update:model-value="table.setPageSize(Number($event))"
+          :model-value="`${props.pagination.per_page}`"
+          @update:model-value="goToPage(0, Number($event))"
         >
           <SelectTrigger class="h-8 w-17.5">
             <SelectValue
@@ -294,7 +246,7 @@ watchDebounced(
         <div class="flex items-center space-x-2">
           <Pagination
             v-slot="{ page }"
-            v-model:page="currentPage"
+            :page="props.pagination.current_page"
             :items-per-page="props.pagination.per_page"
             :total="props.pagination.total"
           >
@@ -305,7 +257,7 @@ watchDebounced(
               <Button
                 variant="outline"
                 class="hidden w-8 h-8 p-0 lg:flex"
-                :disabled="!table.getCanPreviousPage()"
+                :disabled="!canGoPrevious"
                 @click="goToFirstPage"
               >
                 <span class="sr-only">Go to first page</span>
@@ -314,8 +266,8 @@ watchDebounced(
 
               <PaginationPrevious
                 class="border"
-                :disabled="!table.getCanPreviousPage()"
-                @click="table.previousPage()"
+                :disabled="!canGoPrevious"
+                @click="goToPreviousPage"
               />
 
               <template
@@ -328,7 +280,7 @@ watchDebounced(
                   :value="item.value"
                   :is-active="item.value === page"
                   :disabled="item.value === page"
-                  @click="table.setPageIndex(item.value - 1)"
+                  @click="goToPage(item.value - 1)"
                 >
                   {{ item.value }}
                 </PaginationItem>
