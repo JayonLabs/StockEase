@@ -56,6 +56,19 @@ export function getCurrentUrlQuery(exclude = []) {
     return params;
 }
 
-export function filterMenuByRole(menu, role) {
-    return menu.filter((item) => item.roles.includes(role));
+export function filterMenuByRole(menu, role, permissions = []) {
+    return menu.filter((item) => {
+        if (
+            item.permissions &&
+            item.permissions.some((p) => permissions.includes(p))
+        ) {
+            return true;
+        }
+
+        if (item.roles && item.roles.includes(role)) {
+            return true;
+        }
+
+        return false;
+    });
 }
