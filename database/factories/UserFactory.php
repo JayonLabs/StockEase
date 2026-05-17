@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
@@ -30,8 +31,37 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'role' => fake()->randomElement(['admin', 'warehouse', 'cashier']),
         ];
+    }
+
+    /**
+     * Configure the model factory to assign a role after creation.
+     * Removes the old 'role' column attribute and assigns via Spatie.
+     */
+    public function configure(): static
+    {
+        $intendedRole = null;
+
+        return $this
+            ->afterMaking(function (User $user) use (&$intendedRole) {
+                $rawAttributes = $user->getAttributes();
+
+                if (array_key_exists('role', $rawAttributes)) {
+                    $intendedRole = $rawAttributes['role'];
+                    $user->offsetUnset('role');
+                }
+            })
+            ->afterCreating(function (User $user) use (&$intendedRole) {
+                if ($intendedRole && in_array($intendedRole, array_map(fn (Role $r) => $r->value, Role::cases()))) {
+                    $user->assignRole($intendedRole);
+                }
+
+                if (! $user->hasAnyRole(array_map(fn (Role $r) => $r->value, Role::cases()))) {
+                    $user->assignRole(fake()->randomElement(Role::cases())->value);
+                }
+
+                $intendedRole = null;
+            });
     }
 
     /**

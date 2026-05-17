@@ -111,7 +111,7 @@ class PurchaseReportController extends Controller
                 $q->where('name', 'like', "%{$request->search}%")
                     ->orWhere('id', 'like', "%{$request->search}%");
             })
-                ->whereIn('role', [Role::Warehouse->value, Role::Admin->value])
+                ->role([Role::Warehouse->value, Role::Admin->value, Role::SuperAdmin->value])
                 ->select('id as value', 'name as label')
                 ->get();
 

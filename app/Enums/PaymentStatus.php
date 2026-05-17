@@ -14,6 +14,9 @@ enum PaymentStatus: string
     case Challenge = 'challenge';
     case Unknown = 'unknown';
 
+    /**
+     * Get the Indonesian label for the payment status.
+     */
     public function label(): string
     {
         return match ($this) {
