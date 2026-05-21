@@ -96,22 +96,24 @@ class PaymentService
             $fraud = $notificationData['fraud_status'] ?? null;
 
             $paymentStatus = match ($transactionStatus) {
-                'capture' => ($type === 'credit_card' && $fraud === 'challenge') ? 'challenge' : 'success',
-                'settlement' => 'settlement',
-                'pending' => 'pending',
-                'deny' => 'deny',
-                'expire' => 'expired',
-                'cancel' => 'cancel',
-                default => 'unknown',
+                PaymentStatus::Capture->value => ($type === 'credit_card' && $fraud === PaymentStatus::Challenge->value)
+                    ? PaymentStatus::Challenge
+                    : PaymentStatus::Success,
+                PaymentStatus::Settlement->value => PaymentStatus::Settlement,
+                PaymentStatus::Pending->value => PaymentStatus::Pending,
+                PaymentStatus::Deny->value => PaymentStatus::Deny,
+                'expire' => PaymentStatus::Expired,
+                PaymentStatus::Cancel->value => PaymentStatus::Cancel,
+                default => PaymentStatus::Unknown,
             };
 
             $paymentTransaction->update([
                 'payment_type' => $type,
-                'status' => $paymentStatus,
+                'status' => $paymentStatus->value,
                 'raw_response' => $rawBody,
             ]);
 
-            if (in_array($paymentStatus, [PaymentStatus::Settlement->value, PaymentStatus::Success->value, PaymentStatus::Capture->value])) {
+            if ($paymentStatus->isPaid()) {
                 $sale = $paymentTransaction->sale;
                 if ($sale && $sale->status !== SaleStatus::Completed->value) {
                     $sale->update(['status' => SaleStatus::Completed->value]);

@@ -57,6 +57,66 @@ it('can handle notification and update sale status to completed', function () {
     expect($product->fresh()->stock)->toBe(8); // Stock reduced on settlement
 });
 
+
+it('uses payment status enum values for non-paid notification statuses', function (string $transactionStatus, string $expectedStatus) {
+    $transaction = PaymentTransaction::factory()->create([
+        'external_id' => 'ORDER-'.$transactionStatus,
+        'amount' => 10000,
+        'status' => 'pending',
+    ]);
+
+    $statusCode = '200';
+    $grossAmount = '10000.00';
+    $signatureKey = hash('sha512', $transaction->external_id.$statusCode.$grossAmount.'test_server_key');
+
+    $notificationData = [
+        'order_id' => $transaction->external_id,
+        'status_code' => $statusCode,
+        'gross_amount' => $grossAmount,
+        'signature_key' => $signatureKey,
+        'transaction_status' => $transactionStatus,
+        'payment_type' => 'qris',
+    ];
+
+    $response = $this->paymentService->handleNotification($notificationData, json_encode($notificationData));
+
+    expect($response['status'])->toBe(200);
+    expect($transaction->fresh()->status)->toBe($expectedStatus);
+})->with([
+    'pending' => ['pending', 'pending'],
+    'deny' => ['deny', 'deny'],
+    'expire' => ['expire', 'expired'],
+    'cancel' => ['cancel', 'cancel'],
+    'unknown' => ['unexpected-status', 'unknown'],
+]);
+
+it('uses challenge enum value for challenged credit card captures', function () {
+    $transaction = PaymentTransaction::factory()->create([
+        'external_id' => 'ORDER-CHALLENGE',
+        'amount' => 10000,
+        'status' => 'pending',
+    ]);
+
+    $statusCode = '200';
+    $grossAmount = '10000.00';
+    $signatureKey = hash('sha512', $transaction->external_id.$statusCode.$grossAmount.'test_server_key');
+
+    $notificationData = [
+        'order_id' => $transaction->external_id,
+        'status_code' => $statusCode,
+        'gross_amount' => $grossAmount,
+        'signature_key' => $signatureKey,
+        'transaction_status' => 'capture',
+        'payment_type' => 'credit_card',
+        'fraud_status' => 'challenge',
+    ];
+
+    $response = $this->paymentService->handleNotification($notificationData, json_encode($notificationData));
+
+    expect($response['status'])->toBe(200);
+    expect($transaction->fresh()->status)->toBe('challenge');
+});
+
 it('throws exception for invalid signature', function () {
     $notificationData = [
         'order_id' => 'ORDER-123',
