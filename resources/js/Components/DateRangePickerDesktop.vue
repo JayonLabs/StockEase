@@ -138,7 +138,7 @@ function handleApply() {
                 variant="outline"
                 :class="
                     cn(
-                        'w-full justify-start text-left font-normal bg-card h-10 border-muted-foreground/20',
+                        'w-72 justify-start text-left font-normal bg-card h-10 border-muted-foreground/20',
                         !hasValue && 'text-muted-foreground',
                     )
                 "
