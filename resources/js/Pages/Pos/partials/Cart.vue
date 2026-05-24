@@ -29,6 +29,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    disabled: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const qtyRefs = ref({});
@@ -347,6 +351,7 @@ const sendInvoice = () => {
                         >
                             <NumberFieldContent>
                                 <NumberFieldDecrement
+                                    :disabled="disabled"
                                     @click="
                                         qtyRefs[cartItem.product_id]--;
                                         changeQty(
@@ -360,6 +365,7 @@ const sendInvoice = () => {
                                     readonly
                                 />
                                 <NumberFieldIncrement
+                                    :disabled="disabled"
                                     @click="
                                         qtyRefs[cartItem.product_id]++;
                                         changeQty(
@@ -374,7 +380,10 @@ const sendInvoice = () => {
                             variant="destructive"
                             size="icon"
                             class="ml-2 disabled:cursor-not-allowed"
-                            :disabled="loadingItemId === cartItem.product_id"
+                            :disabled="
+                                disabled ||
+                                loadingItemId === cartItem.product_id
+                            "
                             @click="removeItemFromCart(cartItem.product_id)"
                         >
                             <Loader2
@@ -446,6 +455,7 @@ const sendInvoice = () => {
             <Button
                 class="w-full disabled:cursor-not-allowed"
                 :disabled="
+                    disabled ||
                     !paymentMethod ||
                     (cartItems?.length ?? 0) === 0 ||
                     isCheckoutLoading
