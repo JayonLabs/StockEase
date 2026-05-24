@@ -9,6 +9,7 @@ use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\StockLog;
 use App\Models\Supplier;
+use App\Models\Warehouse;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ class PurchaseService
         $startDate = $filters['start'] ?? null;
         $endDate = $filters['end'] ?? null;
 
-        return Purchase::with('supplier', 'user', 'purchaseItems', 'purchaseItems.product')
+        return Purchase::with('supplier', 'user', 'warehouse', 'purchaseItems', 'purchaseItems.product')
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->orWhereHas('supplier', function ($q) use ($search) {
@@ -78,13 +79,17 @@ class PurchaseService
     }
 
     /**
-     * Store a new purchase and update stock.
+     * Store a new purchase and update warehouse stock.
      */
     public function storePurchase(array $data): Purchase
     {
         return DB::transaction(function () use ($data) {
+            /** @var Warehouse $warehouse */
+            $warehouse = Warehouse::findOrFail($data['warehouse_id']);
+
             $purchase = Purchase::create([
                 'supplier_id' => $data['supplier_id'],
+                'warehouse_id' => $warehouse->id,
                 'user_id' => Auth::id(),
                 'total' => 0,
                 'date' => $data['date'],
@@ -101,6 +106,7 @@ class PurchaseService
 
                 PurchaseItem::create([
                     'purchase_id' => $purchase->id,
+                    'warehouse_id' => $warehouse->id,
                     'product_id' => $item['product_id'],
                     'qty' => $item['qty'],
                     'remaining_qty' => $item['qty'],
@@ -110,19 +116,32 @@ class PurchaseService
 
                 /** @var Product $product */
                 $product = $products[$item['product_id']];
-                $product->increment('stock', $item['qty'], [
+
+                // Add received stock to the destination warehouse
+                $warehouse->products()->syncWithoutDetaching([
+                    $product->id => [
+                        'stock' => $product->stockInWarehouse($warehouse->id) + $item['qty'],
+                    ],
+                ]);
+
+                $product->update([
                     'purchase_price' => $item['price'],
                     'selling_price' => $item['selling_price'],
                 ]);
+
+                // Sync global stock = sum of all warehouse stocks
+                $product->syncStockFromWarehouses();
+
                 resolve(UpdateProductExpiryDate::class)->execute($product);
 
                 StockLog::create([
                     'product_id' => $product->id,
+                    'warehouse_id' => $warehouse->id,
                     'qty' => $item['qty'],
                     'type' => StockLogType::In->value,
                     'reference_type' => 'Purchase',
                     'reference_id' => $purchase->id,
-                    'note' => "Pembelian produk {$product->name}",
+                    'note' => "Pembelian produk {$product->name} masuk ke {$warehouse->name}",
                 ]);
             }
 
@@ -133,11 +152,15 @@ class PurchaseService
     }
 
     /**
-     * Update an existing purchase and adjust stock.
+     * Update an existing purchase and adjust warehouse stock.
+     * The purchase warehouse is immutable — only quantities and prices can change.
      */
     public function updatePurchase(Purchase $purchase, array $data): bool
     {
         return DB::transaction(function () use ($purchase, $data) {
+            /** @var Warehouse $warehouse */
+            $warehouse = Warehouse::findOrFail($purchase->warehouse_id);
+
             $purchase->update([
                 'supplier_id' => $data['supplier_id'],
                 'user_id' => Auth::id(),
@@ -148,14 +171,18 @@ class PurchaseService
             $productIds = collect($data['product_items'])->pluck('product_id');
             $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
-            // Handle deleted items
+            // Rollback deleted items from the warehouse
             $existingItems = PurchaseItem::where('purchase_id', $purchase->id)->get();
             foreach ($existingItems as $existingItem) {
                 if (! $productIds->contains($existingItem->product_id)) {
                     /** @var Product|null $product */
                     $product = Product::find($existingItem->product_id);
                     if ($product) {
-                        $product->decrement('stock', $existingItem->qty);
+                        $newWarehouseStock = max(0, $product->stockInWarehouse($warehouse->id) - $existingItem->qty);
+                        $warehouse->products()->syncWithoutDetaching([
+                            $product->id => ['stock' => $newWarehouseStock],
+                        ]);
+                        $product->syncStockFromWarehouses();
                     }
                     $existingItem->forceDelete();
                     if ($product) {
@@ -187,23 +214,32 @@ class PurchaseService
                         'price' => $item['price'],
                         'expiry_date' => $item['expiry_date'] ?? null,
                     ]);
-                    $product->increment('stock', $diffQty);
+
+                    $newWarehouseStock = max(0, $product->stockInWarehouse($warehouse->id) + $diffQty);
+                    $warehouse->products()->syncWithoutDetaching([
+                        $product->id => ['stock' => $newWarehouseStock],
+                    ]);
                 } else {
                     PurchaseItem::create([
                         'purchase_id' => $purchase->id,
+                        'warehouse_id' => $warehouse->id,
                         'product_id' => $item['product_id'],
                         'qty' => $item['qty'],
                         'remaining_qty' => $item['qty'],
                         'price' => $item['price'],
                         'expiry_date' => $item['expiry_date'] ?? null,
                     ]);
-                    $product->increment('stock', $item['qty']);
+                    $warehouse->products()->syncWithoutDetaching([
+                        $product->id => [
+                            'stock' => $product->stockInWarehouse($warehouse->id) + $item['qty'],
+                        ],
+                    ]);
                     $diffQty = $item['qty'];
                 }
 
+                $product->syncStockFromWarehouses();
                 resolve(UpdateProductExpiryDate::class)->execute($product);
 
-                // Update prices if changed
                 if ($product->purchase_price != $item['price'] || $product->selling_price != $item['selling_price']) {
                     $product->update([
                         'purchase_price' => $item['price'],
@@ -213,11 +249,12 @@ class PurchaseService
 
                 StockLog::create([
                     'product_id' => $product->id,
+                    'warehouse_id' => $warehouse->id,
                     'qty' => abs($diffQty),
                     'type' => StockLogType::Adjust->value,
                     'reference_type' => 'Purchase',
                     'reference_id' => $purchase->id,
-                    'note' => 'Perubahan pembelian produk '.$product->name,
+                    'note' => "Perubahan pembelian produk {$product->name} di {$warehouse->name}",
                 ]);
             }
 
@@ -226,11 +263,14 @@ class PurchaseService
     }
 
     /**
-     * Delete a purchase and revert stock.
+     * Delete a purchase and revert warehouse stock.
      */
     public function deletePurchase(Purchase $purchase): bool
     {
         return DB::transaction(function () use ($purchase) {
+            /** @var Warehouse $warehouse */
+            $warehouse = Warehouse::findOrFail($purchase->warehouse_id);
+
             $purchaseItems = PurchaseItem::where('purchase_id', $purchase->id)->get();
             $products = Product::whereIn('id', $purchaseItems->pluck('product_id'))->get();
 
@@ -238,14 +278,20 @@ class PurchaseService
                 /** @var Product|null $product */
                 $product = $products->firstWhere('id', $purchaseItem->product_id);
                 if ($product) {
-                    $product->decrement('stock', $purchaseItem->qty);
+                    $newWarehouseStock = max(0, $product->stockInWarehouse($warehouse->id) - $purchaseItem->qty);
+                    $warehouse->products()->syncWithoutDetaching([
+                        $product->id => ['stock' => $newWarehouseStock],
+                    ]);
+                    $product->syncStockFromWarehouses();
+
                     StockLog::create([
                         'product_id' => $product->id,
+                        'warehouse_id' => $warehouse->id,
                         'qty' => $purchaseItem->qty,
                         'type' => StockLogType::Out->value,
                         'reference_type' => 'Purchase',
                         'reference_id' => $purchase->id,
-                        'note' => "Penghapusan pembelian and pengurangan stok produk {$product->name}",
+                        'note' => "Penghapusan pembelian, stok produk {$product->name} dikurangi dari {$warehouse->name}",
                     ]);
                 }
                 $purchaseItem->delete();

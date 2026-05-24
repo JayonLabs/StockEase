@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Purchase\StorePurchaseRequest;
 use App\Http\Requests\Purchase\UpdatePurchaseRequest;
 use App\Models\Purchase;
+use App\Models\Warehouse;
 use App\Services\Purchase\PurchaseService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -34,6 +35,7 @@ class PurchaseController extends Controller
 
         return Inertia::render('Purchase/Index', [
             'purchases' => $purchases,
+            'warehouses' => Warehouse::where('is_active', true)->select('id', 'name')->orderBy('name')->get(),
             'filters' => [
                 'start' => $filters['start'] ?? '',
                 'end' => $filters['end'] ?? '',
