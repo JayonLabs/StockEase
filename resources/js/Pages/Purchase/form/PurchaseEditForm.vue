@@ -174,6 +174,15 @@ const submit = () => {
                 </DialogDescription>
             </DialogHeader>
             <form id="form" @submit.prevent="submit">
+                <div class="grid gap-2 mb-4">
+                    <Label>Gudang</Label>
+                    <p
+                        class="text-sm text-muted-foreground border rounded-md px-3 py-2 bg-muted"
+                    >
+                        {{ props.purchase.warehouse?.name ?? '—' }}
+                        <span class="ml-1 text-xs">(tidak dapat diubah)</span>
+                    </p>
+                </div>
                 <div class="flex items-center space-x-2">
                     <div class="grid flex-1 gap-2">
                         <Label for="supplier"> Supplier </Label>

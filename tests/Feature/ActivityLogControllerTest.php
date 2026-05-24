@@ -6,6 +6,7 @@ use App\Models\Unit;
 use App\Models\User;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -364,6 +365,52 @@ describe('Permission Assignment', function () {
         $this->admin->givePermissionTo($this->viewPermission);
 
         expect($this->admin->can('view_activity_logs'))->toBeTrue();
+    });
+});
+
+describe('Query Performance', function () {
+    beforeEach(function () {
+        $this->superAdmin->givePermissionTo($this->viewPermission);
+        Activity::query()->delete();
+    });
+
+    it('does not run duplicate role queries when loading activity logs', function () {
+        $causerUser = User::factory()->create();
+        $causerUser->syncRoles('admin');
+        activity()->causedBy($causerUser)->log('test adjustment');
+        activity()->causedBy($causerUser)->log('test transfer');
+        activity()->causedBy($causerUser)->log('test opname');
+        activity()->causedBy($causerUser)->log('test purchase');
+
+        DB::enableQueryLog();
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'));
+        $queries = DB::getQueryLog();
+
+        $duplicateQueries = collect($queries)
+            ->filter(fn ($query) => str_contains($query['query'], 'model_has_roles'))
+            ->groupBy(fn ($query) => $query['query'].json_encode($query['bindings']))
+            ->filter(fn ($group) => $group->count() > 1);
+
+        expect($duplicateQueries)->toHaveCount(0);
+    });
+
+    it('does not run duplicate role queries on show page', function () {
+        $causerUser = User::factory()->create();
+        $causerUser->syncRoles('warehouse');
+        $activity = activity()->causedBy($causerUser)->log('show test activity');
+
+        DB::enableQueryLog();
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.show', $activity));
+        $queries = DB::getQueryLog();
+
+        $duplicateQueries = collect($queries)
+            ->filter(fn ($query) => str_contains($query['query'], 'model_has_roles'))
+            ->groupBy(fn ($query) => $query['query'].json_encode($query['bindings']))
+            ->filter(fn ($group) => $group->count() > 1);
+
+        expect($duplicateQueries)->toHaveCount(0);
     });
 });
 

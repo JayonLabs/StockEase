@@ -29,6 +29,9 @@ class SaleReportService
             ->when(($filters['payment'] ?? null) && $filters['payment'] !== 'semua-metode', function ($query) use ($filters) {
                 return $query->where('payment_method', $filters['payment']);
             })
+            ->when(($filters['warehouse'] ?? null) && $filters['warehouse'] !== 'semua-gudang', function ($query) use ($filters) {
+                return $query->where('warehouse_id', $filters['warehouse']);
+            })
             ->get();
     }
 

@@ -16,6 +16,7 @@ class Purchase extends Model
 
     protected $fillable = [
         'supplier_id',
+        'warehouse_id',
         'user_id',
         'total',
         'date',
@@ -41,6 +42,16 @@ class Purchase extends Model
     public function supplier()
     {
         return $this->belongsTo(Supplier::class);
+    }
+
+    /**
+     * Get the warehouse that received this purchase.
+     *
+     * @return BelongsTo
+     */
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 
     /**

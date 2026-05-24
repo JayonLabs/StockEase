@@ -741,4 +741,62 @@ describe('Close — Close Shift', function () {
 
         expect($shift->closed_at)->not->toBeNull();
     });
+
+    it('cashier cannot close another cashier shift', function () {
+        /** @var TestCase&object{cashier:User} $this */
+        $otherCashier = User::factory()->create(['role' => 'cashier']);
+
+        $shift = Shift::factory()->create([
+            'user_id' => $otherCashier->id,
+            'status' => 'open',
+        ]);
+
+        actingAs($this->cashier)
+            ->post(route('shift.close', $shift), ['actual_cash' => 500000])
+            ->assertForbidden();
+    });
+
+    it('admin can close any user shift', function () {
+        /** @var TestCase&object{admin:User, cashier:User} $this */
+        $shift = Shift::factory()->create([
+            'user_id' => $this->cashier->id,
+            'status' => 'open',
+        ]);
+
+        actingAs($this->admin)
+            ->post(route('shift.close', $shift), [
+                'actual_cash' => 300000,
+                'notes' => 'Closed by admin',
+            ])
+            ->assertRedirect(route('shift.show', $shift))
+            ->assertSessionHas('success', 'Shift berhasil ditutup.');
+
+        assertDatabaseHas('shifts', [
+            'id' => $shift->id,
+            'status' => 'closed',
+            'actual_cash' => 300000,
+            'notes' => 'Closed by admin',
+        ]);
+    });
+
+    it('super admin can close any shift', function () {
+        /** @var User $superAdmin */
+        $superAdmin = User::factory()->create(['role' => 'super_admin']);
+
+        /** @var TestCase&object{cashier:User} $this */
+        $shift = Shift::factory()->create([
+            'user_id' => $this->cashier->id,
+            'status' => 'open',
+        ]);
+
+        actingAs($superAdmin)
+            ->post(route('shift.close', $shift), ['actual_cash' => 100000])
+            ->assertRedirect(route('shift.show', $shift))
+            ->assertSessionHas('success', 'Shift berhasil ditutup.');
+
+        assertDatabaseHas('shifts', [
+            'id' => $shift->id,
+            'status' => 'closed',
+        ]);
+    });
 });

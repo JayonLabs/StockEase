@@ -15,10 +15,26 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    warehouseStock: {
+        type: Number,
+        default: null,
+    },
+    disabled: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 import { computed } from 'vue';
 import { Badge } from '@/Components/ui/badge';
+
+const displayStock = computed(() => {
+    if (props.warehouseStock !== null && props.warehouseStock !== undefined) {
+        return props.warehouseStock;
+    }
+
+    return props.product?.stock ?? 0;
+});
 
 const applicablePromo = computed(() => {
     if (!props.activePromotions || props.activePromotions.length === 0)
@@ -56,29 +72,34 @@ const promoLabel = computed(() => {
 });
 
 const emit = defineEmits(['cart-updated']);
-const addToCart = (producId) => {
+const addToCart = (productId) => {
+    if (props.disabled) return;
+
     axios
-        .post(route('pos.add-to-cart', { product_id: producId }))
+        .post(route('pos.add-to-cart', { product_id: productId }))
         .then((response) => {
             toast.success(response.data.message);
             emit('cart-updated');
         })
         .catch((error) => {
-            toast.error(error.data.message);
+            toast.error(error.response?.data?.message || 'Gagal menambahkan');
         });
 };
 </script>
 
 <template>
     <Card
-        class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer p-0"
-        :class="{ 'opacity-50': product.stock === 0 }"
+        class="border rounded-lg overflow-hidden shadow-sm transition-shadow p-0"
+        :class="{
+            'opacity-50 cursor-not-allowed': displayStock === 0 || disabled,
+            'hover:shadow-md cursor-pointer': displayStock > 0 && !disabled,
+        }"
         @click="addToCart(product.id)"
     >
         <CardContent class="p-0">
             <div class="h-32 flex items-center justify-center relative">
                 <span
-                    v-if="product.stock === 0"
+                    v-if="displayStock === 0"
                     class="absolute bg-red-500 text-white text-xs px-2 py-1 rounded"
                 >
                     Habis
@@ -89,7 +110,7 @@ const addToCart = (producId) => {
                     :src="product.image_path"
                     :alt="product.name"
                     class="h-full object-cover w-full"
-                    :class="{ 'opacity-50': product.stock === 0 }"
+                    :class="{ 'opacity-50': displayStock === 0 }"
                 />
 
                 <img
@@ -97,7 +118,7 @@ const addToCart = (producId) => {
                     src="/img/StockEase-Logo.png"
                     :alt="product.name"
                     class="h-full object-cover w-full"
-                    :class="{ 'opacity-50': product.stock === 0 }"
+                    :class="{ 'opacity-50': displayStock === 0 }"
                 />
 
                 <Badge
@@ -116,10 +137,10 @@ const addToCart = (producId) => {
                 </p>
                 <div class="flex justify-between items-center mt-2">
                     <span class="text-xs text-gray-500">
-                        Stok: {{ product.stock }}
+                        Stok: {{ displayStock }}
                     </span>
                     <Button
-                        v-if="product.stock > 0"
+                        v-if="displayStock > 0"
                         class="p-1 rounded-full w-6 h-6 flex items-center justify-center"
                     >
                         <Plus class="w-4 h-4" />

@@ -5,6 +5,7 @@ use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Services\Purchase\PurchaseService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -19,6 +20,7 @@ uses(TestCase::class, RefreshDatabase::class);
 beforeEach(function () {
     $user = User::factory()->create(['role' => 'admin']);
     Auth::login($user);
+    $this->warehouseModel = Warehouse::factory()->create();
 });
 
 it('can get paginated purchases', function () {
@@ -84,12 +86,17 @@ it('can search products', function () {
 
 it('can store a new purchase and increments stock', function () {
     $supplier = Supplier::factory()->create();
-    $product1 = Product::factory()->create(['stock' => 10, 'purchase_price' => 1000]);
-    $product2 = Product::factory()->create(['stock' => 5, 'purchase_price' => 500]);
+    $product1 = Product::factory()->create(['purchase_price' => 1000]);
+    $product2 = Product::factory()->create(['purchase_price' => 500]);
+    $this->warehouseModel->products()->attach($product1->id, ['stock' => 10]);
+    $this->warehouseModel->products()->attach($product2->id, ['stock' => 5]);
+    $product1->syncStockFromWarehouses();
+    $product2->syncStockFromWarehouses();
     $purchaseService = new PurchaseService;
 
     $data = [
         'supplier_id' => $supplier->id,
+        'warehouse_id' => $this->warehouseModel->id,
         'date' => now()->toDateString(),
         'product_items' => [
             [
@@ -122,6 +129,7 @@ it('can store a new purchase and increments stock', function () {
 
     assertDatabaseHas('stock_logs', [
         'product_id' => $product1->id,
+        'warehouse_id' => $this->warehouseModel->id,
         'qty' => 5,
         'type' => 'in',
     ]);
@@ -129,13 +137,20 @@ it('can store a new purchase and increments stock', function () {
 
 it('can update an existing purchase and adjust stock', function () {
     $supplier = Supplier::factory()->create();
-    $product = Product::factory()->create(['stock' => 20]);
-    $purchase = Purchase::factory()->create(['supplier_id' => $supplier->id]);
+    $product = Product::factory()->create();
+    $this->warehouseModel->products()->attach($product->id, ['stock' => 20]);
+    $product->syncStockFromWarehouses();
+    $purchase = Purchase::factory()->create([
+        'supplier_id' => $supplier->id,
+        'warehouse_id' => $this->warehouseModel->id,
+    ]);
     $purchaseService = new PurchaseService;
     PurchaseItem::create([
         'purchase_id' => $purchase->id,
+        'warehouse_id' => $this->warehouseModel->id,
         'product_id' => $product->id,
         'qty' => 10,
+        'remaining_qty' => 10,
         'price' => 1000,
     ]);
 
@@ -160,19 +175,24 @@ it('can update an existing purchase and adjust stock', function () {
 
     assertDatabaseHas('stock_logs', [
         'product_id' => $product->id,
+        'warehouse_id' => $this->warehouseModel->id,
         'qty' => 5, // diff qty
         'type' => 'adjust',
     ]);
 });
 
 it('can delete a purchase and revert stock', function () {
-    $purchase = Purchase::factory()->create();
-    $product = Product::factory()->create(['stock' => 20]);
+    $product = Product::factory()->create();
+    $this->warehouseModel->products()->attach($product->id, ['stock' => 20]);
+    $product->syncStockFromWarehouses();
+    $purchase = Purchase::factory()->create(['warehouse_id' => $this->warehouseModel->id]);
     $purchaseService = new PurchaseService;
     PurchaseItem::create([
         'purchase_id' => $purchase->id,
+        'warehouse_id' => $this->warehouseModel->id,
         'product_id' => $product->id,
         'qty' => 5,
+        'remaining_qty' => 5,
         'price' => 1000,
     ]);
 
@@ -184,6 +204,7 @@ it('can delete a purchase and revert stock', function () {
 
     assertDatabaseHas('stock_logs', [
         'product_id' => $product->id,
+        'warehouse_id' => $this->warehouseModel->id,
         'qty' => 5,
         'type' => 'out',
     ]);

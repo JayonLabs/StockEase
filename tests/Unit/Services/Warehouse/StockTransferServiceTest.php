@@ -6,8 +6,11 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\Warehouse\StockTransferService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
+
+use function Pest\Laravel\assertDatabaseHas;
 
 uses(TestCase::class, RefreshDatabase::class);
 
@@ -26,6 +29,7 @@ it('can get paginated transfers', function () {
     ]);
     $service = new StockTransferService;
 
+    /** @var LengthAwarePaginator $results */
     $results = $service->getPaginatedTransfers([], 10);
 
     expect($results->total())->toBe(15);
@@ -98,19 +102,19 @@ it('can store a stock transfer', function () {
     expect($transfer->qty)->toBe(20);
     expect($transfer->status)->toBe('completed');
 
-    $this->assertDatabaseHas('warehouse_product', [
+    assertDatabaseHas('warehouse_product', [
         'warehouse_id' => $warehouseA->id,
         'product_id' => $product->id,
         'stock' => 30,
     ]);
 
-    $this->assertDatabaseHas('warehouse_product', [
+    assertDatabaseHas('warehouse_product', [
         'warehouse_id' => $warehouseB->id,
         'product_id' => $product->id,
         'stock' => 20,
     ]);
 
-    $this->assertDatabaseHas('stock_logs', [
+    assertDatabaseHas('stock_logs', [
         'product_id' => $product->id,
         'qty' => 20,
         'type' => 'transfer',
@@ -136,11 +140,79 @@ it('creates stock log when transferring', function () {
         'date' => now()->toDateString(),
     ]);
 
-    $this->assertDatabaseHas('stock_logs', [
+    assertDatabaseHas('stock_logs', [
         'product_id' => $product->id,
         'qty' => 15,
         'type' => 'transfer',
     ]);
+});
+
+it('filters by both search and warehouse_id combined', function () {
+    $warehouseA = Warehouse::factory()->create();
+    $warehouseB = Warehouse::factory()->create();
+    $productMatch = Product::factory()->create(['name' => 'Keripik Pedas']);
+    $productOther = Product::factory()->create(['name' => 'Air Mineral']);
+
+    // Transfer di warehouseA dengan produk yang cocok search
+    StockTransfer::factory()->create([
+        'from_warehouse_id' => $warehouseA->id,
+        'to_warehouse_id' => $warehouseA->id,
+        'product_id' => $productMatch->id,
+    ]);
+
+    // Transfer di warehouseB dengan produk yang cocok search — tidak boleh muncul
+    StockTransfer::factory()->create([
+        'from_warehouse_id' => $warehouseB->id,
+        'to_warehouse_id' => $warehouseB->id,
+        'product_id' => $productMatch->id,
+    ]);
+
+    // Transfer di warehouseA dengan produk yang tidak cocok search — tidak boleh muncul
+    StockTransfer::factory()->create([
+        'from_warehouse_id' => $warehouseA->id,
+        'to_warehouse_id' => $warehouseA->id,
+        'product_id' => $productOther->id,
+    ]);
+
+    $service = new StockTransferService;
+
+    $results = $service->getPaginatedTransfers([
+        'search' => 'Keripik',
+        'warehouse_id' => $warehouseA->id,
+    ], 10);
+
+    expect($results->total())->toBe(1);
+});
+
+it('search by note does not bypass warehouse filter', function () {
+    $warehouseA = Warehouse::factory()->create();
+    $warehouseB = Warehouse::factory()->create();
+    $product = Product::factory()->create();
+
+    // Transfer di warehouseA dengan note cocok — harus muncul
+    StockTransfer::factory()->create([
+        'from_warehouse_id' => $warehouseA->id,
+        'to_warehouse_id' => $warehouseA->id,
+        'product_id' => $product->id,
+        'note' => 'urgent delivery',
+    ]);
+
+    // Transfer di warehouseB dengan note cocok — tidak boleh muncul karena beda warehouse
+    StockTransfer::factory()->create([
+        'from_warehouse_id' => $warehouseB->id,
+        'to_warehouse_id' => $warehouseB->id,
+        'product_id' => $product->id,
+        'note' => 'urgent delivery',
+    ]);
+
+    $service = new StockTransferService;
+
+    $results = $service->getPaginatedTransfers([
+        'search' => 'urgent',
+        'warehouse_id' => $warehouseA->id,
+    ], 10);
+
+    expect($results->total())->toBe(1);
 });
 
 it('handles transfer to warehouse that already has the product', function () {
@@ -160,13 +232,13 @@ it('handles transfer to warehouse that already has the product', function () {
         'date' => now()->toDateString(),
     ]);
 
-    $this->assertDatabaseHas('warehouse_product', [
+    assertDatabaseHas('warehouse_product', [
         'warehouse_id' => $warehouseA->id,
         'product_id' => $product->id,
         'stock' => 40,
     ]);
 
-    $this->assertDatabaseHas('warehouse_product', [
+    assertDatabaseHas('warehouse_product', [
         'warehouse_id' => $warehouseB->id,
         'product_id' => $product->id,
         'stock' => 40,

@@ -163,4 +163,23 @@ class Product extends Model
     {
         return $this->hasMany(StockTransfer::class);
     }
+
+    /**
+     * Sync the global stock field from the sum of all warehouse-specific stocks.
+     * Call this after any warehouse_product mutation to keep products.stock accurate.
+     */
+    public function syncStockFromWarehouses(): void
+    {
+        $this->update(['stock' => $this->warehouses()->sum('warehouse_product.stock')]);
+    }
+
+    /**
+     * Get the stock level of this product in a specific warehouse.
+     */
+    public function stockInWarehouse(int $warehouseId): int
+    {
+        $pivot = $this->warehouses()->where('warehouses.id', $warehouseId)->first();
+
+        return $pivot ? (int) $pivot->pivot->stock : 0;
+    }
 }

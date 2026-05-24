@@ -249,6 +249,17 @@ const submit = () => {
                                 >
                                     <div class="flex flex-col">
                                         <span>{{ product.label }}</span>
+                                        <span
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            Stok gudang:
+                                            {{
+                                                form.from_warehouse_id
+                                                    ? (product.warehouse_stock ??
+                                                      0)
+                                                    : product.stock
+                                            }}
+                                        </span>
                                     </div>
                                     <ComboboxItemIndicator>
                                         <Check :class="cn('ml-auto h-4 w-4')" />

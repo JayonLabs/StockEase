@@ -10,6 +10,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\get;
+use function Pest\Laravel\getJson;
 
 uses(RefreshDatabase::class);
 
@@ -121,6 +122,201 @@ it('can filter stock transfers by search term', function () {
         );
 });
 
+it('can filter stock transfers by search and warehouse combined', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    $warehouseA = Warehouse::factory()->create(['name' => 'Gudang A']);
+    $warehouseB = Warehouse::factory()->create(['name' => 'Gudang B']);
+    $product = Product::factory()->create(['name' => 'Keripik Pedas']);
+
+    // Transfer di warehouseA — harus muncul
+    StockTransfer::factory()->create([
+        'from_warehouse_id' => $warehouseA->id,
+        'to_warehouse_id' => $warehouseA->id,
+        'product_id' => $product->id,
+    ]);
+
+    // Transfer di warehouseB dengan produk sama — tidak boleh muncul
+    StockTransfer::factory()->create([
+        'from_warehouse_id' => $warehouseB->id,
+        'to_warehouse_id' => $warehouseB->id,
+        'product_id' => $product->id,
+    ]);
+
+    actingAs($admin)
+        ->get(route('stock-transfer.index', [
+            'search' => 'Keripik',
+            'warehouse_id' => $warehouseA->id,
+        ]))
+        ->assertSuccessful()
+        ->assertInertia(
+            fn (Assert $page) => $page
+                ->component('StockTransfer/Index')
+                ->has('transfers.data', 1)
+                ->where('filters.search', 'Keripik')
+                ->where('filters.warehouse_id', (string) $warehouseA->id)
+        );
+});
+
+it('search by note does not bypass warehouse filter', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    $warehouseA = Warehouse::factory()->create();
+    $warehouseB = Warehouse::factory()->create();
+    $product = Product::factory()->create();
+
+    // Transfer di warehouseA dengan note cocok — harus muncul
+    StockTransfer::factory()->create([
+        'from_warehouse_id' => $warehouseA->id,
+        'to_warehouse_id' => $warehouseA->id,
+        'product_id' => $product->id,
+        'note' => 'urgent delivery',
+    ]);
+
+    // Transfer di warehouseB dengan note cocok — tidak boleh muncul
+    StockTransfer::factory()->create([
+        'from_warehouse_id' => $warehouseB->id,
+        'to_warehouse_id' => $warehouseB->id,
+        'product_id' => $product->id,
+        'note' => 'urgent delivery',
+    ]);
+
+    actingAs($admin)
+        ->get(route('stock-transfer.index', [
+            'search' => 'urgent',
+            'warehouse_id' => $warehouseA->id,
+        ]))
+        ->assertSuccessful()
+        ->assertInertia(
+            fn (Assert $page) => $page
+                ->component('StockTransfer/Index')
+                ->has('transfers.data', 1)
+        );
+});
+
+it('returns filters props to frontend', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    $warehouse = Warehouse::factory()->create();
+
+    actingAs($admin)
+        ->get(route('stock-transfer.index', [
+            'search' => 'test',
+            'warehouse_id' => $warehouse->id,
+        ]))
+        ->assertSuccessful()
+        ->assertInertia(
+            fn (Assert $page) => $page
+                ->component('StockTransfer/Index')
+                ->where('filters.search', 'test')
+                ->where('filters.warehouse_id', (string) $warehouse->id)
+                ->has('warehouses')
+        );
+});
+
+// -- SEARCH PRODUCT --
+
+it('returns products matching search term', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    Product::factory()->create(['name' => 'Air Mineral', 'stock' => 100]);
+    Product::factory()->create(['name' => 'Keripik Pedas', 'stock' => 50]);
+
+    actingAs($admin)
+        ->getJson(route('stock-transfer.search-product', ['search' => 'Air']))
+        ->assertSuccessful()
+        ->assertJsonCount(1)
+        ->assertJsonFragment(['label' => 'Air Mineral']);
+});
+
+it('returns products even when they are not in the warehouse pivot', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    $warehouse = Warehouse::factory()->create();
+    // Produk ada di tabel products tapi TIDAK ada di warehouse_product pivot
+    Product::factory()->create(['name' => 'Air Mineral', 'stock' => 100]);
+
+    actingAs($admin)
+        ->getJson(route('stock-transfer.search-product', [
+            'search' => 'Air',
+            'warehouse_id' => $warehouse->id,
+        ]))
+        ->assertSuccessful()
+        ->assertJsonCount(1)
+        ->assertJsonFragment(['label' => 'Air Mineral']);
+});
+
+it('returns warehouse_stock from pivot when warehouse_id is provided', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    $warehouse = Warehouse::factory()->create();
+    $product = Product::factory()->create(['name' => 'Air Mineral', 'stock' => 100]);
+    $warehouse->products()->attach($product->id, ['stock' => 30]);
+
+    $response = actingAs($admin)
+        ->getJson(route('stock-transfer.search-product', [
+            'search' => 'Air',
+            'warehouse_id' => $warehouse->id,
+        ]))
+        ->assertSuccessful()
+        ->assertJsonCount(1);
+
+    expect($response->json('0.warehouse_stock'))->toBe(30);
+});
+
+it('returns null warehouse_stock when product not in warehouse pivot', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    $warehouse = Warehouse::factory()->create();
+    Product::factory()->create(['name' => 'Air Mineral', 'stock' => 100]);
+
+    $response = actingAs($admin)
+        ->getJson(route('stock-transfer.search-product', [
+            'search' => 'Air',
+            'warehouse_id' => $warehouse->id,
+        ]))
+        ->assertSuccessful()
+        ->assertJsonCount(1);
+
+    expect($response->json('0.warehouse_stock'))->toBeNull();
+});
+
+it('searches products by sku and barcode', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    Product::factory()->create(['name' => 'Produk A', 'sku' => 'SKU-001', 'stock' => 10]);
+    Product::factory()->create(['name' => 'Produk B', 'barcode' => 'BC-999', 'stock' => 5]);
+    Product::factory()->create(['name' => 'Produk C', 'stock' => 1]);
+
+    actingAs($admin)
+        ->getJson(route('stock-transfer.search-product', ['search' => 'SKU-001']))
+        ->assertSuccessful()
+        ->assertJsonCount(1)
+        ->assertJsonFragment(['label' => 'Produk A']);
+
+    actingAs($admin)
+        ->getJson(route('stock-transfer.search-product', ['search' => 'BC-999']))
+        ->assertSuccessful()
+        ->assertJsonCount(1)
+        ->assertJsonFragment(['label' => 'Produk B']);
+});
+
+it('returns no products when search does not match', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    Product::factory()->create(['name' => 'Air Mineral']);
+
+    actingAs($admin)
+        ->getJson(route('stock-transfer.search-product', ['search' => 'xyz-tidak-ada']))
+        ->assertSuccessful()
+        ->assertJsonCount(0);
+});
+
+it('denies unauthenticated users to search products', function () {
+    getJson(route('stock-transfer.search-product', ['search' => 'Air']))
+        ->assertUnauthorized();
+});
+
 // -- STORE --
 
 it('allows admin to create a stock transfer', function () {
@@ -152,19 +348,19 @@ it('allows admin to create a stock transfer', function () {
         'status' => 'completed',
     ]);
 
-    $this->assertDatabaseHas('warehouse_product', [
+    assertDatabaseHas('warehouse_product', [
         'warehouse_id' => $warehouseA->id,
         'product_id' => $product->id,
         'stock' => 40,
     ]);
 
-    $this->assertDatabaseHas('warehouse_product', [
+    assertDatabaseHas('warehouse_product', [
         'warehouse_id' => $warehouseB->id,
         'product_id' => $product->id,
         'stock' => 10,
     ]);
 
-    $this->assertDatabaseHas('stock_logs', [
+    assertDatabaseHas('stock_logs', [
         'product_id' => $product->id,
         'qty' => 10,
         'type' => 'transfer',
@@ -213,7 +409,7 @@ it('creates a stock log when transferring stock', function () {
         ])
         ->assertRedirect();
 
-    $this->assertDatabaseHas('stock_logs', [
+    assertDatabaseHas('stock_logs', [
         'product_id' => $product->id,
         'qty' => 15,
         'type' => 'transfer',

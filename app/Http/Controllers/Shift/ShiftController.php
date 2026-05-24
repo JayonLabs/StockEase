@@ -10,6 +10,7 @@ use App\Models\Shift;
 use App\Services\Shift\ShiftService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -85,6 +86,8 @@ class ShiftController extends Controller
      */
     public function close(CloseShiftRequest $request, Shift $shift): RedirectResponse
     {
+        Gate::authorize('close', $shift);
+
         try {
             $this->shiftService->closeShift(
                 $shift,

@@ -13,6 +13,7 @@ class PurchaseItem extends Model
 
     protected $fillable = [
         'purchase_id',
+        'warehouse_id',
         'product_id',
         'qty',
         'remaining_qty',
@@ -51,5 +52,15 @@ class PurchaseItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the warehouse that received this purchase item.
+     *
+     * @return BelongsTo
+     */
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 }

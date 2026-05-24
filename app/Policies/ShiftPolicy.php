@@ -48,6 +48,6 @@ class ShiftPolicy
      */
     public function close(User $user, Shift $shift): bool
     {
-        return $user->can('close_shift');
+        return $user->id === $shift->user_id || $user->hasRole('admin');
     }
 }

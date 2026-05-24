@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Sale;
 
+use App\Enums\ShiftStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sale\PosBarcodeCartItemRequest;
 use App\Http\Requests\Sale\PosCartItemRequest;
@@ -10,9 +11,11 @@ use App\Http\Requests\Sale\PosCheckoutRequest;
 use App\Http\Requests\Sale\PosSendInvoiceRequest;
 use App\Models\Promotion;
 use App\Models\Sale;
+use App\Models\Shift;
 use App\Services\Sale\PosService;
 use App\Services\Sale\SaleEmailService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class PosController extends Controller
@@ -31,15 +34,52 @@ class PosController extends Controller
         );
 
         $promotions = Promotion::active()->get();
+        $warehouses = $this->posService->getWarehouses();
+        $activeWarehouseId = $this->posService->getActiveWarehouseId();
+
+        $hasActiveShift = Shift::where('user_id', Auth::id())
+            ->where('status', ShiftStatus::Open->value)
+            ->exists();
 
         return Inertia::render('Pos/Index', [
             'products' => $products,
             'categories' => $categories,
             'cart' => $this->posService->getOrCreateCart(),
             'activePromotions' => $promotions,
+            'warehouses' => $warehouses,
+            'activeWarehouseId' => $activeWarehouseId,
+            'hasActiveShift' => $hasActiveShift,
         ]);
     }
 
+    /**
+     * Set the active warehouse for the POS session.
+     */
+    public function setWarehouse(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'warehouse_id' => ['required', 'integer', 'exists:warehouses,id'],
+            ]);
+
+            $warehouse = $this->posService->setActiveWarehouse((int) $validated['warehouse_id']);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => "Gudang {$warehouse->name} dipilih.",
+                    'warehouse' => $warehouse,
+                ]);
+            }
+
+            return back();
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()], 400);
+        }
+    }
+
+    /**
+     * Ambil keranjang.
+     */
     public function getCartJson()
     {
         if (request()->expectsJson()) {
@@ -51,6 +91,9 @@ class PosController extends Controller
         return abort(403, 'Invalid request.');
     }
 
+    /**
+     * Ubah jumlah item produk di keranjang.
+     */
     public function changeQty(PosChangeQtyRequest $request)
     {
         try {

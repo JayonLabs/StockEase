@@ -7,6 +7,7 @@ use App\Exports\SalesReportExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Report\SaleReportExportRequest;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Services\Sale\SaleReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -37,7 +38,7 @@ class SaleReportController extends Controller
      */
     public function index(Request $request)
     {
-        $filters = $request->only(['start', 'end', 'cashier', 'payment']);
+        $filters = $request->only(['start', 'end', 'cashier', 'payment', 'warehouse']);
 
         $filteredSales = [];
 
@@ -46,8 +47,11 @@ class SaleReportController extends Controller
             $filteredSales = $this->reportService->getIndexReportData($sales);
         }
 
+        $warehouses = Warehouse::select('id', 'name')->get();
+
         return Inertia::render('Reports/Sale/Index', [
             'sales' => $filteredSales,
+            'warehouses' => $warehouses,
         ]);
     }
 

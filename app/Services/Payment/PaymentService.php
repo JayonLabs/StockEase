@@ -115,7 +115,7 @@ class PaymentService
                 $sale = $paymentTransaction->sale;
                 if ($sale && $sale->status !== SaleStatus::Completed->value) {
                     $sale->update(['status' => SaleStatus::Completed->value]);
-                    resolve(ReduceProductStock::class)->execute($sale->saleItems);
+                    resolve(ReduceProductStock::class)->execute($sale->saleItems, $sale->warehouse_id);
                 }
             }
 

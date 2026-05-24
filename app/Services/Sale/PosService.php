@@ -15,6 +15,7 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Shift;
+use App\Models\Warehouse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,13 +23,22 @@ use Illuminate\Support\Facades\DB;
 class PosService
 {
     /**
+     * Session key for the active warehouse ID.
+     */
+    private const SESSION_KEY = 'pos_active_warehouse_id';
+
+    /**
      * Get paginated products with category filter and search.
+     *
+     * Loads warehouse-level stock when an active warehouse is set.
      *
      * @param  array<string, mixed>  $filters
      */
     public function getPaginatedProducts(array $filters, int $perPage = 12): LengthAwarePaginator
     {
-        return Product::query()
+        $warehouseId = $this->getActiveWarehouseId();
+
+        $paginator = Product::query()
             ->when($filters['category'] ?? null, function ($query, $categoryFilter) {
                 $query->whereHas('category', function ($queryCategory) use ($categoryFilter) {
                     $queryCategory->where('slug', $categoryFilter);
@@ -44,6 +54,21 @@ class PosService
             ->orderBy('created_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();
+
+        if ($warehouseId) {
+            $warehouseStocks = DB::table('warehouse_product')
+                ->where('warehouse_id', $warehouseId)
+                ->whereIn('product_id', $paginator->getCollection()->pluck('id'))
+                ->pluck('stock', 'product_id');
+
+            $paginator->getCollection()->transform(function ($product) use ($warehouseStocks) {
+                $product->warehouse_stock = (int) ($warehouseStocks[$product->id] ?? 0);
+
+                return $product;
+            });
+        }
+
+        return $paginator;
     }
 
     /**
@@ -72,6 +97,51 @@ class PosService
     }
 
     /**
+     * Get the active warehouse ID from session.
+     */
+    public function getActiveWarehouseId(): ?int
+    {
+        return session(self::SESSION_KEY);
+    }
+
+    /**
+     * Get the active warehouse from session or throw an exception.
+     *
+     * @throws \Exception
+     */
+    public function requireWarehouseId(): int
+    {
+        $warehouseId = $this->getActiveWarehouseId();
+
+        if (! $warehouseId) {
+            throw new \Exception('Silakan pilih gudang terlebih dahulu.');
+        }
+
+        return $warehouseId;
+    }
+
+    /**
+     * Set the active warehouse for the current POS session.
+     */
+    public function setActiveWarehouse(int $warehouseId): Warehouse
+    {
+        $warehouse = Warehouse::where('is_active', true)->findOrFail($warehouseId);
+        session([self::SESSION_KEY => $warehouse->id]);
+
+        return $warehouse;
+    }
+
+    /**
+     * Get available warehouses for selection.
+     */
+    public function getWarehouses()
+    {
+        return Warehouse::where('is_active', true)
+            ->select('id', 'name', 'slug')
+            ->get();
+    }
+
+    /**
      * Get the current active cart (draft sale) for the authenticated user.
      */
     public function getOrCreateCart(): Sale
@@ -82,9 +152,12 @@ class PosService
             ->first();
 
         if (! $cart) {
+            $warehouseId = $this->getActiveWarehouseId();
+
             $cart = Sale::create([
                 'user_id' => Auth::id(),
                 'shift_id' => $this->getActiveShiftId(),
+                'warehouse_id' => $warehouseId,
                 'total' => 0,
                 'payment_method' => PaymentMethod::Pending->value,
                 'paid' => 0,
@@ -99,10 +172,40 @@ class PosService
     }
 
     /**
+     * Get available stock for a product (warehouse stock if warehouse set, else global stock).
+     */
+    private function getAvailableStock(Product $product): int
+    {
+        $warehouseId = $this->getActiveWarehouseId();
+
+        if ($warehouseId) {
+            return $product->stockInWarehouse($warehouseId);
+        }
+
+        return $product->stock;
+    }
+
+    /**
+     * Verify that both shift is open and warehouse is selected before any mutation.
+     *
+     * @throws \Exception
+     */
+    private function ensureReady(): void
+    {
+        if (! $this->getActiveShiftId()) {
+            throw new \Exception('Silakan buka shift terlebih dahulu.');
+        }
+
+        $this->requireWarehouseId();
+    }
+
+    /**
      * Add product to cart by barcode.
      */
     public function addToCartByBarcode(string $barcode, int $qty = 1): array
     {
+        $this->ensureReady();
+
         $product = Product::where('barcode', $barcode)->first();
 
         if (! $product) {
@@ -117,17 +220,22 @@ class PosService
      */
     public function addToCart(int $productId, int $qty = 1): array
     {
+        $this->ensureReady();
+
         $product = Product::findOrFail($productId);
         $cart = $this->getOrCreateCart();
+        $warehouseId = $this->getActiveWarehouseId();
 
-        if ($product->stock <= 0) {
+        $availableStock = $this->getAvailableStock($product);
+
+        if ($availableStock <= 0) {
             throw new \Exception('Stok produk habis');
         }
 
         $existItem = $cart->saleItems->firstWhere('product_id', $product->id);
         $resultingQty = ($existItem?->qty ?? 0) + $qty;
 
-        if ($product->stock < $resultingQty) {
+        if ($availableStock < $resultingQty) {
             throw new \Exception('Stok produk tidak mencukupi');
         }
 
@@ -135,6 +243,7 @@ class PosService
             $newItem = SaleItem::create([
                 'sale_id' => $cart->id,
                 'product_id' => $product->id,
+                'warehouse_id' => $warehouseId,
                 'qty' => $qty,
                 'price' => $product->selling_price,
             ]);
@@ -156,10 +265,13 @@ class PosService
      */
     public function updateCartItemQty(int $productId, int $qty): array
     {
+        $this->ensureReady();
+
         $cart = $this->getOrCreateCart();
         $product = Product::findOrFail($productId);
+        $availableStock = $this->getAvailableStock($product);
 
-        if ($qty > 0 && $qty > $product->stock) {
+        if ($qty > 0 && $qty > $availableStock) {
             throw new \Exception('Stok produk tidak mencukupi');
         }
 
@@ -211,7 +323,10 @@ class PosService
      */
     public function checkout(array $data): array
     {
-        return DB::transaction(function () use ($data) {
+        $this->ensureReady();
+        $warehouseId = $this->getActiveWarehouseId();
+
+        return DB::transaction(function () use ($data, $warehouseId) {
             $sale = Sale::with('saleItems.product')
                 ->where('user_id', Auth::id())
                 ->where('status', SaleStatus::Draft->value)
@@ -222,20 +337,25 @@ class PosService
             }
 
             foreach ($sale->saleItems as $item) {
-                if ($item->product->stock < $item->qty) {
+                $availableStock = $item->product->stockInWarehouse($warehouseId);
+
+                if ($availableStock < $item->qty) {
                     throw new \Exception("Stok produk {$item->product->name} tidak mencukupi untuk checkout.");
                 }
             }
 
             if ($data['payment_method'] === PaymentMethod::Qris->value) {
                 $sale->update([
+                    'warehouse_id' => $warehouseId,
                     'payment_method' => PaymentMethod::Qris->value,
                     'shift_id' => $this->getActiveShiftId(),
                     'customer_name' => $data['customer_name'] ?? null,
-                    'paid' => $sale->total, // QRIS total matches sale total
-                    'status' => SaleStatus::Pending->value,   // QRIS stays pending until webhook
+                    'paid' => $sale->total,
+                    'status' => SaleStatus::Pending->value,
                     'date' => now(),
                 ]);
+
+                $sale->saleItems()->update(['warehouse_id' => $warehouseId]);
 
                 PaymentTransaction::create([
                     'sale_id' => $sale->id,
@@ -253,6 +373,7 @@ class PosService
                 $change = $data['paid'] - $sale->total;
 
                 $sale->update([
+                    'warehouse_id' => $warehouseId,
                     'payment_method' => PaymentMethod::Cash->value,
                     'shift_id' => $this->getActiveShiftId(),
                     'customer_name' => $data['customer_name'] ?? null,
@@ -262,7 +383,9 @@ class PosService
                     'date' => now(),
                 ]);
 
-                resolve(ReduceProductStock::class)->execute($sale->saleItems);
+                $sale->saleItems()->update(['warehouse_id' => $warehouseId]);
+
+                resolve(ReduceProductStock::class)->execute($sale->saleItems, $warehouseId);
             }
 
             // After checkout, we get/create a new empty cart for the next transaction

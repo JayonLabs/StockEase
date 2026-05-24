@@ -14,7 +14,7 @@ class ActivityLogController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Activity::with('causer:id,name,email')
+        $query = Activity::with('causer:id,name,email', 'causer.roles')
             ->latest();
 
         if ($request->filled('search')) {
@@ -56,7 +56,7 @@ class ActivityLogController extends Controller
      */
     public function show(Activity $activity)
     {
-        $activity->load('causer:id,name,email');
+        $activity->load('causer:id,name,email', 'causer.roles');
 
         return Inertia::render('ActivityLog/Show', [
             'activity' => $activity,

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\DB;
 
 class PermissionSeeder extends Seeder
 {
@@ -15,20 +15,17 @@ class PermissionSeeder extends Seeder
      */
     public function run(): void
     {
-        $permissions = $this->getPermissions();
+        $now = now();
+        $rows = array_map(fn (string $name) => [
+            'name' => $name,
+            'guard_name' => 'web',
+            'created_at' => $now,
+            'updated_at' => $now,
+        ], $this->getPermissions());
 
-        foreach ($permissions as $permission) {
-            // Performance best practice: make + saveOrFail is faster than create()
-            // when doing bulk permission creation. We skip if already exists.
-            $exists = Permission::where('name', $permission)
-                ->where('guard_name', 'web')
-                ->first();
-
-            if (! $exists) {
-                Permission::make(['name' => $permission, 'guard_name' => 'web'])
-                    ->saveOrFail();
-            }
-        }
+        // Bulk insert — bypasses model events so Spatie cache is NOT flushed per row.
+        DB::table(config('permission.table_names.permissions', 'permissions'))
+            ->insertOrIgnore($rows);
     }
 
     /**

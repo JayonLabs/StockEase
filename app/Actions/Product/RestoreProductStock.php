@@ -13,11 +13,14 @@ class RestoreProductStock
     /**
      * Restore product stock from return items.
      *
-     * This function increments the stock of each product in the given return items
-     * by the quantity returned. It also reverses FEFO by adding back to the
-     * purchase_items.remaining_qty in the same order they were deducted.
+     * When a warehouse ID is provided, stock is restored to that warehouse's
+     * inventory (warehouse_product pivot) and the global products.stock is
+     * then synced from all warehouses.
+     *
+     * When no warehouse ID is provided, stock is restored to the global
+     * products.stock column directly (backward compatible).
      */
-    public function execute(Collection $returnItems): void
+    public function execute(Collection $returnItems, ?int $warehouseId = null): void
     {
         $productIds = $returnItems->pluck('product_id')->toArray();
         $products = Product::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
@@ -27,11 +30,16 @@ class RestoreProductStock
             $product = $products[$item->product_id];
 
             // FEFO Reversal: Add back to purchase items
-            // We add to purchase items in reverse of expiry order (oldest last so it's
-            // available again for future sales), same order as the original deduction
             $qtyToRestore = $item->qty;
-            $purchaseItems = PurchaseItem::where('product_id', $product->id)
-                ->where('remaining_qty', '<', DB::raw('qty'))
+
+            $purchaseItemsQuery = PurchaseItem::where('product_id', $product->id)
+                ->where('remaining_qty', '<', DB::raw('qty'));
+
+            if ($warehouseId !== null) {
+                $purchaseItemsQuery->where('warehouse_id', $warehouseId);
+            }
+
+            $purchaseItems = $purchaseItemsQuery
                 ->orderByRaw('expiry_date IS NULL, expiry_date ASC')
                 ->lockForUpdate()
                 ->get();
@@ -55,8 +63,18 @@ class RestoreProductStock
                 $lastItem->increment('remaining_qty', $qtyToRestore);
             }
 
-            $product->increment('stock', $item->qty);
-            (new UpdateProductExpiryDate)->execute($product);
+            if ($warehouseId !== null) {
+                DB::table('warehouse_product')
+                    ->where('warehouse_id', $warehouseId)
+                    ->where('product_id', $product->id)
+                    ->increment('stock', $item->qty);
+
+                $product->syncStockFromWarehouses();
+            } else {
+                $product->increment('stock', $item->qty);
+            }
+
+            (new UpdateProductExpiryDate)->execute($product, $warehouseId);
 
             StockLog::create([
                 'product_id' => $product->id,

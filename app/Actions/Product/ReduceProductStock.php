@@ -9,18 +9,21 @@ use App\Models\PurchaseItem;
 use App\Models\Sale;
 use App\Models\StockLog;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class ReduceProductStock
 {
     /**
      * Reduce product stock from sale items.
      *
-     * This function reduces the stock of each product in the given sale items
-     * by the quantity sold. It also updates the product expiry date based on the
-     * earliest expiring available stock. If the stock falls below the alert level,
-     * it sends a notification to the admin.
+     * When a warehouse ID is provided, stock is reduced from that warehouse's
+     * inventory (warehouse_product pivot) using FEFO filtered by warehouse.
+     * The global products.stock is then synced from all warehouses.
+     *
+     * When no warehouse ID is provided, stock is reduced from the global
+     * products.stock column directly (backward compatible).
      */
-    public function execute(Collection $saleItems): void
+    public function execute(Collection $saleItems, ?int $warehouseId = null): void
     {
         $productIds = $saleItems->pluck('product_id')->toArray();
         $products = Product::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
@@ -29,15 +32,28 @@ class ReduceProductStock
             /** @var Product $product */
             $product = $products[$item->product_id];
 
-            if ($product->stock < $item->qty) {
+            if ($warehouseId !== null) {
+                $warehouseStock = $product->stockInWarehouse($warehouseId);
+
+                if ($warehouseStock < $item->qty) {
+                    throw new \Exception("Stok produk {$product->name} tidak cukup di gudang.");
+                }
+            } elseif ($product->stock < $item->qty) {
                 throw new \Exception("Stok produk {$product->name} tidak cukup.");
             }
 
             // FEFO Logic: Deduct stock from the earliest expiring purchase items
             $qtyToReduce = $item->qty;
             $totalItemCost = 0;
-            $purchaseItems = PurchaseItem::where('product_id', $product->id)
-                ->where('remaining_qty', '>', 0)
+
+            $purchaseItemsQuery = PurchaseItem::where('product_id', $product->id)
+                ->where('remaining_qty', '>', 0);
+
+            if ($warehouseId !== null) {
+                $purchaseItemsQuery->where('warehouse_id', $warehouseId);
+            }
+
+            $purchaseItems = $purchaseItemsQuery
                 ->orderByRaw('expiry_date IS NULL, expiry_date ASC')
                 ->lockForUpdate()
                 ->get();
@@ -61,9 +77,19 @@ class ReduceProductStock
                 'cost_price' => $item->qty > 0 ? $totalItemCost / $item->qty : 0,
             ]);
 
-            $product->decrement('stock', $item->qty);
-            (new UpdateProductExpiryDate)->execute($product);
-            $product->refresh(); // Refresh to get the actual stock value after decrement
+            if ($warehouseId !== null) {
+                DB::table('warehouse_product')
+                    ->where('warehouse_id', $warehouseId)
+                    ->where('product_id', $product->id)
+                    ->decrement('stock', $item->qty);
+
+                $product->syncStockFromWarehouses();
+            } else {
+                $product->decrement('stock', $item->qty);
+            }
+
+            (new UpdateProductExpiryDate)->execute($product, $warehouseId);
+            $product->refresh();
 
             if ($product->stock <= $product->alert_stock) {
                 (new NotifyStockAlert)->execute($product);

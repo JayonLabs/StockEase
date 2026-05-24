@@ -4,6 +4,7 @@ use App\Models\Product;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Models\Warehouse;
 use Carbon\Carbon;
 use Tests\TestCase;
 
@@ -12,26 +13,31 @@ use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertSoftDeleted;
 
 beforeEach(function () {
-    /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+    /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
     $this->admin = User::factory()->create(['role' => 'admin']);
     $this->warehouse = User::factory()->create(['role' => 'warehouse']);
     $this->cashier = User::factory()->create(['role' => 'cashier']);
 
+    $this->warehouseModel = Warehouse::factory()->create();
     $this->supplier = Supplier::factory()->create();
-    $this->product = Product::factory()->create(['stock' => 10]);
+    $this->product = Product::factory()->create();
+    $this->warehouseModel->products()->attach($this->product->id, ['stock' => 10]);
+    $this->product->syncStockFromWarehouses();
 });
 
 // Helper — buat purchase dengan item
-function purchase(User $user, Supplier $supplier, Product $product, array $purchaseAttributes = [], array $itemAttributes = []): Purchase
+function purchase(User $user, Supplier $supplier, Product $product, Warehouse $warehouseModel, array $purchaseAttributes = [], array $itemAttributes = []): Purchase
 {
     $purchase = Purchase::factory()->create(array_merge([
         'user_id' => $user->id,
         'supplier_id' => $supplier->id,
+        'warehouse_id' => $warehouseModel->id,
         'date' => Carbon::today()->toDateString(),
         'total' => 5000,
     ], $purchaseAttributes));
 
     $purchase->purchaseItems()->create(array_merge([
+        'warehouse_id' => $warehouseModel->id,
         'product_id' => $product->id,
         'qty' => 5,
         'remaining_qty' => 5,
@@ -42,10 +48,11 @@ function purchase(User $user, Supplier $supplier, Product $product, array $purch
 }
 
 // Helper — payload store/update yang valid
-function purchasePayload(Supplier $supplier, Product $product, array $overrides = []): array
+function purchasePayload(Supplier $supplier, Product $product, Warehouse $warehouseModel, array $overrides = []): array
 {
     return array_merge([
         'supplier_id' => $supplier->id,
+        'warehouse_id' => $warehouseModel->id,
         'date' => Carbon::today()->toDateString(),
         'product_items' => [
             [
@@ -113,6 +120,13 @@ describe('Index', function () {
             ->get(route('purchase.index'))
             ->assertSuccessful()
             ->assertInertia(fn ($page) => $page->component('Purchase/Index'));
+    });
+
+    it('passes warehouses prop to the Vue component', function () {
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        actingAs($this->admin)
+            ->get(route('purchase.index'))
+            ->assertInertia(fn ($page) => $page->has('warehouses'));
     });
 
     it('passes purchases prop with paginator structure', function () {
@@ -414,9 +428,9 @@ describe('Search product', function () {
 
 describe('Store', function () {
     it('creates a purchase and redirects to index with success message', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
         actingAs($this->admin)
-            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product))
+            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, $this->warehouseModel))
             ->assertRedirect(route('purchase.index'))
             ->assertSessionHas('success');
 
@@ -424,9 +438,9 @@ describe('Store', function () {
     });
 
     it('increments product stock on store', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
         actingAs($this->admin)
-            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, [
+            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, $this->warehouseModel, [
                 'product_items' => [[
                     'product_id' => $this->product->id,
                     'qty' => 5,
@@ -440,9 +454,9 @@ describe('Store', function () {
     });
 
     it('creates stock log with type in on store', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
         actingAs($this->admin)
-            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product));
+            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, $this->warehouseModel));
 
         assertDatabaseHas('stock_logs', [
             'product_id' => $this->product->id,
@@ -453,9 +467,9 @@ describe('Store', function () {
     });
 
     it('calculates total correctly on store', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
         actingAs($this->admin)
-            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, [
+            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, $this->warehouseModel, [
                 'product_items' => [
                     ['product_id' => $this->product->id, 'qty' => 3, 'price' => 2000, 'selling_price' => 4000, 'expiry_date' => null],
                 ],
@@ -465,11 +479,13 @@ describe('Store', function () {
     });
 
     it('stores multiple products in one purchase', function () {
-        $product2 = Product::factory()->create(['stock' => 5]);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $product2 = Product::factory()->create();
+        $this->warehouseModel->products()->attach($product2->id, ['stock' => 5]);
+        $product2->syncStockFromWarehouses();
 
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
         actingAs($this->admin)
-            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, [
+            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, $this->warehouseModel, [
                 'product_items' => [
                     ['product_id' => $this->product->id, 'qty' => 5, 'price' => 1000, 'selling_price' => 2000, 'expiry_date' => null],
                     ['product_id' => $product2->id, 'qty' => 10, 'price' => 500, 'selling_price' => 1000, 'expiry_date' => null],
@@ -481,11 +497,11 @@ describe('Store', function () {
     });
 
     it('stores purchase item with expiry_date when provided', function () {
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
         $expiryDate = Carbon::today()->addMonths(6)->toDateString();
 
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
         actingAs($this->admin)
-            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, [
+            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, $this->warehouseModel, [
                 'product_items' => [[
                     'product_id' => $this->product->id,
                     'qty' => 5,
@@ -502,9 +518,9 @@ describe('Store', function () {
     });
 
     it('warehouse can also store a purchase', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
         actingAs($this->warehouse)
-            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product))
+            ->post(route('purchase.store'), purchasePayload($this->supplier, $this->product, $this->warehouseModel))
             ->assertRedirect(route('purchase.index'));
     });
 
@@ -538,13 +554,12 @@ describe('Store', function () {
 
 describe('Update', function () {
     it('updates a purchase and redirects to index with success message', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
-        $purchase = purchase($this->admin, $this->supplier, $this->product);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $purchase = purchase($this->admin, $this->supplier, $this->product, $this->warehouseModel);
         $newSupplier = Supplier::factory()->create();
 
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
         actingAs($this->admin)
-            ->put(route('purchase.update', $purchase), purchasePayload($newSupplier, $this->product))
+            ->put(route('purchase.update', $purchase), purchasePayload($newSupplier, $this->product, $this->warehouseModel))
             ->assertRedirect(route('purchase.index'))
             ->assertSessionHas('success');
 
@@ -555,13 +570,14 @@ describe('Update', function () {
     });
 
     it('adjusts stock when qty increases on update', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
-        $purchase = purchase($this->admin, $this->supplier, $this->product, [], ['qty' => 5]);
-        // stock: 10 + 5 (dari factory) = 15 setelah store, tapi kita set manual
-        $this->product->update(['stock' => 15]);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $purchase = purchase($this->admin, $this->supplier, $this->product, $this->warehouseModel, [], ['qty' => 5]);
+        // Simulate stock after original purchase: warehouse stock = 15
+        $this->warehouseModel->products()->syncWithoutDetaching([$this->product->id => ['stock' => 15]]);
+        $this->product->syncStockFromWarehouses();
 
         actingAs($this->admin)
-            ->put(route('purchase.update', $purchase), purchasePayload($this->supplier, $this->product, [
+            ->put(route('purchase.update', $purchase), purchasePayload($this->supplier, $this->product, $this->warehouseModel, [
                 'product_items' => [[
                     'product_id' => $this->product->id,
                     'qty' => 8, // +3 dari 5
@@ -575,12 +591,13 @@ describe('Update', function () {
     });
 
     it('adjusts stock when qty decreases on update', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
-        $purchase = purchase($this->admin, $this->supplier, $this->product, [], ['qty' => 5]);
-        $this->product->update(['stock' => 15]);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $purchase = purchase($this->admin, $this->supplier, $this->product, $this->warehouseModel, [], ['qty' => 5]);
+        $this->warehouseModel->products()->syncWithoutDetaching([$this->product->id => ['stock' => 15]]);
+        $this->product->syncStockFromWarehouses();
 
         actingAs($this->admin)
-            ->put(route('purchase.update', $purchase), purchasePayload($this->supplier, $this->product, [
+            ->put(route('purchase.update', $purchase), purchasePayload($this->supplier, $this->product, $this->warehouseModel, [
                 'product_items' => [[
                     'product_id' => $this->product->id,
                     'qty' => 3, // -2 dari 5
@@ -594,12 +611,13 @@ describe('Update', function () {
     });
 
     it('creates stock log with type adjust on update', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
-        $purchase = purchase($this->admin, $this->supplier, $this->product, [], ['qty' => 5]);
-        $this->product->update(['stock' => 15]);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $purchase = purchase($this->admin, $this->supplier, $this->product, $this->warehouseModel, [], ['qty' => 5]);
+        $this->warehouseModel->products()->syncWithoutDetaching([$this->product->id => ['stock' => 15]]);
+        $this->product->syncStockFromWarehouses();
 
         actingAs($this->admin)
-            ->put(route('purchase.update', $purchase), purchasePayload($this->supplier, $this->product, [
+            ->put(route('purchase.update', $purchase), purchasePayload($this->supplier, $this->product, $this->warehouseModel, [
                 'product_items' => [[
                     'product_id' => $this->product->id,
                     'qty' => 8,
@@ -618,19 +636,19 @@ describe('Update', function () {
     });
 
     it('returns 404 for non-existent purchase on update', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
         actingAs($this->admin)
-            ->put(route('purchase.update', 999999), purchasePayload($this->supplier, $this->product))
+            ->put(route('purchase.update', 999999), purchasePayload($this->supplier, $this->product, $this->warehouseModel))
             ->assertNotFound();
     });
 
     it('validates required fields on update', function (array $overrides, array $errors) {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
-        $purchase = purchase($this->admin, $this->supplier, $this->product);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $purchase = purchase($this->admin, $this->supplier, $this->product, $this->warehouseModel);
 
         actingAs($this->admin)
             ->put(route('purchase.update', $purchase), array_merge(
-                purchasePayload($this->supplier, $this->product),
+                purchasePayload($this->supplier, $this->product, $this->warehouseModel),
                 $overrides
             ))
             ->assertSessionHasErrors($errors);
@@ -647,8 +665,8 @@ describe('Update', function () {
 
 describe('Destroy', function () {
     it('deletes a purchase and redirects to index with success message', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
-        $purchase = purchase($this->admin, $this->supplier, $this->product);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $purchase = purchase($this->admin, $this->supplier, $this->product, $this->warehouseModel);
 
         actingAs($this->admin)
             ->delete(route('purchase.destroy', $purchase))
@@ -659,9 +677,10 @@ describe('Destroy', function () {
     });
 
     it('decrements product stock on delete', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
-        $purchase = purchase($this->admin, $this->supplier, $this->product, [], ['qty' => 5]);
-        $this->product->update(['stock' => 15]);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $purchase = purchase($this->admin, $this->supplier, $this->product, $this->warehouseModel, [], ['qty' => 5]);
+        $this->warehouseModel->products()->syncWithoutDetaching([$this->product->id => ['stock' => 15]]);
+        $this->product->syncStockFromWarehouses();
 
         actingAs($this->admin)
             ->delete(route('purchase.destroy', $purchase));
@@ -670,8 +689,8 @@ describe('Destroy', function () {
     });
 
     it('creates stock log with type out on delete', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
-        $purchase = purchase($this->admin, $this->supplier, $this->product, [], ['qty' => 5]);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $purchase = purchase($this->admin, $this->supplier, $this->product, $this->warehouseModel, [], ['qty' => 5]);
 
         actingAs($this->admin)
             ->delete(route('purchase.destroy', $purchase));
@@ -686,8 +705,8 @@ describe('Destroy', function () {
     });
 
     it('deletes all purchase items on purchase delete', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
-        $purchase = purchase($this->admin, $this->supplier, $this->product);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $purchase = purchase($this->admin, $this->supplier, $this->product, $this->warehouseModel);
 
         actingAs($this->admin)
             ->delete(route('purchase.destroy', $purchase));
@@ -696,15 +715,15 @@ describe('Destroy', function () {
     });
 
     it('returns 404 for non-existent purchase on delete', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
         actingAs($this->admin)
             ->delete(route('purchase.destroy', 999999))
             ->assertNotFound();
     });
 
     it('warehouse can also delete a purchase', function () {
-        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, supplier:Supplier, product:Product} $this */
-        $purchase = purchase($this->warehouse, $this->supplier, $this->product);
+        /** @var TestCase&object{admin:User, cashier:User, warehouse:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $purchase = purchase($this->warehouse, $this->supplier, $this->product, $this->warehouseModel);
 
         actingAs($this->warehouse)
             ->delete(route('purchase.destroy', $purchase))

@@ -34,6 +34,7 @@ class HandleInertiaRequests extends Middleware
         $userData = null;
 
         if ($user) {
+            $user->load('roles', 'permissions');
             $userData = $user->toArray();
             $userData['roles'] = $user->getRoleNames();
             $userData['role'] = $user->getRoleNames()->first();

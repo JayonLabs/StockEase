@@ -7,8 +7,10 @@ use App\Http\Requests\Warehouse\StoreStockTransferRequest;
 use App\Models\Product;
 use App\Models\Warehouse;
 use App\Services\Warehouse\StockTransferService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -56,30 +58,28 @@ class StockTransferController extends Controller
     /**
      * Search products for transfer selection.
      */
-    public function searchProduct(Request $request)
+    public function searchProduct(Request $request): JsonResponse
     {
-        if ($request->expectsJson()) {
-            $search = $request->search;
+        $search = $request->string('search');
+        $warehouseId = $request->integer('warehouse_id') ?: null;
 
-            $warehouseId = $request->warehouse_id;
-
-            $products = Product::where(function ($q) use ($search) {
+        $products = Product::select('id as value', 'name as label', 'stock')
+            ->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('sku', 'like', "%{$search}%")
                     ->orWhere('barcode', 'like', "%{$search}%");
             });
 
-            if ($warehouseId) {
-                $products->whereHas('warehouses', function ($q) use ($warehouseId) {
-                    $q->where('warehouses.id', $warehouseId);
-                });
-            }
-
-            return response()->json(
-                $products->select('id as value', 'name as label', 'stock')
-                    ->take(10)
-                    ->get()
-            );
+        if ($warehouseId) {
+            $products->addSelect([
+                'warehouse_stock' => DB::table('warehouse_product')
+                    ->select('stock')
+                    ->whereColumn('product_id', 'products.id')
+                    ->where('warehouse_id', $warehouseId)
+                    ->limit(1),
+            ]);
         }
+
+        return response()->json($products->take(10)->get());
     }
 }

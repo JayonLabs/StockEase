@@ -14,6 +14,7 @@ class SaleItem extends Model
     protected $fillable = [
         'sale_id',
         'product_id',
+        'warehouse_id',
         'qty',
         'price',
         'cost_price',
@@ -63,5 +64,15 @@ class SaleItem extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the warehouse that this sale item belongs to.
+     *
+     * @return BelongsTo
+     */
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 }

@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,6 +22,7 @@ class PurchaseFactory extends Factory
     {
         return [
             'supplier_id' => Supplier::factory(),
+            'warehouse_id' => Warehouse::factory(),
             'user_id' => User::factory(),
             'total' => 0,
             'date' => now(),
