@@ -11,6 +11,13 @@ import axios from 'axios';
 import ProductTable from './ProductTable.vue';
 import { Calendar } from '@/Components/ui/calendar';
 import InputError from '@/Components/InputError.vue';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/Components/ui/select';
 
 import {
     DateFormatter,
@@ -45,6 +52,13 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/Components/ui/dialog';
+
+const props = defineProps({
+    warehouses: {
+        type: Array,
+        default: () => [],
+    },
+});
 
 const isDialogOpen = ref(false);
 const searchSupplier = ref('');
@@ -86,6 +100,7 @@ const date = ref(today(getLocalTimeZone()));
 
 const form = useForm({
     supplier_id: '',
+    warehouse_id: '',
     date: formatDate(date.value),
     product_items: [],
 });
@@ -133,6 +148,24 @@ const submit = () => {
                 </DialogDescription>
             </DialogHeader>
             <form id="form" @submit.prevent="submit">
+                <div class="grid gap-2 mb-4">
+                    <Label for="warehouse">Gudang Tujuan</Label>
+                    <Select v-model="form.warehouse_id">
+                        <SelectTrigger id="warehouse">
+                            <SelectValue placeholder="Pilih gudang..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem
+                                v-for="warehouse in props.warehouses"
+                                :key="warehouse.id"
+                                :value="String(warehouse.id)"
+                            >
+                                {{ warehouse.name }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <InputError :message="form.errors.warehouse_id" />
+                </div>
                 <div class="flex items-center space-x-2">
                     <div class="grid flex-1 gap-2">
                         <Label for="supplier"> Supplier </Label>

@@ -20,6 +20,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    warehouses: {
+        type: Array,
+        default: () => [],
+    },
 });
 </script>
 
@@ -53,7 +57,7 @@ const props = defineProps({
                             Riwayat penyesuaian stok produk.
                         </p>
                     </div>
-                    <StockAdjustmentCreateForm />
+                    <StockAdjustmentCreateForm :warehouses="props.warehouses" />
                 </div>
                 <Separator class="my-4" />
 

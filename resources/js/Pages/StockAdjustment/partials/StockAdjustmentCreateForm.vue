@@ -12,6 +12,13 @@ import { watchDebounced } from '@vueuse/core';
 import axios from 'axios';
 import { Calendar } from '@/Components/ui/calendar';
 import InputError from '@/Components/InputError.vue';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/Components/ui/select';
 
 import {
     DateFormatter,
@@ -47,6 +54,13 @@ import {
     DialogTrigger,
 } from '@/Components/ui/dialog';
 
+const props = defineProps({
+    warehouses: {
+        type: Array,
+        default: () => [],
+    },
+});
+
 const isDialogOpen = ref(false);
 const searchProduct = ref('');
 const products = ref([]);
@@ -59,6 +73,7 @@ const df = new DateFormatter('id-ID', {
 const date = ref(today(getLocalTimeZone()));
 
 const form = useForm({
+    warehouse_id: '',
     product_id: '',
     new_stock: 0,
     reason: '',
@@ -71,7 +86,10 @@ watchDebounced(
         if (newSearch.length < 2) return;
         axios
             .get(route('stock-adjustment.search-product'), {
-                params: { search: newSearch },
+                params: {
+                    search: newSearch,
+                    warehouse_id: form.warehouse_id || undefined,
+                },
             })
             .then((response) => {
                 products.value = response.data;
@@ -86,7 +104,9 @@ watchDebounced(
 watch(selectedProduct, (val) => {
     if (val) {
         form.product_id = val.value;
-        form.new_stock = val.stock;
+        form.new_stock = form.warehouse_id
+            ? (val.warehouse_stock ?? 0)
+            : val.stock;
     }
 });
 
@@ -103,6 +123,7 @@ const submit = () => {
             form.reset();
             selectedProduct.value = null;
             searchProduct.value = '';
+            products.value = [];
             toast.success('Penyesuaian stok berhasil disimpan', {
                 description: `Berhasil diproses oleh ${user}`,
             });
@@ -137,6 +158,24 @@ const submit = () => {
                 @submit.prevent="submit"
             >
                 <div class="grid gap-2">
+                    <Label for="warehouse">Gudang</Label>
+                    <Select v-model="form.warehouse_id">
+                        <SelectTrigger id="warehouse">
+                            <SelectValue placeholder="Pilih gudang..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem
+                                v-for="warehouse in props.warehouses"
+                                :key="warehouse.id"
+                                :value="String(warehouse.id)"
+                            >
+                                {{ warehouse.name }}
+                            </SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <InputError :message="form.errors.warehouse_id" />
+                </div>
+                <div class="grid gap-2">
                     <Label for="product"> Produk </Label>
                     <Combobox v-model="selectedProduct" by="label">
                         <ComboboxAnchor class="w-full">
@@ -148,7 +187,7 @@ const submit = () => {
                                     placeholder="Cari Produk (Nama/SKU/Barcode)..."
                                 />
                                 <span
-                                    class="absolute start-0 inset-y-0 flex items-center justify-center px-3"
+                                    class="absolute inset-s-0 inset-y-0 flex items-center justify-center px-3"
                                 >
                                     <Search
                                         class="size-4 text-muted-foreground"
@@ -172,9 +211,20 @@ const submit = () => {
                                         <span>{{ product.label }}</span>
                                         <span
                                             class="text-xs text-muted-foreground"
-                                            >Stok saat ini:
-                                            {{ product.stock }}</span
                                         >
+                                            Stok
+                                            {{
+                                                form.warehouse_id
+                                                    ? 'gudang'
+                                                    : 'global'
+                                            }}:
+                                            {{
+                                                form.warehouse_id
+                                                    ? (product.warehouse_stock ??
+                                                      0)
+                                                    : product.stock
+                                            }}
+                                        </span>
                                     </div>
                                     <ComboboxItemIndicator>
                                         <Check :class="cn('ml-auto h-4 w-4')" />

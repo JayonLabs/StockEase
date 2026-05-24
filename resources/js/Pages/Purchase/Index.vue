@@ -27,6 +27,10 @@ const props = defineProps({
         type: Object,
         required: true,
     },
+    warehouses: {
+        type: Array,
+        default: () => [],
+    },
     filters: {
         type: Object,
         default: () => ({ start: '', end: '', search: '' }),
@@ -94,7 +98,7 @@ function resetFilters() {
             <div class="rounded-xl bg-muted/50 h-full p-4">
                 <div class="flex justify-between items-center">
                     <h4 class="font-semibold">Data Pembelian</h4>
-                    <PurchaseCreateForm />
+                    <PurchaseCreateForm :warehouses="props.warehouses" />
                 </div>
                 <Separator class="my-4" />
 
