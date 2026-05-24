@@ -4,6 +4,7 @@ use App\Models\Product;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -11,17 +12,20 @@ use Tests\TestCase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    /** @var TestCase&object{admin: User, supplier: Supplier, product: Product} $this */
+    /** @var TestCase&object{admin: User, supplier: Supplier, product: Product, warehouseModel: Warehouse} $this */
     $this->admin = User::factory()->create(['role' => 'admin']);
     $this->supplier = Supplier::factory()->create();
     $this->product = Product::factory()->create();
+    $this->warehouseModel = Warehouse::factory()->create();
+    $this->warehouseModel->products()->attach($this->product->id, ['stock' => 0]);
 });
 
 it('can store purchase with expiry date', function () {
     $expiryDate = now()->addYear()->toDateString();
-    /** @var TestCase&object{admin: User, supplier: Supplier, product: Product} $this */
+    /** @var TestCase&object{admin: User, supplier: Supplier, product: Product, warehouseModel: Warehouse} $this */
     $response = $this->actingAs($this->admin)->post(route('purchase.store'), [
         'supplier_id' => $this->supplier->id,
+        'warehouse_id' => $this->warehouseModel->id,
         'date' => now()->toDateString(),
         'product_items' => [
             [
