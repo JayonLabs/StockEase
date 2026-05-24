@@ -13,7 +13,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/Components/ui/select';
-import { Search } from 'lucide-vue-next';
 import { ref, watch } from 'vue';
 
 import {
@@ -40,33 +39,16 @@ const props = defineProps({
     },
 });
 
-const search = ref(props.filters.search || '');
 const warehouseId = ref(props.filters.warehouse_id || '');
 
-let searchTimer;
-watch(search, (val) => {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
-        router.get(
-            route('stock-transfer.index'),
-            {
-                search: val || undefined,
-                warehouse_id: warehouseId.value || undefined,
-            },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                replace: true,
-            },
-        );
-    }, 300);
-});
-
 watch(warehouseId, (val) => {
+    const currentSearch =
+        new URLSearchParams(window.location.search).get('search') || undefined;
+
     router.get(
         route('stock-transfer.index'),
         {
-            search: search.value || undefined,
+            search: currentSearch,
             warehouse_id: val || undefined,
         },
         {

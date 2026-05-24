@@ -20,12 +20,14 @@ class StockTransferService
      */
     public function getPaginatedTransfers(array $filters, int $perPage = 10): LengthAwarePaginator
     {
-        return StockTransfer::with(['fromWarehouse', 'toWarehouse', 'product', 'user'])
+        return StockTransfer::with(['fromWarehouse', 'toWarehouse', 'product', 'user.roles'])
             ->when($filters['search'] ?? null, function ($query, $search) {
-                $query->whereHas('product', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%");
-                })->orWhere('note', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('product', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('sku', 'like', "%{$search}%");
+                    })->orWhere('note', 'like', "%{$search}%");
+                });
             })
             ->when($filters['warehouse_id'] ?? null, function ($query, $warehouseId) {
                 $query->where(function ($q) use ($warehouseId) {
