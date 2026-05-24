@@ -18,6 +18,7 @@ class Sale extends Model
     protected $fillable = [
         'user_id',
         'shift_id',
+        'warehouse_id',
         'customer_name',
         'total',
         'payment_method',
@@ -61,6 +62,14 @@ class Sale extends Model
     public function saleItems()
     {
         return $this->hasMany(SaleItem::class);
+    }
+
+    /**
+     * Get the warehouse that the sale belongs to.
+     */
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 
     /**
