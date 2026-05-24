@@ -2,9 +2,14 @@
 
 namespace App\Http\Controllers\Payment;
 
+use App\Enums\SaleStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Payment\CreateMidtransTransactionRequest;
+use App\Models\Sale;
 use App\Services\Payment\PaymentService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PaymentController extends Controller
 {
@@ -18,22 +23,22 @@ class PaymentController extends Controller
     /**
      * Create Snap Token Midtrans.
      */
-    public function createMidtransTransaction(Request $request)
+    public function createMidtransTransaction(CreateMidtransTransactionRequest $request): JsonResponse
     {
-        if ($request->expectsJson()) {
-            try {
-                $snapToken = $this->paymentService->createSnapToken(
-                    (float) $request->amount,
-                    $request->customer_name
-                );
+        try {
+            $cart = Sale::where('user_id', Auth::id())
+                ->where('status', SaleStatus::Draft->value)
+                ->firstOrFail();
 
-                return response()->json(['snap_token' => $snapToken]);
-            } catch (\Throwable $th) {
-                return response()->json(['message' => 'Gagal membuat token pembayaran: '.$th->getMessage()], 500);
-            }
+            $snapToken = $this->paymentService->createSnapToken(
+                (float) $cart->total,
+                $request->validated('customer_name')
+            );
+
+            return response()->json(['snap_token' => $snapToken]);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => 'Gagal membuat token pembayaran: '.$th->getMessage()], 500);
         }
-
-        return abort(403, 'Invalid request.');
     }
 
     /**
