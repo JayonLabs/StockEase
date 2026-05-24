@@ -9,6 +9,7 @@ use App\Models\Product;
 use App\Models\PurchaseItem;
 use App\Models\StockAdjustment;
 use App\Models\StockLog;
+use App\Models\Warehouse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -22,12 +23,14 @@ class StockAdjustmentService
      */
     public function getPaginatedAdjustments(array $filters, int $perPage = 10): LengthAwarePaginator
     {
-        return StockAdjustment::with(['product', 'user'])
+        return StockAdjustment::with(['product', 'user.roles', 'warehouse'])
             ->when($filters['search'] ?? null, function ($query, $search) {
-                $query->whereHas('product', function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('sku', 'like', "%{$search}%");
-                })->orWhere('reason', 'like', "%{$search}%");
+                $query->where(function ($q) use ($search) {
+                    $q->whereHas('product', function ($q2) use ($search) {
+                        $q2->where('name', 'like', "%{$search}%")
+                            ->orWhere('sku', 'like', "%{$search}%");
+                    })->orWhere('reason', 'like', "%{$search}%");
+                });
             })
             ->latest()
             ->paginate($perPage)
@@ -37,31 +40,41 @@ class StockAdjustmentService
     /**
      * Store a new stock adjustment.
      *
-     * @param  array{product_id: int, new_stock: int, reason: string|null, date: string}  $data
+     * @param  array{warehouse_id: int, product_id: int, new_stock: int, reason: string|null, date: string}  $data
      */
     public function storeAdjustment(array $data): StockAdjustment
     {
         return DB::transaction(function () use ($data) {
+            /** @var Warehouse $warehouse */
+            $warehouse = Warehouse::findOrFail($data['warehouse_id']);
+
             /** @var Product $product */
             $product = Product::findOrFail($data['product_id']);
-            $oldStock = $product->stock;
-            $diff = $data['new_stock'] - $oldStock;
+
+            $oldStock = $product->stockInWarehouse($warehouse->id);
+            $newStock = (int) $data['new_stock'];
+            $diff = $newStock - $oldStock;
 
             $adjustment = StockAdjustment::create([
                 'user_id' => Auth::id(),
-                'product_id' => $data['product_id'],
+                'warehouse_id' => $warehouse->id,
+                'product_id' => $product->id,
                 'old_stock' => $oldStock,
-                'new_stock' => $data['new_stock'],
+                'new_stock' => $newStock,
                 'reason' => $data['reason'],
                 'date' => $data['date'],
             ]);
 
-            $product->update(['stock' => $data['new_stock']]);
+            $warehouse->products()->syncWithoutDetaching([
+                $product->id => ['stock' => max(0, $newStock)],
+            ]);
+
+            $product->syncStockFromWarehouses();
 
             if ($diff < 0) {
-                // Stock decreased: Apply FEFO to remaining_qty
                 $qtyToReduce = abs($diff);
                 $purchaseItems = PurchaseItem::where('product_id', $product->id)
+                    ->where('warehouse_id', $warehouse->id)
                     ->where('remaining_qty', '>', 0)
                     ->orderByRaw('expiry_date IS NULL, expiry_date ASC')
                     ->lockForUpdate()
@@ -88,11 +101,12 @@ class StockAdjustmentService
 
             StockLog::create([
                 'product_id' => $product->id,
+                'warehouse_id' => $warehouse->id,
                 'qty' => abs($diff),
                 'type' => StockLogType::Adjust->value,
                 'reference_type' => 'StockAdjustment',
                 'reference_id' => $adjustment->id,
-                'note' => "Penyesuaian stok (Stock Opname): {$data['reason']}",
+                'note' => "Penyesuaian stok (Stock Opname) di {$warehouse->name}: {$data['reason']}",
             ]);
 
             return $adjustment;
