@@ -4,13 +4,25 @@ namespace App\Http\Controllers\Trash;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\PaymentTransaction;
+use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\Sale;
+use App\Models\SaleEmail;
+use App\Models\SaleItem;
+use App\Models\SaleReturn;
+use App\Models\SaleReturnItem;
+use App\Models\Shift;
+use App\Models\StockAdjustment;
+use App\Models\StockLog;
+use App\Models\StockTransfer;
 use App\Models\Supplier;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Services\Trash\TrashService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -26,13 +38,25 @@ class TrashController extends Controller
      */
     protected const RESTORABLE_CLASSES = [
         'Category' => Category::class,
+        'PaymentTransaction' => PaymentTransaction::class,
+        'PriceHistory' => PriceHistory::class,
         'Product' => Product::class,
+        'Promotion' => Promotion::class,
+        'Purchase' => Purchase::class,
+        'PurchaseItem' => PurchaseItem::class,
+        'Sale' => Sale::class,
+        'SaleEmail' => SaleEmail::class,
+        'SaleItem' => SaleItem::class,
+        'SaleReturn' => SaleReturn::class,
+        'SaleReturnItem' => SaleReturnItem::class,
+        'Shift' => Shift::class,
+        'StockAdjustment' => StockAdjustment::class,
+        'StockLog' => StockLog::class,
+        'StockTransfer' => StockTransfer::class,
         'Supplier' => Supplier::class,
         'Unit' => Unit::class,
         'User' => User::class,
-        'Promotion' => Promotion::class,
-        'Purchase' => Purchase::class,
-        'Sale' => Sale::class,
+        'Warehouse' => Warehouse::class,
     ];
 
     public function __construct(protected TrashService $trashService) {}

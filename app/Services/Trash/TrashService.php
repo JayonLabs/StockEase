@@ -3,14 +3,25 @@
 namespace App\Services\Trash;
 
 use App\Models\Category;
+use App\Models\PaymentTransaction;
+use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Models\Purchase;
+use App\Models\PurchaseItem;
 use App\Models\Sale;
+use App\Models\SaleEmail;
+use App\Models\SaleItem;
+use App\Models\SaleReturn;
+use App\Models\SaleReturnItem;
 use App\Models\Shift;
+use App\Models\StockAdjustment;
+use App\Models\StockLog;
+use App\Models\StockTransfer;
 use App\Models\Supplier;
 use App\Models\Unit;
 use App\Models\User;
+use App\Models\Warehouse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -27,13 +38,25 @@ class TrashService
      */
     protected array $trackedModels = [
         ['class' => Category::class, 'label' => 'Kategori'],
+        ['class' => PaymentTransaction::class, 'label' => 'Transaksi Pembayaran'],
+        ['class' => PriceHistory::class, 'label' => 'Riwayat Harga'],
         ['class' => Product::class, 'label' => 'Produk'],
+        ['class' => Promotion::class, 'label' => 'Promosi'],
+        ['class' => Purchase::class, 'label' => 'Pembelian'],
+        ['class' => PurchaseItem::class, 'label' => 'Item Pembelian'],
+        ['class' => Sale::class, 'label' => 'Penjualan'],
+        ['class' => SaleEmail::class, 'label' => 'Email Penjualan'],
+        ['class' => SaleItem::class, 'label' => 'Item Penjualan'],
+        ['class' => SaleReturn::class, 'label' => 'Retur Penjualan'],
+        ['class' => SaleReturnItem::class, 'label' => 'Item Retur'],
+        ['class' => Shift::class, 'label' => 'Shift'],
+        ['class' => StockAdjustment::class, 'label' => 'Penyesuaian Stok'],
+        ['class' => StockLog::class, 'label' => 'Log Stok'],
+        ['class' => StockTransfer::class, 'label' => 'Transfer Stok'],
         ['class' => Supplier::class, 'label' => 'Supplier'],
         ['class' => Unit::class, 'label' => 'Satuan'],
         ['class' => User::class, 'label' => 'User'],
-        ['class' => Promotion::class, 'label' => 'Promosi'],
-        ['class' => Purchase::class, 'label' => 'Pembelian'],
-        ['class' => Sale::class, 'label' => 'Penjualan'],
+        ['class' => Warehouse::class, 'label' => 'Gudang'],
     ];
 
     /**
@@ -80,7 +103,26 @@ class TrashService
                     $q->where('customer_name', 'like', "%{$search}%")
                         ->orWhere('id', 'like', "%{$search}%");
                 });
-            } elseif ($class === Purchase::class) {
+            } elseif ($class === Purchase::class || $class === PurchaseItem::class) {
+                $query->where('id', 'like', "%{$search}%");
+            } elseif ($class === SaleEmail::class) {
+                $query->where('email', 'like', "%{$search}%");
+            } elseif ($class === SaleReturn::class) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('reason', 'like', "%{$search}%")
+                        ->orWhere('id', 'like', "%{$search}%");
+                });
+            } elseif ($class === StockAdjustment::class) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('reason', 'like', "%{$search}%")
+                        ->orWhere('id', 'like', "%{$search}%");
+                });
+            } elseif ($class === PaymentTransaction::class) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('external_id', 'like', "%{$search}%")
+                        ->orWhere('id', 'like', "%{$search}%");
+                });
+            } elseif (in_array($class, [SaleItem::class, SaleReturnItem::class, StockLog::class, StockTransfer::class, Shift::class, PriceHistory::class], true)) {
                 $query->where('id', 'like', "%{$search}%");
             } else {
                 $query->where('name', 'like', "%{$search}%");
@@ -134,6 +176,9 @@ class TrashService
         'user_id' => ['class' => User::class, 'column' => 'name'],
         'product_id' => ['class' => Product::class, 'column' => 'name'],
         'shift_id' => ['class' => Shift::class, 'column' => 'id'],
+        'warehouse_id' => ['class' => Warehouse::class, 'column' => 'name'],
+        'from_warehouse_id' => ['class' => Warehouse::class, 'column' => 'name'],
+        'to_warehouse_id' => ['class' => Warehouse::class, 'column' => 'name'],
     ];
 
     /**
@@ -144,6 +189,7 @@ class TrashService
         'remember_token',
         'email_verified_at',
         'image_path',
+        'raw_response',
     ];
 
     /**
@@ -242,6 +288,17 @@ class TrashService
         return match ($class) {
             Sale::class => $model->customer_name ?: 'Penjualan #'.$model->getKey(),
             Purchase::class => 'Pembelian #'.$model->getKey(),
+            PurchaseItem::class => 'Item Pembelian #'.$model->getKey(),
+            SaleItem::class => 'Item Penjualan #'.$model->getKey(),
+            SaleReturn::class => 'Retur Penjualan #'.$model->getKey(),
+            SaleReturnItem::class => 'Item Retur #'.$model->getKey(),
+            StockLog::class => 'Log Stok #'.$model->getKey(),
+            StockAdjustment::class => 'Penyesuaian Stok #'.$model->getKey(),
+            StockTransfer::class => 'Transfer Stok #'.$model->getKey(),
+            Shift::class => 'Shift #'.$model->getKey().' ('.$model->status.')',
+            PaymentTransaction::class => 'Pembayaran #'.$model->getKey(),
+            PriceHistory::class => 'Riwayat Harga #'.$model->getKey(),
+            SaleEmail::class => $model->email ?: 'Email Penjualan #'.$model->getKey(),
             User::class => $model->name.' ('.$model->email.')',
             default => $model->name ?? (string) $model->getKey(),
         };
