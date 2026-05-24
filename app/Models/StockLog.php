@@ -13,6 +13,7 @@ class StockLog extends Model
 
     protected $fillable = [
         'product_id',
+        'warehouse_id',
         'type',
         'reference_type',
         'reference_id',
@@ -28,5 +29,15 @@ class StockLog extends Model
     public function product()
     {
         return $this->belongsTo(Product::class);
+    }
+
+    /**
+     * Get the warehouse this log entry belongs to.
+     *
+     * @return BelongsTo
+     */
+    public function warehouse()
+    {
+        return $this->belongsTo(Warehouse::class);
     }
 }
