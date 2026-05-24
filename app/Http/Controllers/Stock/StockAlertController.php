@@ -13,11 +13,9 @@ class StockAlertController extends Controller
      */
     public function index(): JsonResponse
     {
-        if (! request()->expectsJson()) {
-            return response()->json(['message' => 'Unauthorized'], 401);
-        }
-
-        $alertProducts = Product::whereColumn('stock', '<=', 'alert_stock')->get();
+        $alertProducts = Product::whereColumn('stock', '<=', 'alert_stock')
+            ->select(['id', 'slug', 'name', 'sku', 'stock', 'alert_stock', 'unit_id'])
+            ->get();
 
         return response()->json($alertProducts);
     }
