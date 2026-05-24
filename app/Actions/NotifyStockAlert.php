@@ -5,6 +5,7 @@ namespace App\Actions;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\StockAlertNotification;
+use Illuminate\Support\Facades\DB;
 
 class NotifyStockAlert
 {
@@ -13,17 +14,22 @@ class NotifyStockAlert
      */
     public function execute(Product $product): void
     {
-        // Get all users
-        $users = User::all();
+        $users = User::permission('view_stock_alerts')->get();
+
+        if ($users->isEmpty()) {
+            return;
+        }
+
+        $alreadyNotifiedUserIds = DB::table('notifications')
+            ->where('type', StockAlertNotification::class)
+            ->whereNull('read_at')
+            ->where('data->product_id', $product->id)
+            ->whereIn('notifiable_id', $users->pluck('id'))
+            ->pluck('notifiable_id')
+            ->toArray();
 
         foreach ($users as $user) {
-            // Check if user already has an unread notification for this product
-            $hasUnread = $user->unreadNotifications()
-                ->where('data->product_id', $product->id)
-                ->where('type', StockAlertNotification::class)
-                ->exists();
-
-            if (! $hasUnread) {
+            if (! in_array($user->id, $alreadyNotifiedUserIds)) {
                 $user->notify(new StockAlertNotification($product));
             }
         }
