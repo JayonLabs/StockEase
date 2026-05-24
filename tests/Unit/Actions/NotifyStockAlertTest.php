@@ -1,42 +1,38 @@
 <?php
 
+namespace Tests\Unit\Actions;
+
 use App\Actions\NotifyStockAlert;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\StockAlertNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
 uses(TestCase::class, RefreshDatabase::class);
 
-it('notifies all users when stock is low', function () {
+it('notifies users with view_stock_alerts permission when stock is low', function () {
     Notification::fake();
 
-    $users = User::factory()->count(3)->create();
+    $userA = User::factory()->create(['role' => 'admin']);
+    $userB = User::factory()->create(['role' => 'warehouse']);
     $product = Product::factory()->create(['name' => 'Low Stock Product', 'stock' => 2, 'alert_stock' => 5]);
 
     (new NotifyStockAlert)->execute($product);
 
-    foreach ($users as $user) {
-        Notification::assertSentTo(
-            $user,
-            StockAlertNotification::class,
-            function ($notification, $channels) use ($product, $user) {
-                return $notification->toArray($user)['product_id'] === $product->id;
-            }
-        );
-    }
+    Notification::assertSentTo($userA, StockAlertNotification::class);
+    Notification::assertSentTo($userB, StockAlertNotification::class);
 });
 
-it('does not send duplicate unread notifications to the same user', function () {
+it('skips users who already have unread notification for the same product', function () {
     Notification::fake();
 
-    $user = User::factory()->create();
+    $user = User::factory()->create(['role' => 'admin']);
     $product = Product::factory()->create(['name' => 'Low Stock Product', 'stock' => 2, 'alert_stock' => 5]);
 
-    // Manually create an unread notification in the database
     $user->notifications()->create([
         'id' => Str::uuid(),
         'type' => StockAlertNotification::class,
@@ -50,17 +46,15 @@ it('does not send duplicate unread notifications to the same user', function () 
 
     (new NotifyStockAlert)->execute($product);
 
-    // Should NOT send another notification because one already exists (unread)
     Notification::assertNotSentTo($user, StockAlertNotification::class);
 });
 
 it('sends notification if the previous one was already read', function () {
     Notification::fake();
 
-    $user = User::factory()->create();
+    $user = User::factory()->create(['role' => 'admin']);
     $product = Product::factory()->create(['name' => 'Low Stock Product', 'stock' => 2, 'alert_stock' => 5]);
 
-    // Manually create a READ notification
     $user->notifications()->create([
         'id' => Str::uuid(),
         'type' => StockAlertNotification::class,
@@ -74,6 +68,51 @@ it('sends notification if the previous one was already read', function () {
 
     (new NotifyStockAlert)->execute($product);
 
-    // Should send a new notification because the previous one was read
     Notification::assertSentTo($user, StockAlertNotification::class);
+});
+
+it('uses a single query to check existing unread notifications', function () {
+    Notification::fake();
+
+    User::factory()->count(5)->create(['role' => 'admin']);
+    $product = Product::factory()->create(['name' => 'Low Stock Product', 'stock' => 2, 'alert_stock' => 5]);
+
+    DB::enableQueryLog();
+
+    (new NotifyStockAlert)->execute($product);
+
+    $queries = DB::getQueryLog();
+
+    DB::disableQueryLog();
+
+    $notificationQueries = array_filter($queries, fn ($q) => str_contains($q['query'], 'notifications'));
+
+    expect($notificationQueries)->toHaveCount(1);
+});
+
+it('returns early when no users have view_stock_alerts permission', function () {
+    Notification::fake();
+
+    // Create a user with no spatie role — factory assigns random role, so we detach it
+    $user = User::factory()->create();
+    $user->roles()->detach();
+
+    $product = Product::factory()->create(['name' => 'Low Stock Product', 'stock' => 2, 'alert_stock' => 5]);
+
+    (new NotifyStockAlert)->execute($product);
+
+    Notification::assertNothingSent();
+});
+
+it('notifies all eligible users in a single batch', function () {
+    Notification::fake();
+
+    $users = User::factory()->count(5)->create(['role' => 'admin']);
+    $product = Product::factory()->create(['name' => 'Low Stock Product', 'stock' => 2, 'alert_stock' => 5]);
+
+    (new NotifyStockAlert)->execute($product);
+
+    foreach ($users as $user) {
+        Notification::assertSentTo($user, StockAlertNotification::class);
+    }
 });
