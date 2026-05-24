@@ -30,15 +30,13 @@ export const saleColumns = [
     },
     {
         accessorKey: 'user.name',
-        header: () => h('div', { class: 'text-center w-full' }, 'Kasir'),
-        cell: ({ row }) =>
-            h('span', { class: centerClass }, row.original.user.name),
+        header: () => h('div', 'Kasir'),
+        cell: ({ row }) => h('span', row.original.user.name),
     },
     {
         accessorKey: 'total',
-        header: () => h('div', { class: 'text-center w-full' }, 'Total'),
-        cell: ({ row }) =>
-            h('span', { class: centerClass }, formatPrice(row.original.total)),
+        header: () => h('div', 'Total'),
+        cell: ({ row }) => h('span', formatPrice(row.original.total)),
     },
     {
         accessorKey: 'payment_method',
