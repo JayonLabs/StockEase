@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('pos')->middleware('auth', 'role:admin, cashier')->group(function () {
     Route::get('/', [PosController::class, 'index'])->name('pos.index');
+    Route::post('/set-warehouse', [PosController::class, 'setWarehouse'])->name('pos.set-warehouse');
     Route::patch('/change-qty', [PosController::class, 'changeQty'])->name('pos.change-qty');
     Route::post('/add-to-cart', [PosController::class, 'addToCart'])->name('pos.add-to-cart');
     Route::post('/add-to-cart-barcode', [PosController::class, 'addToCartByBarcode'])->name('pos.add-to-cart-barcode');
