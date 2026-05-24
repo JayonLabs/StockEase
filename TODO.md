@@ -138,12 +138,29 @@
 - fix npm run build (Done)
 - fitur Multi-Gudang (Multi-Warehouse) (Done)
 
+<!-- TODO: 24/05/2026 -->
+
+- fix testing slow (Done)
+- fix pencarian di stock-transfer (Done)
+- fix bug di stock-transfer form kasih warehouse di search product (Done)
+- warehouse-first stock architecture: warehouse_id ke purchases, purchase_items, stock_adjustments, stock_logs (Done)
+- PurchaseService warehouse-aware: stok masuk ke warehouse_product pivot (Done)
+- StockAdjustmentService warehouse-aware: old_stock dari pivot per gudang, FEFO per gudang (Done)
+- form Pembelian dan Stock Opname: tambah warehouse selector (Done)
+- implementasi POS warehouse-aware: kasir pilih gudang saat buka shift (Done)
+- refactor untuk di pos page itu harus open shif dan pilih gudang terlebih dahulu dan productnya dari gudang yang dipilih dan fix bug modal di pos jika klik X itu kalau masukkin ke keranjang itu masih bisa harusnya cegah untuk ga bisa close modal dan cegah untuk nambahin ke keranjang lagi (Done)
+- fix tabel di page penjualan bagian kasir itu rata kirikan (Done)
+- fix query duplikat di page stock opname atau https://stockease.test/stock-adjustment dan https://stockease.test/activity-logs (Done)
+- rafactor controller trash untuk cek yang soft delete karena ada penambahan (Done)
+- refactor untuk date range picker di menu data transaksi dan penjualan serta log stock (Done)
+- fix bug Broadcast events tidak implement ShouldDispatchAfterCommit (Done)
+- fix bug API /api/low-stock terbuka tanpa autentikasi - data inventori bocor ke publik (Done)
+- fix PaymentController: input amount Midtrans tidak divalidasi di sisi server (Done)
+- fix ShiftController::close() missing authorization/ownership check (Done)
+- fix NotifyStockAlert loads all users with N+1 notification query (Done)
+
 <!-- TODO: -->
 
-- fix pencarian di stock-transfer
-- fix tabel di page penjualan bagian kasir itu rata kirikan
-- fix query duplikat di page stock opname atau https://stockease.test/stock-adjustment
-- rafactor controller trash untuk cek yang soft delete karena ada penambahan
 - buatkan landing page
 - cek issue yang ada suruh claude dan buatkan ISSUE.md
 - tambahin lagi beberapa laporan atau fitur di laporan penjualan
