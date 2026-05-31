@@ -158,11 +158,51 @@
 - fix PaymentController: input amount Midtrans tidak divalidasi di sisi server (Done)
 - fix ShiftController::close() missing authorization/ownership check (Done)
 - fix NotifyStockAlert loads all users with N+1 notification query (Done)
+- fix PosService calls getActiveShiftId() up to 3 times per checkout (Done)
+
+<!-- TODO: 31/05/2026 -->
+
+- fix TrashService loads all soft-deleted records into memory before paginating (Done)
+- fix TrashService::resolveAttributeValue() causes N+1 query per FK attribute (Done)
+- fix HandleInertiaRequests runs getAllPermissions() on every Inertia request (Done)
+- fix PurchaseService::updatePurchase() has N+1 query in foreach loop (Done)
+- refactor struktur folder test biar sesuai dengan struktur folder app (Done)
+- fix RecalculateSaleTotal fetches all promotions on every execute() call (Done)
+- fix Excel export class instantiated twice (store + download) in 3 report controllers (Done)
+- fix Carbon::setLocale('id') called 4 times in DashboardService (Done)
+- fix whereMonth() without whereYear() causes cross-year data pollution in dashboard (Done)
+- fix StockAdjustmentService logs abs(diff) losing decrease direction in StockLog (Done)
+- fix ReduceProductStock and RestoreProductStock use hardcoded type strings instead of enum (Done)
+- fix PurchaseService::updatePurchase() can decrement stock below zero (Done)
+- fix StockTransferService silently succeeds on insufficient stock (Done)
+- refactor dari Refresh Database testing ke lazily refresh database (Done)
+- fix DashboardService::cashierData() recent transactions not filtered by user_id (Done)
+- fix PosController compares sale status with raw string instead of SaleStatus enum (Done)
+- fix ResetUserPasswordRequest uses weak password validation instead of Password::defaults() (Done)
+- buatkan test untuk semua code request (Done)
+- fix query duplikat di route https://stockease.test/sale dan https://stockease.test/sale-return (Done)
+- fix PosController overwrites validated() data with raw request input for order_id (Done)
+- fix NotificationController N+1 query: Product::find() inside transform loop (Done)
+- fix FormRequest classes have authorize() returning true without role/permission check (Done)
+- fix StoreProductRequest missing unique validation for SKU and barcode (Done)
+- fix PosService draft sale race condition allows multiple drafts per user/shift (Done)
+- fix File upload uses time() filename (collision risk) and file_get_contents() (memory inefficient) (Done)
+- fix LIKE query used on integer ID columns bypasses index (Done)
+- fix ProductService uses \DB and \Auth global namespace instead of imported facades (Done)
+- fix AppServiceProvider uses loose == comparison instead of strict === for env check (Done)
+- fix pagination di page activity log (Done)
 
 <!-- TODO: -->
 
 - buatkan landing page
-- cek issue yang ada suruh claude dan buatkan ISSUE.md
 - tambahin lagi beberapa laporan atau fitur di laporan penjualan
-- fix github CD ke cpanel
 - bikin API untuk mobile app
+
+<!-- AI Prompt -->
+
+- pastikan sesuai dengan best practice laravel dan gunakan skill yang kamu perlukan. buatkan testnya secara menyeluruh utamakan untuk performa dan kualitas kode yang baik
+
+cek issue ini pakai gh cli
+https://github.com/DewaJayon/StockEase/issues/102
+
+cek issue tersebut apakah valid, jika valid bisa di fix langsung sesuaikan dengan best practice laravel dan buatkan testnya secara menyeluruh untuk struktur folder testnya itu adalah cerminan struktur folder app, gunakan skill yang kamu perlukan untuk menyelesaikan masalah tersebut. utamakan untuk performa dan kualitas kode yang baik. pastikan frontend dan backendnya compatible jika ada perubahan yang perlu berubah frontendnya itu bisa di fix langsung. close issue tersebut ketika sudah selesai
