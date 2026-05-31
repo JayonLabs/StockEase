@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Sale;
 
+use App\Enums\SaleStatus;
 use App\Enums\ShiftStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Sale\PosBarcodeCartItemRequest;
@@ -210,10 +211,6 @@ class PosController extends Controller
         try {
             $data = $request->validated();
 
-            if ($request->has('order_id')) {
-                $data['order_id'] = $request->input('order_id');
-            }
-
             $result = $this->posService->checkout($data);
 
             if ($request->expectsJson()) {
@@ -221,7 +218,7 @@ class PosController extends Controller
                     'message' => 'Checkout berhasil',
                     'total' => $result['total'],
                     'cart' => $result['cart'],
-                    'completed_sale_id' => $result['sale']->status === 'completed'
+                    'completed_sale_id' => $result['sale']->status === SaleStatus::Completed->value
                         ? $result['sale']->id
                         : null,
                 ]);
