@@ -20,10 +20,20 @@ class NotificationController extends Controller
             ->latest()
             ->paginate(10);
 
+        // Eager-load product slugs in a single query to avoid N+1
+        $productIds = $notifications->getCollection()
+            ->pluck('data.product_id')
+            ->filter()
+            ->unique();
+
+        $products = $productIds->isEmpty()
+            ? collect()
+            : Product::whereIn('id', $productIds)->get()->keyBy('id');
+
         // Transform results to ensure slug is present even for older notifications
-        $notifications->getCollection()->transform(function ($notification) {
+        $notifications->getCollection()->transform(function ($notification) use ($products) {
             if (! isset($notification->data['product_slug']) && isset($notification->data['product_id'])) {
-                $product = Product::find($notification->data['product_id']);
+                $product = $products->get($notification->data['product_id']);
                 if ($product) {
                     $data = $notification->data;
                     $data['product_slug'] = $product->slug;
