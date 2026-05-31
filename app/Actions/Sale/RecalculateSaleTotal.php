@@ -11,10 +11,7 @@ use Illuminate\Support\Collection;
 class RecalculateSaleTotal
 {
     /**
-     * Calculate the total of a sale by summing up all sale items prices
-     * and updating the sale record.
-     *
-     * @return float The total of the sale
+     * Recalculate the total for a given sale by applying applicable promotions to each sale item.
      */
     public function execute(Sale $sale): float
     {
@@ -25,13 +22,11 @@ class RecalculateSaleTotal
             $sale->load('saleItems.product');
         }
 
-        // Fetch all active promotions once
-        $activePromotions = Promotion::active()->get();
+        $activePromotions = once(fn () => Promotion::active()->get());
 
         foreach ($sale->saleItems as $item) {
             $product = $item->product;
 
-            // Find applicable promotion
             $applicablePromo = $this->findBestPromotion($activePromotions, $product);
 
             $discountAmount = 0;
@@ -42,12 +37,14 @@ class RecalculateSaleTotal
                 $promotionId = $applicablePromo->id;
             }
 
-            // Update item if discount changed to avoid unnecessary queries,
-            // but for simplicity, we can just update it.
-            $item->update([
+            $item->fill([
                 'promotion_id' => $promotionId,
                 'discount_amount' => $discountAmount,
             ]);
+
+            if ($item->isDirty(['promotion_id', 'discount_amount'])) {
+                $item->save();
+            }
 
             $total += ($item->price * $item->qty) - $discountAmount;
             $totalCost += ($item->cost_price ?? 0) * $item->qty;
@@ -62,17 +59,14 @@ class RecalculateSaleTotal
     }
 
     /**
-     * Find the best applicable promotion for a product.
-     *
-     * @param  Product  $product
-     * @return Promotion|null
+     * Find the best applicable promotion for a product, prioritizing product-specific promotions
+     * over category-specific and general promotions.
      */
-    private function findBestPromotion(Collection $promotions, $product)
+    private function findBestPromotion(Collection $promotions, Product $product): ?Promotion
     {
-        // Product specific promotions take precedence, then category specific, then general
         $productPromos = $promotions->where('product_id', $product->id);
         if ($productPromos->isNotEmpty()) {
-            return $productPromos->first(); // In reality, you'd find the one giving highest discount
+            return $productPromos->first();
         }
 
         $categoryPromos = $promotions->where('category_id', $product->category_id);
@@ -89,7 +83,7 @@ class RecalculateSaleTotal
     }
 
     /**
-     * Calculate the discount amount for a given promotion, price, and quantity.
+     * Calculate the discount amount based on the promotion type and quantity.
      */
     private function calculateDiscount(Promotion $promo, float $price, int $qty): float
     {
@@ -98,25 +92,13 @@ class RecalculateSaleTotal
         }
 
         if ($promo->type === PromotionType::Nominal->value) {
-            // Nominal is per item
-            $discount = $promo->discount_value * $qty;
-            // Prevent discount from being higher than price
-            $maxDiscount = $price * $qty;
-
-            return min($discount, $maxDiscount);
+            return min($promo->discount_value * $qty, $price * $qty);
         }
 
         if ($promo->type === PromotionType::Bogo->value && $promo->buy_qty > 0 && $promo->get_qty > 0) {
-            // How many times does the BOGO trigger?
-            // E.g., buy 2 get 1. Group size = buy_qty.
-            // Wait, usually BOGO means if you have 3 items in cart, you pay for 2.
-            // So if you buy 3, you get 1 free. buy_qty = 2, get_qty = 1.
             $groupSize = $promo->buy_qty + $promo->get_qty;
             $freeItems = floor($qty / $groupSize) * $promo->get_qty;
 
-            // What if they buy exactly buy_qty, but didn't add the get_qty?
-            // Usually, POS systems require the item to be in cart to discount it.
-            // So if cart has 3 items, 1 is discounted.
             return $freeItems * $price;
         }
 
