@@ -24,7 +24,11 @@ class StockLogService
                     })
                         ->orWhere('type', 'like', "%{$search}%")
                         ->orWhere('reference_type', 'like', "%{$search}%")
-                        ->orWhere('reference_id', 'like', "%{$search}%")
+                        ->orWhere(function ($q) use ($search) {
+                            if (is_numeric($search)) {
+                                $q->where('reference_id', $search);
+                            }
+                        })
                         ->orWhere('note', 'like', "%{$search}%");
                 });
             })

@@ -4,6 +4,7 @@ namespace App\Actions\Product;
 
 use App\Actions\NotifyStockAlert;
 use App\Actions\Sale\RecalculateSaleTotal;
+use App\Enums\StockLogType;
 use App\Models\Product;
 use App\Models\PurchaseItem;
 use App\Models\Sale;
@@ -98,7 +99,7 @@ class ReduceProductStock
             StockLog::create([
                 'product_id' => $product->id,
                 'qty' => $item->qty,
-                'type' => 'out',
+                'type' => StockLogType::Out->value,
                 'reference_type' => 'Sale',
                 'reference_id' => $item->sale_id,
                 'note' => 'Penjualan produk '.$product->name,
