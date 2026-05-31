@@ -8,7 +8,6 @@ use App\Enums\PaymentGateway;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentType;
 use App\Enums\SaleStatus;
-use App\Enums\ShiftStatus;
 use App\Models\Category;
 use App\Models\PaymentTransaction;
 use App\Models\Product;
@@ -17,6 +16,7 @@ use App\Models\SaleItem;
 use App\Models\Shift;
 use App\Models\Warehouse;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -26,6 +26,11 @@ class PosService
      * Session key for the active warehouse ID.
      */
     private const SESSION_KEY = 'pos_active_warehouse_id';
+
+    public function __construct(
+        private readonly RecalculateSaleTotal $recalculateSaleTotal,
+        private readonly ReduceProductStock $reduceProductStock,
+    ) {}
 
     /**
      * Get paginated products with category filter and search.
@@ -85,15 +90,14 @@ class PosService
 
     /**
      * Get the active shift for the current user.
+     *
+     * Memoized via once() to avoid redundant DB queries during a single checkout flow.
      */
     private function getActiveShiftId(): ?int
     {
-        $shift = Shift::where('user_id', Auth::id())
-            ->where('status', ShiftStatus::Open->value)
+        return once(fn () => Shift::open()->where('user_id', Auth::id())
             ->latest()
-            ->first();
-
-        return $shift?->id;
+            ->first()?->id);
     }
 
     /**
@@ -143,32 +147,47 @@ class PosService
 
     /**
      * Get the current active cart (draft sale) for the authenticated user.
+     *
+     * Uses an atomic find-or-create within a transaction and a database-level
+     * unique constraint on draft sales per user to prevent race conditions.
      */
     public function getOrCreateCart(): Sale
     {
-        $cart = Sale::with('saleItems.product')
-            ->where('user_id', Auth::id())
-            ->where('status', SaleStatus::Draft->value)
-            ->first();
+        try {
+            return DB::transaction(function () {
+                $cart = Sale::with('saleItems.product')
+                    ->where('user_id', Auth::id())
+                    ->where('status', SaleStatus::Draft->value)
+                    ->lockForUpdate()
+                    ->first();
 
-        if (! $cart) {
-            $warehouseId = $this->getActiveWarehouseId();
+                if (! $cart) {
+                    $warehouseId = $this->getActiveWarehouseId();
 
-            $cart = Sale::create([
-                'user_id' => Auth::id(),
-                'shift_id' => $this->getActiveShiftId(),
-                'warehouse_id' => $warehouseId,
-                'total' => 0,
-                'payment_method' => PaymentMethod::Pending->value,
-                'paid' => 0,
-                'change' => 0,
-                'date' => now(),
-                'status' => SaleStatus::Draft->value,
-            ]);
-            $cart->setRelation('saleItems', collect());
+                    $cart = Sale::create([
+                        'user_id' => Auth::id(),
+                        'shift_id' => $this->getActiveShiftId(),
+                        'warehouse_id' => $warehouseId,
+                        'total' => 0,
+                        'payment_method' => PaymentMethod::Pending->value,
+                        'paid' => 0,
+                        'change' => 0,
+                        'date' => now(),
+                        'status' => SaleStatus::Draft->value,
+                    ]);
+                    $cart->setRelation('saleItems', collect());
+                }
+
+                return $cart;
+            });
+        } catch (UniqueConstraintViolationException $e) {
+            // Another request won the race and created the draft sale.
+            // Re-fetch the existing draft and return it.
+            return Sale::with('saleItems.product')
+                ->where('user_id', Auth::id())
+                ->where('status', SaleStatus::Draft->value)
+                ->firstOrFail();
         }
-
-        return $cart;
     }
 
     /**
@@ -255,7 +274,7 @@ class PosService
             ]);
         }
 
-        resolve(RecalculateSaleTotal::class)->execute($cart);
+        $this->recalculateSaleTotal->execute($cart);
 
         return ['cart' => $cart, 'total' => $cart->total];
     }
@@ -285,7 +304,7 @@ class PosService
             }
         }
 
-        resolve(RecalculateSaleTotal::class)->execute($cart);
+        $this->recalculateSaleTotal->execute($cart);
 
         return ['cart' => $cart, 'total' => $cart->total];
     }
@@ -299,7 +318,7 @@ class PosService
         $cart->saleItems()->where('product_id', $productId)->forceDelete();
         $cart->setRelation('saleItems', $cart->saleItems->reject(fn ($item) => $item->product_id === $productId)->values());
 
-        resolve(RecalculateSaleTotal::class)->execute($cart);
+        $this->recalculateSaleTotal->execute($cart);
 
         return ['cart' => $cart, 'total' => $cart->total];
     }
@@ -313,7 +332,7 @@ class PosService
         $cart->saleItems()->forceDelete();
         $cart->setRelation('saleItems', collect());
 
-        resolve(RecalculateSaleTotal::class)->execute($cart);
+        $this->recalculateSaleTotal->execute($cart);
 
         return ['cart' => $cart, 'total' => $cart->total];
     }
@@ -385,7 +404,7 @@ class PosService
 
                 $sale->saleItems()->update(['warehouse_id' => $warehouseId]);
 
-                resolve(ReduceProductStock::class)->execute($sale->saleItems, $warehouseId);
+                $this->reduceProductStock->execute($sale->saleItems, $warehouseId);
             }
 
             // After checkout, we get/create a new empty cart for the next transaction
