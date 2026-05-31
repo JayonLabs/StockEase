@@ -2,10 +2,10 @@
 
 use App\Models\Warehouse;
 use App\Services\Warehouse\WarehouseService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 it('can get paginated warehouses', function () {
     Warehouse::factory()->count(15)->create();

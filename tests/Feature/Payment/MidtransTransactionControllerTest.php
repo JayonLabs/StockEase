@@ -2,13 +2,13 @@
 
 use App\Models\PaymentTransaction;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{admin: User, cashier: User, warehouse: User} $this */

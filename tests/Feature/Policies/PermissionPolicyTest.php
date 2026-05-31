@@ -2,13 +2,15 @@
 
 use App\Models\User;
 use Database\Seeders\RoleAndPermissionSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Spatie\Permission\Models\Permission;
 
-uses(RefreshDatabase::class);
+use function Pest\Laravel\seed;
+
+uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
-    $this->seed(RoleAndPermissionSeeder::class);
+    seed(RoleAndPermissionSeeder::class);
 });
 
 describe('super_admin', function () {

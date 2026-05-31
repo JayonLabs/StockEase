@@ -5,14 +5,14 @@ use App\Models\StockTransfer;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\Warehouse\StockTransferService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Tests\TestCase;
 
 use function Pest\Laravel\assertDatabaseHas;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     $user = User::factory()->create(['role' => 'admin']);
@@ -242,5 +242,85 @@ it('handles transfer to warehouse that already has the product', function () {
         'warehouse_id' => $warehouseB->id,
         'product_id' => $product->id,
         'stock' => 40,
+    ]);
+});
+
+// ─── Insufficient Stock Prevention ────────────────────────────────────────────
+
+it('throws when source warehouse has insufficient stock', function () {
+    $warehouseA = Warehouse::factory()->create(['name' => 'Gudang A']);
+    $warehouseB = Warehouse::factory()->create(['name' => 'Gudang B']);
+    $product = Product::factory()->create();
+
+    $warehouseA->products()->attach($product->id, ['stock' => 5]);
+    $service = new StockTransferService;
+
+    expect(fn () => $service->storeTransfer([
+        'from_warehouse_id' => $warehouseA->id,
+        'to_warehouse_id' => $warehouseB->id,
+        'product_id' => $product->id,
+        'qty' => 10,
+        'date' => now()->toDateString(),
+    ]))->toThrow(Exception::class, 'Stok tidak mencukupi di gudang asal');
+});
+
+it('throws when source warehouse has zero stock', function () {
+    $warehouseA = Warehouse::factory()->create();
+    $warehouseB = Warehouse::factory()->create();
+    $product = Product::factory()->create();
+
+    $warehouseA->products()->attach($product->id, ['stock' => 0]);
+    $service = new StockTransferService;
+
+    expect(fn () => $service->storeTransfer([
+        'from_warehouse_id' => $warehouseA->id,
+        'to_warehouse_id' => $warehouseB->id,
+        'product_id' => $product->id,
+        'qty' => 1,
+        'date' => now()->toDateString(),
+    ]))->toThrow(Exception::class, 'Stok tidak mencukupi di gudang asal');
+});
+
+it('throws when source warehouse has no product record', function () {
+    $warehouseA = Warehouse::factory()->create();
+    $warehouseB = Warehouse::factory()->create();
+    $product = Product::factory()->create();
+    $service = new StockTransferService;
+
+    expect(fn () => $service->storeTransfer([
+        'from_warehouse_id' => $warehouseA->id,
+        'to_warehouse_id' => $warehouseB->id,
+        'product_id' => $product->id,
+        'qty' => 1,
+        'date' => now()->toDateString(),
+    ]))->toThrow(Exception::class, 'Stok tidak mencukupi di gudang asal');
+});
+
+it('allows transfer when exact stock matches requested qty', function () {
+    $warehouseA = Warehouse::factory()->create(['name' => 'Toko A']);
+    $warehouseB = Warehouse::factory()->create(['name' => 'Toko B']);
+    $product = Product::factory()->create();
+
+    $warehouseA->products()->attach($product->id, ['stock' => 10]);
+    $service = new StockTransferService;
+
+    $service->storeTransfer([
+        'from_warehouse_id' => $warehouseA->id,
+        'to_warehouse_id' => $warehouseB->id,
+        'product_id' => $product->id,
+        'qty' => 10,
+        'date' => now()->toDateString(),
+    ]);
+
+    assertDatabaseHas('warehouse_product', [
+        'warehouse_id' => $warehouseA->id,
+        'product_id' => $product->id,
+        'stock' => 0,
+    ]);
+
+    assertDatabaseHas('warehouse_product', [
+        'warehouse_id' => $warehouseB->id,
+        'product_id' => $product->id,
+        'stock' => 10,
     ]);
 });

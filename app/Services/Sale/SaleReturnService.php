@@ -18,6 +18,10 @@ use Illuminate\Support\Facades\DB;
 
 class SaleReturnService
 {
+    public function __construct(
+        private readonly RestoreProductStock $restoreProductStock,
+    ) {}
+
     /**
      * Get paginated sale returns with filters.
      *
@@ -28,7 +32,12 @@ class SaleReturnService
         $startDate = $filters['start'] ?? null;
         $endDate = $filters['end'] ?? null;
 
-        return SaleReturn::with('user', 'sale', 'saleReturnItems', 'saleReturnItems.product')
+        return SaleReturn::with([
+            'user.roles',
+            'sale',
+            'saleReturnItems',
+            'saleReturnItems.product',
+        ])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('reason', 'like', "%{$search}%")
@@ -56,7 +65,12 @@ class SaleReturnService
      */
     public function getSaleForReturn(Sale $sale): Sale
     {
-        return $sale->load('user', 'saleItems', 'saleItems.product', 'paymentTransaction');
+        return $sale->load([
+            'user.roles',
+            'saleItems',
+            'saleItems.product',
+            'paymentTransaction',
+        ]);
     }
 
     /**
@@ -142,7 +156,7 @@ class SaleReturnService
                 $createdItems->push($returnItem);
             }
 
-            resolve(RestoreProductStock::class)->execute($createdItems);
+            $this->restoreProductStock->execute($createdItems);
 
             return $saleReturn->load('saleReturnItems', 'saleReturnItems.product');
         });

@@ -4,7 +4,8 @@ use App\Models\Product;
 use App\Models\StockTransfer;
 use App\Models\User;
 use App\Models\Warehouse;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 
 use function Pest\Laravel\actingAs;
@@ -12,7 +13,7 @@ use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\get;
 use function Pest\Laravel\getJson;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 // -- AUTHORIZATION --
 
@@ -212,6 +213,36 @@ it('returns filters props to frontend', function () {
                 ->where('filters.warehouse_id', (string) $warehouse->id)
                 ->has('warehouses')
         );
+});
+
+it('does not duplicate roles query when auth user has transfers', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    $warehouse = Warehouse::factory()->create();
+    $product = Product::factory()->create();
+
+    // Create transfers by the auth user (so auth user appears as transfer user)
+    StockTransfer::factory()->count(3)->create([
+        'user_id' => $admin->id,
+        'from_warehouse_id' => $warehouse->id,
+        'to_warehouse_id' => $warehouse->id,
+        'product_id' => $product->id,
+    ]);
+
+    DB::enableQueryLog();
+
+    actingAs($admin)
+        ->get(route('stock-transfer.index'))
+        ->assertSuccessful();
+
+    $rolesQueries = collect(DB::getQueryLog())
+        ->filter(fn ($q) => str_contains($q['query'], 'model_has_roles'));
+
+    DB::disableQueryLog();
+
+    // Should be at most 1 roles query: auth user roles are loaded by middleware,
+    // and loadMissing on transfer users skips already-loaded auth user.
+    expect($rolesQueries->count())->toBeLessThanOrEqual(1);
 });
 
 // -- SEARCH PRODUCT --

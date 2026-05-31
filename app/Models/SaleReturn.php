@@ -41,40 +41,32 @@ class SaleReturn extends Model
 
     /**
      * Get the sale that was returned.
-     *
-     * @return BelongsTo
      */
-    public function sale()
+    public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
     }
 
     /**
      * Get the user that processed the return.
-     *
-     * @return BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     /**
      * Get the shift during which the return was processed.
-     *
-     * @return BelongsTo
      */
-    public function shift()
+    public function shift(): BelongsTo
     {
         return $this->belongsTo(Shift::class);
     }
 
     /**
      * Get the sale return items.
-     *
-     * @return HasMany
      */
-    public function saleReturnItems()
+    public function saleReturnItems(): HasMany
     {
         return $this->hasMany(SaleReturnItem::class);
     }

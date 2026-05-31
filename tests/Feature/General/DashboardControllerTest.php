@@ -7,11 +7,11 @@ use App\Models\Sale;
 use App\Models\Supplier;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 use function Pest\Laravel\actingAs;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 it('renders admin dashboard with correct data', function () {
     /** @var User $admin */

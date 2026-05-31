@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 
 use function Pest\Laravel\actingAs;
@@ -9,7 +9,7 @@ use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertSoftDeleted;
 use function Pest\Laravel\get;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 it('allows admin to view users list', function () {
     /** @var User $admin */
@@ -210,13 +210,14 @@ it('allows admin to reset user password', function () {
 
     $response = actingAs($admin)
         ->put(route('users.reset-password', $user), [
-            'password' => 'new-password-123',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ]);
 
     $response->assertRedirect();
     $response->assertSessionHas('success', 'Password berhasil diubah');
     $user->refresh();
-    expect(Hash::check('new-password-123', $user->password))->toBeTrue();
+    expect(Hash::check('NewPassword123!', $user->password))->toBeTrue();
 });
 
 it('validates reset password', function () {
@@ -225,7 +226,7 @@ it('validates reset password', function () {
     $user = User::factory()->create();
 
     actingAs($admin)
-        ->put(route('users.reset-password', $user), ['password' => 'short'])
+        ->put(route('users.reset-password', $user), ['password' => 'short', 'password_confirmation' => 'short'])
         ->assertSessionHasErrors(['password']);
 });
 
@@ -235,7 +236,10 @@ it('denies non-admin to reset password', function ($role) {
     $user = User::factory()->create();
 
     actingAs($actor)
-        ->put(route('users.reset-password', $user), ['password' => 'new-password-123'])
+        ->put(route('users.reset-password', $user), [
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
+        ])
         ->assertForbidden();
 })->with(['cashier', 'warehouse']);
 

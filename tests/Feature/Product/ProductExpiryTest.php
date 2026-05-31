@@ -6,12 +6,12 @@ use App\Models\Product;
 use App\Models\PurchaseItem;
 use App\Models\Unit;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 it('allows admin to create a product with an initial expiry date', function () {
     /** @var User $admin */

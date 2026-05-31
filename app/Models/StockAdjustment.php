@@ -25,30 +25,24 @@ class StockAdjustment extends Model
 
     /**
      * Get the user that created the adjustment.
-     *
-     * @return BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     /**
      * Get the warehouse this adjustment was applied to.
-     *
-     * @return BelongsTo
      */
-    public function warehouse()
+    public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }
 
     /**
      * Get the product that the adjustment belongs to.
-     *
-     * @return BelongsTo
      */
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Actions\Sale\RecalculateSaleTotal;
 use App\Enums\Role;
 use App\Models\Category;
 use App\Models\Product;
@@ -16,10 +17,12 @@ use App\Policies\PurchasePolicy;
 use App\Policies\ShiftPolicy;
 use App\Policies\SupplierPolicy;
 use App\Policies\UserPolicy;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\Rules\Password;
 use Spatie\Permission\Models\Permission;
 
 class AppServiceProvider extends ServiceProvider
@@ -29,7 +32,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(RecalculateSaleTotal::class);
     }
 
     /**
@@ -39,8 +42,12 @@ class AppServiceProvider extends ServiceProvider
     {
         Vite::prefetch(concurrency: 3);
 
+        Carbon::setLocale('id');
+
+        Password::defaults(fn () => Password::min(8)->letters()->mixedCase()->numbers()->symbols());
+
         // Force HTTPS in local
-        if (config('app.env') == 'local') {
+        if (app()->isLocal()) {
             URL::forceScheme('https');
         }
 

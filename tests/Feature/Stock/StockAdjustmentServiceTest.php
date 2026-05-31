@@ -7,16 +7,16 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Notifications\StockAlertNotification;
 use App\Services\Stock\StockAdjustmentService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{admin: User, service: StockAdjustmentService, warehouseModel: Warehouse} $this */
     $this->admin = User::factory()->create(['role' => 'admin']);
-    $this->service = new StockAdjustmentService;
+    $this->service = app(StockAdjustmentService::class);
     $this->warehouseModel = Warehouse::factory()->create();
     $this->actingAs($this->admin);
 });
@@ -139,7 +139,7 @@ it('creates stock log with correct type for adjustment', function () {
         'product_id' => $product->id,
         'warehouse_id' => $this->warehouseModel->id,
         'type' => 'adjust',
-        'qty' => 20,
+        'qty' => -20,
         'reference_type' => 'StockAdjustment',
     ]);
 });

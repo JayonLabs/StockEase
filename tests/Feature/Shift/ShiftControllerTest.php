@@ -3,6 +3,7 @@
 use App\Models\Sale;
 use App\Models\Shift;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
@@ -226,6 +227,34 @@ describe('Index', function () {
                     ->where('shifts.data.0.id', $newer->id)
                     ->where('shifts.data.1.id', $older->id)
             );
+    });
+
+    it('eager loads user roles to prevent lazy loading during serialization', function () {
+        /** @var TestCase&object{admin:User} $this */
+        $cashierA = User::factory()->create(['role' => 'cashier']);
+        $cashierB = User::factory()->create(['role' => 'cashier']);
+        $cashierC = User::factory()->create(['role' => 'cashier']);
+
+        Shift::factory()->create(['user_id' => $cashierA->id]);
+        Shift::factory()->create(['user_id' => $cashierB->id]);
+        Shift::factory()->create(['user_id' => $cashierC->id]);
+
+        DB::enableQueryLog();
+
+        actingAs($this->admin)
+            ->get(route('shift.index'))
+            ->assertSuccessful();
+
+        $roleQueries = collect(DB::getQueryLog())
+            ->filter(fn ($q) => str_contains($q['query'], 'model_has_roles'));
+
+        DB::disableQueryLog();
+
+        // Without eager loading user.roles, each shift user would trigger a lazy
+        // roles query via the appended `role` attribute (N+1).
+        // With eager loading, the shift users' roles are loaded in a single batch.
+        expect($roleQueries->count())->toBeLessThanOrEqual(2)
+            ->and($roleQueries->count())->toBeGreaterThanOrEqual(1);
     });
 });
 

@@ -34,11 +34,23 @@ class HandleInertiaRequests extends Middleware
         $userData = null;
 
         if ($user) {
-            $user->load('roles', 'permissions');
-            $userData = $user->toArray();
-            $userData['roles'] = $user->getRoleNames();
-            $userData['role'] = $user->getRoleNames()->first();
-            $userData['permissions'] = $user->getAllPermissions()->pluck('name');
+            $user->loadMissing('roles');
+            if ($user->relationLoaded('roles')) {
+                $user->roles->loadMissing('permissions');
+            }
+            $user->loadMissing('permissions');
+
+            $roleNames = $user->getRoleNames();
+
+            $userData = [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'photo_profile' => $user->photo_profile,
+                'role' => $roleNames->first(),
+                'roles' => $roleNames,
+                'permissions' => $user->getAllPermissions()->pluck('name'),
+            ];
         }
 
         return [

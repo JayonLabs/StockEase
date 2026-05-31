@@ -1,12 +1,12 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 
 use function Pest\Laravel\actingAs;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 test('password can be updated', function () {
     /** @var User $user */
@@ -16,15 +16,15 @@ test('password can be updated', function () {
         ->from('/profile')
         ->put('/password', [
             'current_password' => 'password',
-            'password' => 'new-password',
-            'password_confirmation' => 'new-password',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ]);
 
     $response
         ->assertSessionHasNoErrors()
         ->assertRedirect('/profile');
 
-    expect(Hash::check('new-password', $user->refresh()->password))->toBeTrue();
+    expect(Hash::check('NewPassword123!', $user->refresh()->password))->toBeTrue();
 });
 
 test('correct password must be provided to update password', function () {
@@ -35,8 +35,8 @@ test('correct password must be provided to update password', function () {
         ->from('/profile')
         ->put('/password', [
             'current_password' => 'wrong-password',
-            'password' => 'new-password',
-            'password_confirmation' => 'new-password',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ]);
 
     $response
@@ -52,8 +52,8 @@ test('validates current password is required', function () {
         ->from('/profile')
         ->put('/password', [
             'current_password' => '',
-            'password' => 'new-password',
-            'password_confirmation' => 'new-password',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'NewPassword123!',
         ]);
 
     $response
@@ -69,8 +69,8 @@ test('validates new password must be confirmed', function () {
         ->from('/profile')
         ->put('/password', [
             'current_password' => 'password',
-            'password' => 'new-password',
-            'password_confirmation' => 'different-password',
+            'password' => 'NewPassword123!',
+            'password_confirmation' => 'DifferentPassword123!',
         ]);
 
     $response
@@ -105,5 +105,22 @@ test('validates password update with missing fields', function () {
 
     $response
         ->assertSessionHasErrors(['current_password', 'password'])
+        ->assertRedirect('/profile');
+});
+
+test('rejects weak password without mixed case, numbers, or symbols', function () {
+    /** @var User $user */
+    $user = User::factory()->create();
+
+    $response = actingAs($user)
+        ->from('/profile')
+        ->put('/password', [
+            'current_password' => 'password',
+            'password' => 'weakpassword',
+            'password_confirmation' => 'weakpassword',
+        ]);
+
+    $response
+        ->assertSessionHasErrors('password')
         ->assertRedirect('/profile');
 });

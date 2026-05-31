@@ -7,7 +7,7 @@ use App\Models\StockAdjustment;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Notifications\StockAlertNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -15,7 +15,7 @@ use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{admin: User, warehouse: User, cashier: User, warehouseModel: Warehouse} $this */

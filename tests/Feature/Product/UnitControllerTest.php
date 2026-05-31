@@ -2,7 +2,7 @@
 
 use App\Models\Unit;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
@@ -10,7 +10,7 @@ use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertModelExists;
 use function Pest\Laravel\assertSoftDeleted;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{admin: User, cashier: User, warehouse: User} $this */

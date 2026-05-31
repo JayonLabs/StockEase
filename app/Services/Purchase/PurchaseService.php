@@ -17,6 +17,10 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseService
 {
+    public function __construct(
+        private readonly UpdateProductExpiryDate $updateProductExpiryDate,
+    ) {}
+
     /**
      * Get paginated purchases with filters.
      *
@@ -132,7 +136,7 @@ class PurchaseService
                 // Sync global stock = sum of all warehouse stocks
                 $product->syncStockFromWarehouses();
 
-                resolve(UpdateProductExpiryDate::class)->execute($product);
+                $this->updateProductExpiryDate->execute($product);
 
                 StockLog::create([
                     'product_id' => $product->id,
@@ -172,13 +176,17 @@ class PurchaseService
             $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
 
             // Rollback deleted items from the warehouse
-            $existingItems = PurchaseItem::where('purchase_id', $purchase->id)->get();
+            $existingItems = PurchaseItem::where('purchase_id', $purchase->id)->get()->keyBy('product_id');
             foreach ($existingItems as $existingItem) {
                 if (! $productIds->contains($existingItem->product_id)) {
                     /** @var Product|null $product */
                     $product = Product::find($existingItem->product_id);
                     if ($product) {
-                        $newWarehouseStock = max(0, $product->stockInWarehouse($warehouse->id) - $existingItem->qty);
+                        $currentStock = $product->stockInWarehouse($warehouse->id);
+                        if ($currentStock < $existingItem->qty) {
+                            throw new \Exception("Tidak dapat menghapus item pembelian {$product->name} karena stok di {$warehouse->name} tidak mencukupi.");
+                        }
+                        $newWarehouseStock = $currentStock - $existingItem->qty;
                         $warehouse->products()->syncWithoutDetaching([
                             $product->id => ['stock' => $newWarehouseStock],
                         ]);
@@ -186,7 +194,7 @@ class PurchaseService
                     }
                     $existingItem->forceDelete();
                     if ($product) {
-                        resolve(UpdateProductExpiryDate::class)->execute($product);
+                        $this->updateProductExpiryDate->execute($product);
                     }
                 }
             }
@@ -202,9 +210,7 @@ class PurchaseService
 
                 /** @var Product $product */
                 $product = $products[$item['product_id']];
-                $oldItem = PurchaseItem::where('purchase_id', $purchase->id)
-                    ->where('product_id', $item['product_id'])
-                    ->first();
+                $oldItem = $existingItems->get($item['product_id']);
 
                 if ($oldItem) {
                     $diffQty = $item['qty'] - $oldItem->qty;
@@ -215,9 +221,13 @@ class PurchaseService
                         'expiry_date' => $item['expiry_date'] ?? null,
                     ]);
 
-                    $newWarehouseStock = max(0, $product->stockInWarehouse($warehouse->id) + $diffQty);
+                    $currentStock = $product->stockInWarehouse($warehouse->id);
+                    $newWarehouseStock = $currentStock + $diffQty;
+                    if ($newWarehouseStock < 0) {
+                        throw new \Exception("Tidak dapat mengurangi qty pembelian {$product->name} karena stok di {$warehouse->name} tidak mencukupi.");
+                    }
                     $warehouse->products()->syncWithoutDetaching([
-                        $product->id => ['stock' => $newWarehouseStock],
+                        $product->id => ['stock' => max(0, $newWarehouseStock)],
                     ]);
                 } else {
                     PurchaseItem::create([
@@ -238,7 +248,7 @@ class PurchaseService
                 }
 
                 $product->syncStockFromWarehouses();
-                resolve(UpdateProductExpiryDate::class)->execute($product);
+                $this->updateProductExpiryDate->execute($product);
 
                 if ($product->purchase_price != $item['price'] || $product->selling_price != $item['selling_price']) {
                     $product->update([
@@ -250,7 +260,7 @@ class PurchaseService
                 StockLog::create([
                     'product_id' => $product->id,
                     'warehouse_id' => $warehouse->id,
-                    'qty' => abs($diffQty),
+                    'qty' => $diffQty,
                     'type' => StockLogType::Adjust->value,
                     'reference_type' => 'Purchase',
                     'reference_id' => $purchase->id,
@@ -296,7 +306,7 @@ class PurchaseService
                 }
                 $purchaseItem->delete();
                 if ($product) {
-                    resolve(UpdateProductExpiryDate::class)->execute($product);
+                    $this->updateProductExpiryDate->execute($product);
                 }
             }
 

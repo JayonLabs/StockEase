@@ -6,6 +6,7 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Unit;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
@@ -373,6 +374,59 @@ describe('Combined search and date filter', function () {
                     ->where('filters.search', 'ABC')
                     ->where('filters.start', '2024-04-01')
                     ->where('filters.end', '2024-04-30')
+            );
+    });
+
+    it('eager loads user roles to prevent implicit n plus one during serialization', function () {
+        /** @var TestCase&object{admin:User} $this */
+        $cashierA = User::factory()->create(['role' => 'cashier']);
+        $cashierB = User::factory()->create(['role' => 'cashier']);
+
+        Sale::factory()->count(3)->create([
+            'user_id' => $cashierA->id,
+            'payment_method' => 'cash',
+            'status' => 'completed',
+        ]);
+        Sale::factory()->count(3)->create([
+            'user_id' => $cashierB->id,
+            'payment_method' => 'cash',
+            'status' => 'completed',
+        ]);
+
+        DB::enableQueryLog();
+
+        actingAs($this->admin)
+            ->get(route('sale.index'))
+            ->assertSuccessful();
+
+        $roleQueries = collect(DB::getQueryLog())
+            ->filter(fn ($query) => str_contains($query['query'], 'model_has_roles'));
+
+        // With user.roles eager loaded, we expect exactly 1 roles query:
+        // the authenticated user's roles are already loaded by factory, so
+        // HandleInertiaRequests loadMissing skips them. Only the eager loaded
+        // sale user roles trigger one query.
+        // Without the fix, HandleInertiaRequests would re-query roles,
+        // producing a duplicate.
+        expect($roleQueries)->toHaveCount(1);
+    });
+
+    it('exposes user role in paginated sales without triggering lazy loading', function () {
+        /** @var TestCase&object{admin:User} $this */
+        $cashier = User::factory()->create(['role' => 'cashier']);
+
+        Sale::factory()->count(3)->create([
+            'user_id' => $cashier->id,
+            'payment_method' => 'cash',
+            'status' => 'completed',
+        ]);
+
+        actingAs($this->admin)
+            ->get(route('sale.index'))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->has('sales.data.0.user.role')
+                    ->where('sales.data.0.user.role', 'cashier')
             );
     });
 });

@@ -59,13 +59,13 @@ class SaleReturnController extends Controller
      */
     public function detail(SaleReturn $saleReturn)
     {
-        $saleReturn->load(
+        $saleReturn->load([
             'saleReturnItems.product',
             'saleReturnItems.saleItem',
             'sale.saleItems.product',
-            'user',
-            'shift'
-        );
+            'user.roles',
+            'shift',
+        ]);
 
         return Inertia::render('SaleReturn/Detail', [
             'saleReturn' => $saleReturn,

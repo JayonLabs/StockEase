@@ -36,40 +36,32 @@ class Purchase extends Model
 
     /**
      * Get the supplier that the purchase belongs to.
-     *
-     * @return BelongsTo
      */
-    public function supplier()
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
     }
 
     /**
      * Get the warehouse that received this purchase.
-     *
-     * @return BelongsTo
      */
-    public function warehouse()
+    public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }
 
     /**
      * Get the user that created the purchase.
-     *
-     * @return BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     /**
      * Get the purchase items that belong to the purchase.
-     *
-     * @return HasMany
      */
-    public function purchaseItems()
+    public function purchaseItems(): HasMany
     {
         return $this->hasMany(PurchaseItem::class);
     }

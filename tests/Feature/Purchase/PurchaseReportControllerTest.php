@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
@@ -337,6 +338,25 @@ describe('Search supplier', function () {
             ->getJson(route('reports.purchase.search-supplier', ['search' => $this->supplier->name]))
             ->assertSuccessful();
     });
+
+    it('searches supplier by exact id match only', function () {
+        /** @var TestCase&object{admin:User, supplier:Supplier} $this */
+        $supplier2 = Supplier::factory()->create();
+
+        actingAs($this->admin)
+            ->getJson(route('reports.purchase.search-supplier', ['search' => (string) $this->supplier->id]))
+            ->assertSuccessful()
+            ->assertJsonPath('data.0.value', $this->supplier->id);
+
+        $response = actingAs($this->admin)
+            ->getJson(route('reports.purchase.search-supplier', ['search' => (string) $supplier2->id]));
+
+        $response->assertSuccessful();
+        $data = $response->json('data');
+        $ids = collect($data)->pluck('value')->all();
+        expect($ids)->toContain($supplier2->id)
+            ->and($ids)->not->toContain($this->supplier->id);
+    });
 });
 
 // ============================================================
@@ -391,6 +411,25 @@ describe('Search user', function () {
             ->assertJsonStructure([
                 'data' => [['value', 'label']],
             ]);
+    });
+
+    it('searches user by exact id match only', function () {
+        /** @var TestCase&object{admin:User, warehouse:User} $this */
+        $otherWarehouse = User::factory()->create(['role' => 'warehouse']);
+
+        actingAs($this->admin)
+            ->getJson(route('reports.purchase.search-user', ['search' => (string) $this->warehouse->id]))
+            ->assertSuccessful()
+            ->assertJsonPath('data.0.value', $this->warehouse->id);
+
+        $response = actingAs($this->admin)
+            ->getJson(route('reports.purchase.search-user', ['search' => (string) $otherWarehouse->id]));
+
+        $response->assertSuccessful();
+        $data = $response->json('data');
+        $ids = collect($data)->pluck('value')->all();
+        expect($ids)->toContain($otherWarehouse->id)
+            ->and($ids)->not->toContain($this->warehouse->id);
     });
 });
 
@@ -593,4 +632,29 @@ describe('Export to Excel', function () {
             ['user'],
         ],
     ]);
+
+    it('stores and downloads Excel exactly once per export', function () {
+        /** @var TestCase&object{admin:User, warehouse:User, supplier:Supplier, product:Product} $this */
+        Excel::fake();
+        purchaseReport($this->warehouse, $this->supplier, $this->product);
+
+        $today = Carbon::today()->toDateString();
+        $year = Carbon::now('Asia/Shanghai')->format('Y');
+        $month = Carbon::now('Asia/Shanghai')->translatedFormat('F');
+        $fileName = 'Laporan Pembelian '
+            .Carbon::parse($today)->translatedFormat('d F Y').' - '
+            .Carbon::parse($today)->translatedFormat('d F Y').' StockEase.xlsx';
+
+        actingAs($this->admin)
+            ->get(route('reports.purchase.export-to-excel', [
+                'start_date' => $today,
+                'end_date' => $today,
+                'supplier' => 'semua-supplier',
+                'user' => 'semua-user',
+            ]))
+            ->assertSuccessful();
+
+        Excel::assertStored("reports/purchase/{$year}/{$month}/{$fileName}", 'local');
+        Excel::assertDownloaded($fileName);
+    });
 });

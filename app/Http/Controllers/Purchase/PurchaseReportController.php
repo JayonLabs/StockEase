@@ -72,8 +72,11 @@ class PurchaseReportController extends Controller
             }
 
             $supplier = Supplier::where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('id', 'like', "%{$request->search}%");
+                $q->where('name', 'like', "%{$request->search}%");
+
+                if (is_numeric($request->search)) {
+                    $q->orWhere('id', $request->search);
+                }
             })->select('id as value', 'name as label')->get();
 
             if ($supplier->isEmpty()) {
@@ -108,8 +111,11 @@ class PurchaseReportController extends Controller
             }
 
             $user = User::where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('id', 'like', "%{$request->search}%");
+                $q->where('name', 'like', "%{$request->search}%");
+
+                if (is_numeric($request->search)) {
+                    $q->orWhere('id', $request->search);
+                }
             })
                 ->role([Role::Warehouse->value, Role::Admin->value, Role::SuperAdmin->value])
                 ->select('id as value', 'name as label')
@@ -131,7 +137,6 @@ class PurchaseReportController extends Controller
 
     /**
      * Export purchase report to PDF
-     *
      *
      * @return BinaryFileResponse
      */
@@ -178,8 +183,10 @@ class PurchaseReportController extends Controller
             .Carbon::now('Asia/Shanghai')->translatedFormat('F').'/'
             .$fileName;
 
-        Excel::store(new PurchaseExportExcel($purchases, $preparedFilters, $summary), $filePath, 'local');
+        $export = new PurchaseExportExcel($purchases, $preparedFilters, $summary);
 
-        return Excel::download(new PurchaseExportExcel($purchases, $preparedFilters, $summary), $fileName);
+        Excel::store($export, $filePath, 'local');
+
+        return Excel::download($export, $fileName);
     }
 }

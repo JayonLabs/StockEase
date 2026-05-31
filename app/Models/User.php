@@ -65,30 +65,24 @@ class User extends Authenticatable
 
     /**
      * Get the purchases associated with the user.
-     *
-     * @return HasMany
      */
-    public function purchases()
+    public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class);
     }
 
     /**
      * Get the sales associated with the user.
-     *
-     * @return HasMany
      */
-    public function sales()
+    public function sales(): HasMany
     {
         return $this->hasMany(Sale::class);
     }
 
     /**
      * Get the shifts associated with the user.
-     *
-     * @return HasMany
      */
-    public function shifts()
+    public function shifts(): HasMany
     {
         return $this->hasMany(Shift::class);
     }

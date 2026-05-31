@@ -20,7 +20,7 @@ class StockTransferService
      */
     public function getPaginatedTransfers(array $filters, int $perPage = 10): LengthAwarePaginator
     {
-        return StockTransfer::with(['fromWarehouse', 'toWarehouse', 'product', 'user.roles'])
+        $paginator = StockTransfer::with(['fromWarehouse', 'toWarehouse', 'product', 'user'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
                     $q->whereHas('product', function ($q2) use ($search) {
@@ -41,6 +41,22 @@ class StockTransferService
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
+
+        // Replace eager-loaded user with the auth user instance when they match.
+        // This ensures that roles already loaded on Auth::user() by
+        // HandleInertiaRequests are shared, preventing a duplicate query.
+        $collection = $paginator->getCollection();
+        $authUser = Auth::user();
+
+        $collection->each(function (StockTransfer $transfer) use ($authUser) {
+            if ((int) $transfer->user_id === (int) $authUser?->id) {
+                $transfer->setRelation('user', $authUser);
+            }
+        });
+
+        $collection->loadMissing('user.roles');
+
+        return $paginator;
     }
 
     /**
@@ -71,9 +87,13 @@ class StockTransferService
             $fromPivot = $fromWarehouse->products()->where('product_id', $product->id)->first();
             $currentFromStock = $fromPivot ? $fromPivot->pivot->stock : 0;
 
+            if ($currentFromStock < $data['qty']) {
+                throw new \Exception("Stok tidak mencukupi di gudang asal ({$fromWarehouse->name}).");
+            }
+
             $fromWarehouse->products()->syncWithoutDetaching([
                 $product->id => [
-                    'stock' => max(0, $currentFromStock - $data['qty']),
+                    'stock' => $currentFromStock - $data['qty'],
                 ],
             ]);
 

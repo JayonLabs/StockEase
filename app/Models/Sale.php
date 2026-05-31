@@ -46,20 +46,16 @@ class Sale extends Model
 
     /**
      * Get the user that created the sale.
-     *
-     * @return BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
     /**
      * Get the sale items that belong to the sale.
-     *
-     * @return HasMany
      */
-    public function saleItems()
+    public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class);
     }
@@ -82,10 +78,8 @@ class Sale extends Model
 
     /**
      * Get the payment transaction that belongs to the sale.
-     *
-     * @return HasOne
      */
-    public function paymentTransaction()
+    public function paymentTransaction(): HasOne
     {
         return $this->hasOne(PaymentTransaction::class);
     }

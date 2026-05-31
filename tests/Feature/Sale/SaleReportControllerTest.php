@@ -9,6 +9,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
@@ -365,6 +366,26 @@ describe('Search cashier', function () {
                 ],
             ]);
     });
+
+    it('searches cashier by exact id match only', function () {
+        /** @var TestCase&object{admin:User, cashier:User} $this */
+        $cashier11 = User::factory()->create(['role' => 'cashier']);
+
+        actingAs($this->admin)
+            ->getJson(route('reports.sale.search-cashier', ['search' => (string) $this->cashier->id]))
+            ->assertSuccessful()
+            ->assertJsonPath('data.0.value', $this->cashier->id);
+
+        // Searching for partial ID should not match longer IDs
+        $response = actingAs($this->admin)
+            ->getJson(route('reports.sale.search-cashier', ['search' => (string) $cashier11->id]));
+
+        $response->assertSuccessful();
+        $data = $response->json('data');
+        $ids = collect($data)->pluck('value')->all();
+        expect($ids)->toContain($cashier11->id)
+            ->and($ids)->not->toContain($this->cashier->id);
+    });
 });
 
 // ============================================================
@@ -541,5 +562,30 @@ describe('Export to Excel', function () {
             ]));
 
         $response->assertSuccessful();
+    });
+
+    it('stores and downloads Excel exactly once per export', function () {
+        /** @var TestCase&object{admin:User, cashier:User, product:Product} $this */
+        Excel::fake();
+        saleReport($this->cashier, $this->product);
+
+        $today = Carbon::today()->toDateString();
+        $year = Carbon::now('Asia/Shanghai')->format('Y');
+        $month = Carbon::now('Asia/Shanghai')->translatedFormat('F');
+        $fileName = 'Laporan Penjualan '
+            .Carbon::parse($today)->translatedFormat('d F Y').' - '
+            .Carbon::parse($today)->translatedFormat('d F Y').' StockEase.xlsx';
+
+        actingAs($this->admin)
+            ->get(route('reports.sale.export-to-excel', [
+                'start' => $today,
+                'end' => $today,
+                'cashier' => 'semua-cashier',
+                'payment' => 'semua-metode',
+            ]))
+            ->assertSuccessful();
+
+        Excel::assertStored("reports/sales/{$year}/{$month}/{$fileName}", 'local');
+        Excel::assertDownloaded($fileName);
     });
 });

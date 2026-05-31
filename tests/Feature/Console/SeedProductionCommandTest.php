@@ -2,13 +2,13 @@
 
 use App\Enums\Role as RoleEnum;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 use function Pest\Laravel\artisan;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 describe('SeedProduction Command', function () {
     it('creates all permissions when run on empty database', function () {

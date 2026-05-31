@@ -10,10 +10,12 @@ use App\Models\StockLog;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Warehouse;
+use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
 
 beforeEach(function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $this->admin = User::factory()->create(['role' => 'admin']);
     $this->cashier = User::factory()->create(['role' => 'cashier']);
     $this->warehouseUser = User::factory()->create(['role' => 'warehouse']);
@@ -22,24 +24,28 @@ beforeEach(function () {
 // --- Sale Index Page ---
 
 it('renders sale index page for admin', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->admin)
         ->get(route('sale.index'))
         ->assertSuccessful();
 });
 
 it('renders sale index page for cashier', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->cashier)
         ->get(route('sale.index'))
         ->assertSuccessful();
 });
 
 it('denies warehouse user from sale index page', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->warehouseUser)
         ->get(route('sale.index'))
         ->assertForbidden();
 });
 
 it('filters sales by date range', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $warehouse = Warehouse::factory()->create();
     $product = Product::factory()->create();
     $warehouse->products()->attach($product->id, ['stock' => 100]);
@@ -63,6 +69,7 @@ it('filters sales by date range', function () {
 });
 
 it('renders sale index with no date filters', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     Sale::factory()->create(['date' => now(), 'status' => 'completed']);
 
     actingAs($this->admin)
@@ -73,24 +80,28 @@ it('renders sale index with no date filters', function () {
 // --- Purchase Index Page ---
 
 it('renders purchase index page for admin', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->admin)
         ->get(route('purchase.index'))
         ->assertSuccessful();
 });
 
 it('renders purchase index page for warehouse user', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->warehouseUser)
         ->get(route('purchase.index'))
         ->assertSuccessful();
 });
 
 it('denies cashier from purchase index page', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->cashier)
         ->get(route('purchase.index'))
         ->assertForbidden();
 });
 
 it('filters purchases by date range', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $warehouse = Warehouse::factory()->create();
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create();
@@ -119,6 +130,7 @@ it('filters purchases by date range', function () {
 });
 
 it('renders purchase index with empty date filters', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $warehouse = Warehouse::factory()->create();
     $supplier = Supplier::factory()->create();
 
@@ -136,24 +148,28 @@ it('renders purchase index with empty date filters', function () {
 // --- Log Stock Index Page ---
 
 it('renders log-stock index page for admin', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->admin)
         ->get(route('log-stock.index'))
         ->assertSuccessful();
 });
 
 it('renders log-stock index page for warehouse user', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->warehouseUser)
         ->get(route('log-stock.index'))
         ->assertSuccessful();
 });
 
 it('denies cashier from log-stock index page', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->cashier)
         ->get(route('log-stock.index'))
         ->assertForbidden();
 });
 
 it('filters log-stock by date range', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $product = Product::factory()->create();
 
     StockLog::factory()->create([
@@ -172,6 +188,7 @@ it('filters log-stock by date range', function () {
 });
 
 it('renders log-stock index with no date filters', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $product = Product::factory()->create();
     StockLog::factory()->create(['product_id' => $product->id]);
 
@@ -183,24 +200,28 @@ it('renders log-stock index with no date filters', function () {
 // --- Sale Return Index Page ---
 
 it('renders sale-return index page for admin', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->admin)
         ->get(route('sale-return.index'))
         ->assertSuccessful();
 });
 
 it('renders sale-return index page for cashier', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->cashier)
         ->get(route('sale-return.index'))
         ->assertSuccessful();
 });
 
 it('denies warehouse user from sale-return index page', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     actingAs($this->warehouseUser)
         ->get(route('sale-return.index'))
         ->assertForbidden();
 });
 
 it('filters sale-return by date range', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $sale = Sale::factory()->create(['status' => 'completed']);
 
     SaleReturn::factory()->create([
@@ -223,21 +244,25 @@ it('filters sale-return by date range', function () {
 // --- Unauthenticated Access ---
 
 it('denies unauthenticated access to sale index', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $this->get(route('sale.index'))
         ->assertRedirect(route('login'));
 });
 
 it('denies unauthenticated access to purchase index', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $this->get(route('purchase.index'))
         ->assertRedirect(route('login'));
 });
 
 it('denies unauthenticated access to log-stock index', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $this->get(route('log-stock.index'))
         ->assertRedirect(route('login'));
 });
 
 it('denies unauthenticated access to sale-return index', function () {
+    /** @var TestCase&object{admin:User, cashier:User, warehouseUser:User} $this */
     $this->get(route('sale-return.index'))
         ->assertRedirect(route('login'));
 });

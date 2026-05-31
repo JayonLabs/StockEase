@@ -38,40 +38,32 @@ class StockTransfer extends Model
 
     /**
      * Get the source warehouse for the transfer.
-     *
-     * @return BelongsTo
      */
-    public function fromWarehouse()
+    public function fromWarehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class, 'from_warehouse_id');
     }
 
     /**
      * Get the destination warehouse for the transfer.
-     *
-     * @return BelongsTo
      */
-    public function toWarehouse()
+    public function toWarehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class, 'to_warehouse_id');
     }
 
     /**
      * Get the product being transferred.
-     *
-     * @return BelongsTo
      */
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
     /**
      * Get the user who performed the transfer.
-     *
-     * @return BelongsTo
      */
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }

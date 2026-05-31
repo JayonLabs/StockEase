@@ -1,8 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\File;
+use Tests\TestCase;
 
 beforeEach(function () {
+    /** @var TestCase&object{logPath:string} $this */
     $this->logPath = storage_path('logs/queue-worker.log');
 
     if (File::exists($this->logPath)) {
@@ -11,18 +13,21 @@ beforeEach(function () {
 });
 
 afterEach(function () {
+    /** @var TestCase&object{logPath:string} $this */
     if (File::exists($this->logPath)) {
         File::delete($this->logPath);
     }
 });
 
 it('shows a message when the log file does not exist', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $this->artisan('logs:queue-worker')
         ->expectsOutputToContain('No queue worker log file found')
         ->assertSuccessful();
 });
 
 it('shows an info message when the log file is empty', function () {
+    /** @var TestCase&object{logPath:string} $this */
     File::put($this->logPath, '');
 
     $this->artisan('logs:queue-worker')
@@ -31,6 +36,7 @@ it('shows an info message when the log file is empty', function () {
 });
 
 it('displays the full log content when no options are given', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = "[2026-05-08 10:00:00] INFO: Processing job\n[2026-05-08 10:00:01] INFO: Job completed\n";
     File::put($this->logPath, $content);
 
@@ -41,6 +47,7 @@ it('displays the full log content when no options are given', function () {
 });
 
 it('displays file statistics in the header', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = "[2026-05-08 10:00:00] INFO: Test entry\n";
     File::put($this->logPath, $content);
 
@@ -54,6 +61,7 @@ it('displays file statistics in the header', function () {
 });
 
 it('shows only the last N lines when --lines option is given', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $lines = [];
     for ($i = 1; $i <= 10; $i++) {
         $lines[] = "[2026-05-08 10:00:0{$i}] INFO: Line {$i}";
@@ -70,6 +78,7 @@ it('shows only the last N lines when --lines option is given', function () {
 });
 
 it('filters lines containing given text with --filter option', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = "[2026-05-08 10:00:00] INFO: User created\n[2026-05-08 10:00:01] INFO: Order processed\n[2026-05-08 10:00:02] INFO: User updated\n";
     File::put($this->logPath, $content);
 
@@ -81,6 +90,7 @@ it('filters lines containing given text with --filter option', function () {
 });
 
 it('shows only error and warning lines with --errors option', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = "[2026-05-08 10:00:00] INFO: Normal entry\n[2026-05-08 10:00:01] WARNING: Low memory\n[2026-05-08 10:00:02] ERROR: Job failed\n[2026-05-08 10:00:03] INFO: Another entry\n[2026-05-08 10:00:04] exception: Database down\n";
     File::put($this->logPath, $content);
 
@@ -94,6 +104,7 @@ it('shows only error and warning lines with --errors option', function () {
 });
 
 it('shows no matching entries message when filter returns nothing', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = "[2026-05-08 10:00:00] INFO: Normal entry\n";
     File::put($this->logPath, $content);
 
@@ -103,6 +114,7 @@ it('shows no matching entries message when filter returns nothing', function () 
 });
 
 it('shows no matching entries when --errors flag finds no errors', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = "[2026-05-08 10:00:00] INFO: Normal entry\n[2026-05-08 10:00:01] INFO: All good\n";
     File::put($this->logPath, $content);
 
@@ -112,6 +124,7 @@ it('shows no matching entries when --errors flag finds no errors', function () {
 });
 
 it('shows entry count when displaying filtered results', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = "[2026-05-08 10:00:00] INFO: Entry A\n[2026-05-08 10:00:01] ERROR: Entry B\n[2026-05-08 10:00:02] INFO: Entry C\n";
     File::put($this->logPath, $content);
 
@@ -121,6 +134,7 @@ it('shows entry count when displaying filtered results', function () {
 });
 
 it('displays error lines with error styling', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = "[2026-05-08 10:00:00] ERROR: Something went wrong\n[2026-05-08 10:00:01] WARNING: Approaching limit\n";
     File::put($this->logPath, $content);
 
@@ -131,6 +145,7 @@ it('displays error lines with error styling', function () {
 });
 
 it('combines --lines and --filter options together', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $lines = [];
     for ($i = 1; $i <= 10; $i++) {
         $lines[] = "[2026-05-08 10:00:0{$i}] INFO: Entry {$i}";
@@ -146,6 +161,7 @@ it('combines --lines and --filter options together', function () {
 });
 
 it('combines --lines and --errors options together', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = "[2026-05-08 10:00:01] INFO: Normal 1\n";
     $content .= "[2026-05-08 10:00:02] ERROR: Error 1\n";
     $content .= "[2026-05-08 10:00:03] INFO: Normal 2\n";
@@ -162,6 +178,7 @@ it('combines --lines and --errors options together', function () {
 });
 
 it('handles large log files efficiently', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $lines = [];
     for ($i = 1; $i <= 500; $i++) {
         $lines[] = "[2026-05-08 10:00:00] INFO: Processing item {$i}";
@@ -175,6 +192,7 @@ it('handles large log files efficiently', function () {
 });
 
 it('formats file size in human readable format', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = str_repeat('x', 1536);
     File::put($this->logPath, $content);
 
@@ -184,6 +202,7 @@ it('formats file size in human readable format', function () {
 });
 
 it('handles log lines with special characters', function () {
+    /** @var TestCase&object{logPath:string} $this */
     $content = "[2026-05-08 10:00:00] INFO: User 'john@example.com' processed\n";
     $content .= "[2026-05-08 10:00:01] INFO: Price: $100.50 & discount applied\n";
     File::put($this->logPath, $content);

@@ -49,10 +49,8 @@ class Unit extends Model
 
     /**
      * Get the products that belong to this unit.
-     *
-     * @return HasMany
      */
-    public function products()
+    public function products(): HasMany
     {
         return $this->hasMany(Product::class);
     }

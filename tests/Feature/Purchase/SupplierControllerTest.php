@@ -3,14 +3,14 @@
 use App\Models\Purchase;
 use App\Models\Supplier;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertSoftDeleted;
 use function Pest\Laravel\get;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 // --- INDEX ---
 

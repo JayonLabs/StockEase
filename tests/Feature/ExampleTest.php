@@ -1,14 +1,17 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
-uses(RefreshDatabase::class);
+use function Pest\Laravel\actingAs;
+
+uses(LazilyRefreshDatabase::class);
 
 test('the application returns a successful response', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->get('/');
+    /** @var User $user */
+    $response = actingAs($user)->get('/');
 
     $response->assertStatus(200);
 });

@@ -3,12 +3,14 @@
 use App\Models\Shift;
 use App\Models\User;
 use Database\Seeders\RoleAndPermissionSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
-uses(RefreshDatabase::class);
+use function Pest\Laravel\seed;
+
+uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
-    $this->seed(RoleAndPermissionSeeder::class);
+    seed(RoleAndPermissionSeeder::class);
 });
 
 describe('super_admin', function () {
@@ -38,15 +40,17 @@ describe('admin', function () {
 });
 
 describe('cashier', function () {
-    it('passes all ShiftPolicy methods', function () {
+    it('can close their own shift but not another cashier\'s shift', function () {
         $cashier = User::factory()->create();
         $cashier->syncRoles('cashier');
-        $shift = Shift::factory()->create();
+        $ownShift = Shift::factory()->create(['user_id' => $cashier->id]);
+        $otherShift = Shift::factory()->create();
 
         expect($cashier->can('viewAny', Shift::class))->toBeTrue();
-        expect($cashier->can('view', $shift))->toBeTrue();
+        expect($cashier->can('view', $ownShift))->toBeTrue();
         expect($cashier->can('create', Shift::class))->toBeTrue();
-        expect($cashier->can('close', $shift))->toBeTrue();
+        expect($cashier->can('close', $ownShift))->toBeTrue();
+        expect($cashier->can('close', $otherShift))->toBeFalse();
     });
 });
 

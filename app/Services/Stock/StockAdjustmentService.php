@@ -16,6 +16,11 @@ use Illuminate\Support\Facades\DB;
 
 class StockAdjustmentService
 {
+    public function __construct(
+        private readonly UpdateProductExpiryDate $updateProductExpiryDate,
+        private readonly NotifyStockAlert $notifyStockAlert,
+    ) {}
+
     /**
      * Get paginated stock adjustments with filters.
      *
@@ -93,16 +98,16 @@ class StockAdjustmentService
 
             $product->refresh();
 
-            resolve(UpdateProductExpiryDate::class)->execute($product);
+            $this->updateProductExpiryDate->execute($product);
 
             if ($product->stock <= $product->alert_stock) {
-                resolve(NotifyStockAlert::class)->execute($product);
+                $this->notifyStockAlert->execute($product);
             }
 
             StockLog::create([
                 'product_id' => $product->id,
                 'warehouse_id' => $warehouse->id,
-                'qty' => abs($diff),
+                'qty' => $diff,
                 'type' => StockLogType::Adjust->value,
                 'reference_type' => 'StockAdjustment',
                 'reference_id' => $adjustment->id,

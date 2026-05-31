@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Enums\Role;
 use App\Models\Shift;
 use App\Models\User;
 
@@ -48,6 +49,10 @@ class ShiftPolicy
      */
     public function close(User $user, Shift $shift): bool
     {
-        return $user->id === $shift->user_id || $user->hasRole('admin');
+        if ($user->id === $shift->user_id) {
+            return true;
+        }
+
+        return $user->can('close_shift') && $user->hasRole(Role::Admin->value);
     }
 }

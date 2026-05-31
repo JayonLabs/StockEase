@@ -19,8 +19,9 @@ class PaymentService
     /**
      * Create a new service instance.
      */
-    public function __construct()
-    {
+    public function __construct(
+        private readonly ReduceProductStock $reduceProductStock,
+    ) {
         $this->initMidtrans();
     }
 
@@ -117,7 +118,7 @@ class PaymentService
                 $sale = $paymentTransaction->sale;
                 if ($sale && $sale->status !== SaleStatus::Completed->value) {
                     $sale->update(['status' => SaleStatus::Completed->value]);
-                    resolve(ReduceProductStock::class)->execute($sale->saleItems, $sale->warehouse_id);
+                    $this->reduceProductStock->execute($sale->saleItems, $sale->warehouse_id);
                 }
             }
 

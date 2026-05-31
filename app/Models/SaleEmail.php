@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EmailStatus;
 use Database\Factories\SaleEmailFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,6 +36,7 @@ class SaleEmail extends Model
     {
         return [
             'sent_at' => 'datetime',
+            'status' => EmailStatus::class,
         ];
     }
 

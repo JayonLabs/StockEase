@@ -19,28 +19,19 @@ use Illuminate\Support\Facades\DB;
 class DashboardService
 {
     /**
-     * Get dashboard data based on user or role string.
+     * Get dashboard data based on user.
      */
-    public function getDashboardData(User|string $role): array
+    public function getDashboardData(User $user): array
     {
-        if (is_string($role)) {
-            return match ($role) {
-                Role::SuperAdmin->value, Role::Admin->value => $this->adminData(),
-                Role::Cashier->value => $this->cashierData(),
-                Role::Warehouse->value => $this->warehouseData(),
-                default => [],
-            };
-        }
-
-        if ($role->hasRole([Role::SuperAdmin->value, Role::Admin->value])) {
+        if ($user->hasRole([Role::SuperAdmin->value, Role::Admin->value])) {
             return $this->adminData();
         }
 
-        if ($role->hasRole(Role::Cashier->value)) {
-            return $this->cashierData();
+        if ($user->hasRole(Role::Cashier->value)) {
+            return $this->cashierData($user);
         }
 
-        if ($role->hasRole(Role::Warehouse->value)) {
+        if ($user->hasRole(Role::Warehouse->value)) {
             return $this->warehouseData();
         }
 
@@ -90,20 +81,23 @@ class DashboardService
     /**
      * Get dashboard data for cashier.
      */
-    private function cashierData(): array
+    private function cashierData(User $user): array
     {
         $totalTransactionPerWeek = Sale::where('status', SaleStatus::Completed->value)
+            ->where('user_id', $user->id)
             ->whereBetween('date', [
                 Carbon::now()->startOfWeek()->toDateString(),
                 Carbon::now()->endOfWeek()->toDateString(),
             ])->count();
 
         $todaysIncome = (float) Sale::where('status', SaleStatus::Completed->value)
+            ->where('user_id', $user->id)
             ->whereDate('date', Carbon::today())
             ->sum('total');
 
-        $bestSellingProductItem = SaleItem::whereHas('sale', function ($q) {
-            $q->whereDate('date', Carbon::today())
+        $bestSellingProductItem = SaleItem::whereHas('sale', function ($q) use ($user) {
+            $q->where('user_id', $user->id)
+                ->whereDate('date', Carbon::today())
                 ->where('status', SaleStatus::Completed->value);
         })
             ->select('product_id', DB::raw('SUM(qty) as total_qty'))
@@ -115,11 +109,13 @@ class DashboardService
         $bestSellingProduct = $bestSellingProductItem ? $bestSellingProductItem->product->name : 'Tidak ada transaksi hari ini';
 
         $averagePerCustomer = Sale::where('status', SaleStatus::Completed->value)
+            ->where('user_id', $user->id)
             ->whereDate('date', Carbon::today())
             ->avg('total');
         $averagePerCustomer = $averagePerCustomer !== null ? (float) $averagePerCustomer : null;
 
         $recentTransaction = Sale::where('status', SaleStatus::Completed->value)
+            ->where('user_id', $user->id)
             ->latest()
             ->take(5)
             ->get()
@@ -151,7 +147,9 @@ class DashboardService
 
         $lowStockCount = Product::whereColumn('stock', '<=', 'alert_stock')->count();
 
-        $newProductThisMonth = Product::whereMonth('created_at', Carbon::now()->month)->count();
+        $newProductThisMonth = Product::whereMonth('created_at', Carbon::now()->month)
+            ->whereYear('created_at', Carbon::now()->year)
+            ->count();
 
         $activeSupplier = Supplier::count();
 
@@ -183,8 +181,6 @@ class DashboardService
      */
     public function getActivityHistory(): array
     {
-        Carbon::setLocale('id');
-
         $latestSales = Sale::where('status', SaleStatus::Completed->value)
             ->select(['id', 'total', 'created_at'])
             ->with([
@@ -293,8 +289,6 @@ class DashboardService
         $chartData = [];
         $chartCategories = [];
 
-        Carbon::setLocale('id');
-
         for ($date = $start->copy(); $date->lte($end); $date->addDay()) {
             $chartCategories[] = $date->isoFormat('ddd');
             $chartData[] = (float) ($weeklySales[$date->toDateString()] ?? 0);
@@ -311,7 +305,6 @@ class DashboardService
      */
     public function getPriceUpdateChartData(): array
     {
-        Carbon::setLocale('id');
         $startDate = Carbon::now()->subDays(6)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
 
@@ -344,8 +337,6 @@ class DashboardService
      */
     public function getWarehouseChart(): array
     {
-        Carbon::setLocale('id');
-
         $startDate = Carbon::now()->subDays(6)->startOfDay();
         $endDate = Carbon::now()->endOfDay();
 

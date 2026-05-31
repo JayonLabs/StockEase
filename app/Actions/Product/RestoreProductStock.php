@@ -2,6 +2,7 @@
 
 namespace App\Actions\Product;
 
+use App\Enums\StockLogType;
 use App\Models\Product;
 use App\Models\PurchaseItem;
 use App\Models\StockLog;
@@ -79,7 +80,7 @@ class RestoreProductStock
             StockLog::create([
                 'product_id' => $product->id,
                 'qty' => $item->qty,
-                'type' => 'in',
+                'type' => StockLogType::In->value,
                 'reference_type' => 'SaleReturn',
                 'reference_id' => $item->sale_return_id ?? $item->id,
                 'note' => 'Retur penjualan produk '.$product->name,
