@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Stock;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Stock\StoreStockAdjustmentRequest;
 use App\Models\Product;
 use App\Models\Warehouse;
 use App\Services\Stock\StockAdjustmentService;
@@ -40,17 +41,9 @@ class StockAdjustmentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): RedirectResponse
+    public function store(StoreStockAdjustmentRequest $request): RedirectResponse
     {
-        $validated = $request->validate([
-            'warehouse_id' => ['required', 'exists:warehouses,id'],
-            'product_id' => ['required', 'exists:products,id'],
-            'new_stock' => ['required', 'integer', 'min:0'],
-            'reason' => ['nullable', 'string', 'max:255'],
-            'date' => ['required', 'date'],
-        ]);
-
-        $this->stockAdjustmentService->storeAdjustment($validated);
+        $this->stockAdjustmentService->storeAdjustment($request->validated());
 
         return redirect()->route('stock-adjustment.index')
             ->with('success', 'Berhasil melakukan penyesuaian stok.');
