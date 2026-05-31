@@ -16,6 +16,11 @@ class Product extends Model
 {
     use HasFactory, LogsActivity, Sluggable, SoftDeletes;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
         'category_id',
         'slug',
@@ -73,20 +78,16 @@ class Product extends Model
 
     /**
      * Get the category that the product belongs to.
-     *
-     * @return BelongsTo
      */
-    public function category()
+    public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
     }
 
     /**
      * Get the unit that the product belongs to.
-     *
-     * @return BelongsTo
      */
-    public function unit()
+    public function unit(): BelongsTo
     {
         return $this->belongsTo(Unit::class);
     }
@@ -104,30 +105,24 @@ class Product extends Model
 
     /**
      * Get the purchase items that belong to the product.
-     *
-     * @return HasMany
      */
-    public function purchaseItems()
+    public function purchaseItems(): HasMany
     {
         return $this->hasMany(PurchaseItem::class);
     }
 
     /**
      * Get the sale items that belong to the product.
-     *
-     * @return HasMany
      */
-    public function saleItems()
+    public function saleItems(): HasMany
     {
         return $this->hasMany(SaleItem::class);
     }
 
     /**
      * Get the price histories for the product.
-     *
-     * @return HasMany
      */
-    public function priceHistories()
+    public function priceHistories(): HasMany
     {
         return $this->hasMany(PriceHistory::class);
     }
@@ -144,10 +139,8 @@ class Product extends Model
 
     /**
      * Get the warehouses that stock this product.
-     *
-     * @return BelongsToMany
      */
-    public function warehouses()
+    public function warehouses(): BelongsToMany
     {
         return $this->belongsToMany(Warehouse::class, 'warehouse_product')
             ->withPivot('stock')

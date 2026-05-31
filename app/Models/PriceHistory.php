@@ -11,6 +11,11 @@ class PriceHistory extends Model
 {
     use HasFactory, SoftDeletes;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
         'product_id',
         'user_id',

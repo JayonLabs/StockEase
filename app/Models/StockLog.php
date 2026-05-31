@@ -23,20 +23,16 @@ class StockLog extends Model
 
     /**
      * Get the product that owns the stock log.
-     *
-     * @return BelongsTo
      */
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
     /**
      * Get the warehouse this log entry belongs to.
-     *
-     * @return BelongsTo
      */
-    public function warehouse()
+    public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }

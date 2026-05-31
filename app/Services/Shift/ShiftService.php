@@ -11,6 +11,7 @@ use App\Models\Shift;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class ShiftService
 {
@@ -68,7 +69,7 @@ class ShiftService
         $startDate = $filters['start'] ?? null;
         $endDate = $filters['end'] ?? null;
 
-        return Shift::with('user')
+        $paginator = Shift::with('user')
             ->when($user && $user->hasRole(Role::Cashier->value), function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
@@ -89,6 +90,19 @@ class ShiftService
             ->orderBy('created_at', 'desc')
             ->paginate($perPage)
             ->withQueryString();
+
+        $collection = $paginator->getCollection();
+        $authId = Auth::id();
+
+        $collection->each(function (Shift $shift) use ($authId) {
+            if ((int) $shift->user_id === (int) $authId) {
+                $shift->setRelation('user', Auth::user());
+            }
+        });
+
+        $collection->loadMissing('user.roles');
+
+        return $paginator;
     }
 
     /**
@@ -97,7 +111,7 @@ class ShiftService
     public function getShiftDetails(Shift $shift): Shift
     {
         return $shift->load([
-            'user',
+            'user.roles',
             'sales' => function ($query) {
                 $query->where('status', SaleStatus::Completed->value)
                     ->orderBy('created_at', 'desc');

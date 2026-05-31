@@ -1,5 +1,14 @@
 <script setup>
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import { Separator } from '@/Components/ui/separator';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { Badge } from '@/Components/ui/badge';
+import { formatDateTime } from '@/lib/utils';
+import { History } from 'lucide-vue-next';
+import { ref } from 'vue';
+
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -8,10 +17,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
 } from '@/Components/ui/breadcrumb';
-import { Head, Link, router } from '@inertiajs/vue3';
-import { Separator } from '@/Components/ui/separator';
-import { Button } from '@/Components/ui/button';
-import { Input } from '@/Components/ui/input';
+
 import {
     Select,
     SelectContent,
@@ -30,16 +36,10 @@ import {
 import {
     Pagination,
     PaginationContent,
-    PaginationFirst,
     PaginationItem,
-    PaginationLast,
     PaginationNext,
     PaginationPrevious,
 } from '@/Components/ui/pagination';
-import { Badge } from '@/Components/ui/badge';
-import { formatDateTime } from '@/lib/utils';
-import { History } from 'lucide-vue-next';
-import { ref, watch } from 'vue';
 
 const props = defineProps({
     activities: {
@@ -325,53 +325,51 @@ const subjectName = (activity) => {
                     v-if="activities.total > activities.per_page"
                     class="px-4 py-3"
                 >
-                    <Pagination>
-                        <PaginationContent>
-                            <PaginationItem v-if="activities.current_page > 1">
-                                <Link
-                                    :href="activities.first_page_url"
-                                    preserve-scroll
-                                >
-                                    <PaginationFirst />
-                                </Link>
-                            </PaginationItem>
-                            <PaginationItem v-if="activities.prev_page_url">
-                                <Link
-                                    :href="activities.prev_page_url"
-                                    preserve-scroll
-                                >
-                                    <PaginationPrevious />
-                                </Link>
-                            </PaginationItem>
-                            <PaginationItem>
-                                <span
-                                    class="text-sm text-muted-foreground px-2"
-                                >
-                                    {{ activities.current_page }} /
-                                    {{ activities.last_page }}
-                                </span>
-                            </PaginationItem>
-                            <PaginationItem v-if="activities.next_page_url">
-                                <Link
-                                    :href="activities.next_page_url"
-                                    preserve-scroll
-                                >
-                                    <PaginationNext />
-                                </Link>
-                            </PaginationItem>
-                            <PaginationItem
-                                v-if="
-                                    activities.current_page <
-                                    activities.last_page
+                    <Pagination
+                        v-slot="{ page }"
+                        :items-per-page="activities.per_page"
+                        :total="activities.total"
+                        :default-page="activities.current_page"
+                    >
+                        <PaginationContent v-slot="{ items }">
+                            <PaginationPrevious
+                                :disabled="!activities.prev_page_url"
+                                @click="
+                                    $inertia.visit(activities.prev_page_url)
                                 "
+                            />
+
+                            <template
+                                v-for="(item, index) in items"
+                                :key="index"
                             >
-                                <Link
-                                    :href="activities.last_page_url"
-                                    preserve-scroll
+                                <PaginationItem
+                                    v-if="item.type === 'page'"
+                                    class="border disabled:opacity-50 disabled:cursor-not-allowed"
+                                    :value="item.value"
+                                    :is-active="item.value === page"
+                                    :disabled="item.value === page"
+                                    @click="
+                                        $inertia.get(
+                                            route('activity-logs.index'),
+                                            {
+                                                page: item.value,
+                                            },
+                                        )
+                                    "
                                 >
-                                    <PaginationLast />
-                                </Link>
-                            </PaginationItem>
+                                    {{ item.value }}
+                                </PaginationItem>
+                            </template>
+
+                            <PaginationEllipsis :index="4" />
+
+                            <PaginationNext
+                                :disabled="!activities.next_page_url"
+                                @click="
+                                    $inertia.visit(activities.next_page_url)
+                                "
+                            />
                         </PaginationContent>
                     </Pagination>
                 </div>

@@ -61,10 +61,8 @@ class Warehouse extends Model
 
     /**
      * Get the products in this warehouse with pivot stock.
-     *
-     * @return BelongsToMany
      */
-    public function products()
+    public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'warehouse_product')
             ->withPivot('stock')

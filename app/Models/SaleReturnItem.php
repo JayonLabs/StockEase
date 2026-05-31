@@ -35,30 +35,24 @@ class SaleReturnItem extends Model
 
     /**
      * Get the sale return that this item belongs to.
-     *
-     * @return BelongsTo
      */
-    public function saleReturn()
+    public function saleReturn(): BelongsTo
     {
         return $this->belongsTo(SaleReturn::class);
     }
 
     /**
      * Get the sale item that this return item belongs to.
-     *
-     * @return BelongsTo
      */
-    public function saleItem()
+    public function saleItem(): BelongsTo
     {
         return $this->belongsTo(SaleItem::class);
     }
 
     /**
      * Get the product that this return item belongs to.
-     *
-     * @return BelongsTo
      */
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }

@@ -6,6 +6,8 @@ use App\Models\Product;
 use Cviebrock\EloquentSluggable\Services\SlugService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -59,9 +61,9 @@ class ProductService
      */
     public function updatePrice(Product $product, array $data): bool
     {
-        return \DB::transaction(function () use ($product, $data) {
+        return DB::transaction(function () use ($product, $data) {
             $product->priceHistories()->create([
-                'user_id' => \Auth::id(),
+                'user_id' => Auth::id(),
                 'old_purchase_price' => $product->purchase_price,
                 'new_purchase_price' => $data['purchase_price'],
                 'old_selling_price' => $product->selling_price,
@@ -110,12 +112,10 @@ class ProductService
      */
     private function uploadImage(UploadedFile $image): string
     {
-        $imagePath = 'product';
-        $imageName = time().'.'.$image->getClientOriginalExtension();
+        $imageName = Str::uuid().'.'.$image->getClientOriginalExtension();
+        $path = Storage::disk('public')->putFileAs('product', $image, $imageName);
 
-        Storage::disk('public')->put($imagePath.'/'.$imageName, file_get_contents($image));
-
-        return "storage/{$imagePath}/{$imageName}";
+        return "storage/{$path}";
     }
 
     /**

@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -81,12 +82,11 @@ class ProfileController extends Controller
 
             $photoProfile = $request->file('photo_profile');
 
-            $imageName = time().'.'.$photoProfile->getClientOriginalExtension();
-
-            Storage::disk('public')->put('photo_profile/'.$imageName, file_get_contents($photoProfile));
+            $imageName = Str::uuid().'.'.$photoProfile->getClientOriginalExtension();
+            $path = Storage::disk('public')->putFileAs('photo_profile', $photoProfile, $imageName);
 
             $request->user()->update([
-                'photo_profile' => "storage/photo_profile/{$imageName}",
+                'photo_profile' => "storage/{$path}",
             ]);
 
             return response()->json([

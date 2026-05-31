@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\EmailStatus;
 use App\Models\Sale;
 use App\Models\SaleEmail;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -21,7 +22,7 @@ class SaleEmailFactory extends Factory
         return [
             'sale_id' => Sale::factory(),
             'email' => fake()->safeEmail(),
-            'status' => 'pending',
+            'status' => EmailStatus::Pending,
         ];
     }
 
@@ -31,7 +32,7 @@ class SaleEmailFactory extends Factory
     public function sent(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'sent',
+            'status' => EmailStatus::Sent,
             'sent_at' => now(),
         ]);
     }
@@ -42,7 +43,7 @@ class SaleEmailFactory extends Factory
     public function failed(): static
     {
         return $this->state(fn (array $attributes) => [
-            'status' => 'failed',
+            'status' => EmailStatus::Failed,
             'error_message' => fake()->sentence(),
         ]);
     }

@@ -38,40 +38,32 @@ class SaleItem extends Model
 
     /**
      * Get the promotion applied to this sale item.
-     *
-     * @return BelongsTo
      */
-    public function promotion()
+    public function promotion(): BelongsTo
     {
         return $this->belongsTo(Promotion::class);
     }
 
     /**
      * Get the sale that this sale item belongs to.
-     *
-     * @return BelongsTo
      */
-    public function sale()
+    public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);
     }
 
     /**
      * Get the product that this sale item belongs to.
-     *
-     * @return BelongsTo
      */
-    public function product()
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
 
     /**
      * Get the warehouse that this sale item belongs to.
-     *
-     * @return BelongsTo
      */
-    public function warehouse()
+    public function warehouse(): BelongsTo
     {
         return $this->belongsTo(Warehouse::class);
     }

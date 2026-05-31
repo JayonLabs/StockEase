@@ -19,7 +19,12 @@ class SaleService
         $startDate = $filters['start'] ?? null;
         $endDate = $filters['end'] ?? null;
 
-        return Sale::with('user', 'saleItems', 'saleItems.product', 'paymentTransaction')
+        return Sale::with([
+            'user.roles',
+            'saleItems',
+            'saleItems.product',
+            'paymentTransaction',
+        ])
             ->where('payment_method', '!=', PaymentMethod::Pending->value)
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($q) use ($search) {
@@ -58,6 +63,11 @@ class SaleService
      */
     public function getSaleDetails(Sale $sale): Sale
     {
-        return $sale->load('user', 'saleItems', 'saleItems.product', 'paymentTransaction');
+        return $sale->load([
+            'user.roles',
+            'saleItems',
+            'saleItems.product',
+            'paymentTransaction',
+        ]);
     }
 }
