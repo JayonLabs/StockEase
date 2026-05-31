@@ -44,8 +44,6 @@ class PurchaseReportService
         $totalItemsPurchased = $purchases->flatMap->purchaseItems->sum('qty');
         $totalTransaction = $purchases->count();
 
-        Carbon::setLocale('id');
-
         $purchaseTrends = $purchases->groupBy(function ($item) {
             return Carbon::parse($item->created_at)->translatedFormat('M');
         })->map(function ($item) {

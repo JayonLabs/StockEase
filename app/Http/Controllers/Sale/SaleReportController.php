@@ -72,8 +72,11 @@ class SaleReportController extends Controller
             }
 
             $cashier = User::where(function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->search}%")
-                    ->orWhere('id', 'like', "%{$request->search}%");
+                $q->where('name', 'like', "%{$request->search}%");
+
+                if (is_numeric($request->search)) {
+                    $q->orWhere('id', $request->search);
+                }
             })
                 ->role([Role::Cashier->value, Role::Admin->value, Role::SuperAdmin->value])
                 ->select('id as value', 'name as label')
@@ -141,8 +144,10 @@ class SaleReportController extends Controller
             .Carbon::now('Asia/Shanghai')->translatedFormat('F').'/'
             .$fileName;
 
-        Excel::store(new SalesReportExport($sales, $preparedFilters, $summary), $filePath, 'local');
+        $export = new SalesReportExport($sales, $preparedFilters, $summary);
 
-        return Excel::download(new SalesReportExport($sales, $preparedFilters, $summary), $fileName);
+        Excel::store($export, $filePath, 'local');
+
+        return Excel::download($export, $fileName);
     }
 }

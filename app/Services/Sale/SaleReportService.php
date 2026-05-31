@@ -61,8 +61,6 @@ class SaleReportService
             ->sortByDesc('total_sold')
             ->first();
 
-        Carbon::setLocale('id');
-
         $salesTrend = $sales
             ->groupBy(function ($sale) {
                 return Carbon::parse($sale->created_at)->translatedFormat('M');

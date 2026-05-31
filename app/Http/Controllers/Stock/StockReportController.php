@@ -159,8 +159,10 @@ class StockReportController extends Controller
             .Carbon::now('Asia/Shanghai')->translatedFormat('F').'/'
             .$fileName;
 
-        Excel::store(new StockExportExcel($preparedFilters, $filteredStocks), $filePath, 'local');
+        $export = new StockExportExcel($preparedFilters, $filteredStocks);
 
-        return Excel::download(new StockExportExcel($preparedFilters, $filteredStocks), $fileName);
+        Excel::store($export, $filePath, 'local');
+
+        return Excel::download($export, $fileName);
     }
 }
