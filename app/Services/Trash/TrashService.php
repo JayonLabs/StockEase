@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Pagination\LengthAwarePaginator as PaginationLengthAwarePaginator;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class TrashService
 {
@@ -60,82 +60,46 @@ class TrashService
     ];
 
     /**
-     * Get all trashed items across tracked models, paginated.
+     * Get all trashed items across tracked models, paginated at the database level.
+     *
+     * Uses UNION ALL subqueries so that LIMIT/OFFSET is applied before data reaches
+     * PHP memory. Total count is derived from a single COUNT(*) wrapper.
      */
     public function getPaginatedTrashedItems(int $perPage = 15): LengthAwarePaginator
     {
-        $allItems = collect();
+        $page = Paginator::resolveCurrentPage();
 
-        foreach ($this->trackedModels as $entry) {
-            /** @var class-string<Model&SoftDeletes> $class */
-            $class = $entry['class'];
+        $unionSql = $this->buildUnionQuery();
+        $total = (int) DB::selectOne("SELECT COUNT(*) as aggregate FROM ({$unionSql}) as trash_union")->aggregate;
 
-            $trashed = $class::onlyTrashed()->latest('deleted_at')->get()->map(
-                fn (Model $model) => $this->toUnifiedItem($model, $class, $entry['label'])
-            );
+        $offset = ($page - 1) * $perPage;
+        $items = DB::select("SELECT * FROM ({$unionSql}) as trash_items ORDER BY deleted_at DESC LIMIT {$perPage} OFFSET {$offset}");
 
-            $allItems = $allItems->concat($trashed);
-        }
+        $mapped = collect($items)->map(fn ($row) => $this->unifiedItemFromRow($row));
 
-        return $this->paginate($allItems->sortByDesc('deleted_at')->values(), $perPage);
+        return new PaginationLengthAwarePaginator($mapped, $total, $perPage, $page, [
+            'path' => Paginator::resolveCurrentPath(),
+        ]);
     }
 
     /**
-     * Search trashed items across all tracked models.
+     * Search trashed items across all tracked models, paginated at the database level.
      */
     public function searchTrashedItems(string $search, int $perPage = 15): LengthAwarePaginator
     {
-        $allItems = collect();
+        $page = Paginator::resolveCurrentPage();
 
-        foreach ($this->trackedModels as $entry) {
-            /** @var class-string<Model&SoftDeletes> $class */
-            $class = $entry['class'];
+        $unionSql = $this->buildUnionQuery($search);
+        $total = (int) DB::selectOne("SELECT COUNT(*) as aggregate FROM ({$unionSql}) as trash_union")->aggregate;
 
-            $query = $class::onlyTrashed();
+        $offset = ($page - 1) * $perPage;
+        $items = DB::select("SELECT * FROM ({$unionSql}) as trash_items ORDER BY deleted_at DESC LIMIT {$perPage} OFFSET {$offset}");
 
-            if ($class === User::class) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%");
-                });
-            } elseif ($class === Sale::class) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('customer_name', 'like', "%{$search}%")
-                        ->orWhere('id', 'like', "%{$search}%");
-                });
-            } elseif ($class === Purchase::class || $class === PurchaseItem::class) {
-                $query->where('id', 'like', "%{$search}%");
-            } elseif ($class === SaleEmail::class) {
-                $query->where('email', 'like', "%{$search}%");
-            } elseif ($class === SaleReturn::class) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('reason', 'like', "%{$search}%")
-                        ->orWhere('id', 'like', "%{$search}%");
-                });
-            } elseif ($class === StockAdjustment::class) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('reason', 'like', "%{$search}%")
-                        ->orWhere('id', 'like', "%{$search}%");
-                });
-            } elseif ($class === PaymentTransaction::class) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('external_id', 'like', "%{$search}%")
-                        ->orWhere('id', 'like', "%{$search}%");
-                });
-            } elseif (in_array($class, [SaleItem::class, SaleReturnItem::class, StockLog::class, StockTransfer::class, Shift::class, PriceHistory::class], true)) {
-                $query->where('id', 'like', "%{$search}%");
-            } else {
-                $query->where('name', 'like', "%{$search}%");
-            }
+        $mapped = collect($items)->map(fn ($row) => $this->unifiedItemFromRow($row));
 
-            $trashed = $query->latest('deleted_at')->get()->map(
-                fn (Model $model) => $this->toUnifiedItem($model, $class, $entry['label'])
-            );
-
-            $allItems = $allItems->concat($trashed);
-        }
-
-        return $this->paginate($allItems->sortByDesc('deleted_at')->values(), $perPage);
+        return new PaginationLengthAwarePaginator($mapped, $total, $perPage, $page, [
+            'path' => Paginator::resolveCurrentPath(),
+        ]);
     }
 
     /**
@@ -221,8 +185,18 @@ class TrashService
     }
 
     /**
+     * In-memory cache of resolved FK values. Keyed by "class:column:id".
+     *
+     * @var array<string, mixed>
+     */
+    protected array $resolvedCache = [];
+
+    /**
      * Resolve a model attribute value. Translates foreign key IDs to their
      * related model's display name (e.g. supplier_id → "PT Makmur").
+     *
+     * Results are cached in-memory for the lifetime of the service instance
+     * to avoid duplicate queries for the same FK reference.
      */
     protected function resolveAttributeValue(string $key, mixed $value): mixed
     {
@@ -239,9 +213,15 @@ class TrashService
         $relatedClass = $resolver['class'];
         $column = $resolver['column'];
 
+        $cacheKey = "{$relatedClass}:{$column}:{$value}";
+
+        if (array_key_exists($cacheKey, $this->resolvedCache)) {
+            return $this->resolvedCache[$cacheKey];
+        }
+
         $related = $relatedClass::query()->find($value) ?? $relatedClass::withTrashed()->find($value);
 
-        return $related ? $related->{$column} : $value;
+        return $this->resolvedCache[$cacheKey] = $related ? $related->{$column} : $value;
     }
 
     /**
@@ -305,21 +285,105 @@ class TrashService
     }
 
     /**
-     * Paginate a collection manually.
+     * Build the UNION ALL query from all tracked models.
      *
-     * @return LengthAwarePaginator<array<string, mixed>>
+     * Each subquery selects a consistent set of columns: id, model_class, type,
+     * type_label, computed name, and deleted_at. When $search is provided, each
+     * subquery also includes model-specific LIKE conditions.
      */
-    protected function paginate(Collection $items, int $perPage): LengthAwarePaginator
+    protected function buildUnionQuery(?string $search = null): string
     {
-        $page = Paginator::resolveCurrentPage();
-        $total = $items->count();
+        $subQueries = [];
 
-        return new PaginationLengthAwarePaginator(
-            $items->forPage($page, $perPage)->values(),
-            $total,
-            $perPage,
-            $page,
-            ['path' => Paginator::resolveCurrentPath()]
-        );
+        foreach ($this->trackedModels as $entry) {
+            $class = $entry['class'];
+            $model = new $class;
+            $table = $model->getTable();
+            $deletedCol = $model->getDeletedAtColumn();
+            $label = $entry['label'];
+            $type = class_basename($class);
+            $nameExpr = $this->getModelNameExpression($class, $table);
+
+            $where = "{$table}.{$deletedCol} IS NOT NULL";
+
+            if ($search !== null) {
+                $searchCondition = $this->buildSearchCondition($class, $table, $search);
+                if ($searchCondition !== null) {
+                    $where .= " AND ({$searchCondition})";
+                }
+            }
+
+            $subQueries[] = "SELECT {$table}.id, '{$class}' as model_class, '{$type}' as type, '{$label}' as type_label, {$nameExpr} as name, {$table}.{$deletedCol} as deleted_at FROM {$table} WHERE {$where}";
+        }
+
+        return implode(' UNION ALL ', $subQueries);
+    }
+
+    /**
+     * Map a raw UNION result row to the unified trash item array.
+     *
+     * @param  object  $row  stdClass from DB::select
+     * @return array<string, mixed>
+     */
+    protected function unifiedItemFromRow(object $row): array
+    {
+        return [
+            'id' => (int) $row->id,
+            'class' => $row->model_class,
+            'type' => $row->type,
+            'type_label' => $row->type_label,
+            'name' => $row->name,
+            'deleted_at' => $row->deleted_at,
+        ];
+    }
+
+    /**
+     * Return a SQL expression that computes the human-readable name for a model.
+     *
+     * Mirrors resolveName() but operates at the database level so the name is
+     * available directly from the UNION subquery without fetching the full row.
+     */
+    protected function getModelNameExpression(string $class, string $table): string
+    {
+        return match ($class) {
+            User::class => "CONCAT({$table}.name, ' (', {$table}.email, ')')",
+            Sale::class => "COALESCE({$table}.customer_name, CONCAT('Penjualan #', {$table}.id))",
+            Purchase::class => "CONCAT('Pembelian #', {$table}.id)",
+            PurchaseItem::class => "CONCAT('Item Pembelian #', {$table}.id)",
+            SaleItem::class => "CONCAT('Item Penjualan #', {$table}.id)",
+            SaleReturn::class => "CONCAT('Retur Penjualan #', {$table}.id)",
+            SaleReturnItem::class => "CONCAT('Item Retur #', {$table}.id)",
+            StockLog::class => "CONCAT('Log Stok #', {$table}.id)",
+            StockAdjustment::class => "CONCAT('Penyesuaian Stok #', {$table}.id)",
+            StockTransfer::class => "CONCAT('Transfer Stok #', {$table}.id)",
+            Shift::class => "CONCAT('Shift #', {$table}.id, ' (', {$table}.status, ')')",
+            PaymentTransaction::class => "CONCAT('Pembayaran #', {$table}.id)",
+            PriceHistory::class => "CONCAT('Riwayat Harga #', {$table}.id)",
+            SaleEmail::class => "COALESCE({$table}.email, CONCAT('Email Penjualan #', {$table}.id))",
+            default => "COALESCE({$table}.name, CAST({$table}.id AS CHAR))",
+        };
+    }
+
+    /**
+     * Build a model-specific search condition for a single tracked model.
+     *
+     * Returns a raw SQL fragment (e.g. "name LIKE '%foo%' OR email LIKE '%foo%'")
+     * or null when the model has no searchable columns. The search string is
+     * safely escaped via PDO::quote.
+     */
+    protected function buildSearchCondition(string $class, string $table, string $search): ?string
+    {
+        $escaped = DB::connection()->getPdo()->quote('%'.$search.'%');
+
+        return match ($class) {
+            User::class => "{$table}.name LIKE {$escaped} OR {$table}.email LIKE {$escaped}",
+            Sale::class => "{$table}.customer_name LIKE {$escaped} OR {$table}.id LIKE {$escaped}",
+            Purchase::class, PurchaseItem::class => "{$table}.id LIKE {$escaped}",
+            SaleEmail::class => "{$table}.email LIKE {$escaped}",
+            SaleReturn::class, StockAdjustment::class => "{$table}.reason LIKE {$escaped} OR {$table}.id LIKE {$escaped}",
+            PaymentTransaction::class => "{$table}.external_id LIKE {$escaped} OR {$table}.id LIKE {$escaped}",
+            SaleItem::class, SaleReturnItem::class, StockLog::class, StockTransfer::class, Shift::class, PriceHistory::class => "{$table}.id LIKE {$escaped}",
+            default => "{$table}.name LIKE {$escaped}",
+        };
     }
 }
