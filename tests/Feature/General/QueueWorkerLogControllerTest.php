@@ -1,15 +1,17 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
     $this->admin = User::factory()->create(['role' => 'admin']);
     $this->cashier = User::factory()->create(['role' => 'cashier']);
     $this->logPath = storage_path('logs/queue-worker.log');
@@ -20,6 +22,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
+    /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
     if (File::exists($this->logPath)) {
         File::delete($this->logPath);
     }
@@ -27,17 +30,20 @@ afterEach(function () {
 
 describe('Access Control', function () {
     it('redirects unauthenticated users to login', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         get(route('queue-worker-logs.index'))
             ->assertRedirect(route('login'));
     });
 
     it('forbids cashier users', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         actingAs($this->cashier)
             ->get(route('queue-worker-logs.index'))
             ->assertForbidden();
     });
 
     it('forbids warehouse users', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $warehouse = User::factory()->create(['role' => 'warehouse']);
 
         actingAs($warehouse)
@@ -46,6 +52,7 @@ describe('Access Control', function () {
     });
 
     it('allows admin users to access', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         actingAs($this->admin)
             ->get(route('queue-worker-logs.index'))
             ->assertSuccessful();
@@ -54,12 +61,14 @@ describe('Access Control', function () {
 
 describe('Page Rendering', function () {
     it('renders the correct Inertia component', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         actingAs($this->admin)
             ->get(route('queue-worker-logs.index'))
             ->assertInertia(fn ($page) => $page->component('QueueWorkerLog/Index'));
     });
 
     it('provides null stats when log file does not exist', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         actingAs($this->admin)
             ->get(route('queue-worker-logs.index'))
             ->assertInertia(fn ($page) => $page
@@ -69,6 +78,7 @@ describe('Page Rendering', function () {
     });
 
     it('provides empty lines array when log file does not exist', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         actingAs($this->admin)
             ->get(route('queue-worker-logs.index'))
             ->assertInertia(fn ($page) => $page
@@ -79,6 +89,7 @@ describe('Page Rendering', function () {
 
 describe('Log Content Display', function () {
     it('provides stats when log file exists', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         File::put($this->logPath, "[2026-05-08 10:00:00] INFO: Test entry\n");
 
         actingAs($this->admin)
@@ -90,6 +101,7 @@ describe('Log Content Display', function () {
     });
 
     it('correctly counts lines in log file', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = '';
         for ($i = 1; $i <= 5; $i++) {
             $content .= "[2026-05-08 10:00:0{$i}] INFO: Line {$i}\n";
@@ -104,6 +116,7 @@ describe('Log Content Display', function () {
     });
 
     it('returns parsed lines with correct level detection', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.INFO: Normal entry\n";
         $content .= "[2026-05-08 10:00:01] local.ERROR: Something failed\n";
         $content .= "[2026-05-08 10:00:02] local.WARNING: Low memory\n";
@@ -120,6 +133,7 @@ describe('Log Content Display', function () {
     });
 
     it('detects CRITICAL, ALERT, and EMERGENCY as error level', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.CRITICAL: System crash\n";
         $content .= "[2026-05-08 10:00:01] local.ALERT: High alert\n";
         $content .= "[2026-05-08 10:00:02] local.EMERGENCY: Fatal\n";
@@ -135,6 +149,7 @@ describe('Log Content Display', function () {
     });
 
     it('provides filesize in human-readable format', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = str_repeat('x', 2048);
         File::put($this->logPath, $content);
 
@@ -148,6 +163,7 @@ describe('Log Content Display', function () {
 
 describe('Filtering', function () {
     it('filters lines by search query', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] INFO: User created\n";
         $content .= "[2026-05-08 10:00:01] INFO: Order processed\n";
         $content .= "[2026-05-08 10:00:02] INFO: User updated\n";
@@ -161,6 +177,7 @@ describe('Filtering', function () {
     });
 
     it('filters lines by error level', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.INFO: Normal\n";
         $content .= "[2026-05-08 10:00:01] local.ERROR: Bad\n";
         $content .= "[2026-05-08 10:00:02] local.INFO: Normal again\n";
@@ -175,6 +192,7 @@ describe('Filtering', function () {
     });
 
     it('filters lines by warning level', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.INFO: Normal\n";
         $content .= "[2026-05-08 10:00:01] local.WARNING: Warning entry\n";
         $content .= "[2026-05-08 10:00:02] local.ERROR: Error entry\n";
@@ -189,6 +207,7 @@ describe('Filtering', function () {
     });
 
     it('filters lines by info level', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.INFO: Normal\n";
         $content .= "[2026-05-08 10:00:01] local.ERROR: Bad\n";
         File::put($this->logPath, $content);
@@ -202,6 +221,7 @@ describe('Filtering', function () {
     });
 
     it('combines search and level filters', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.ERROR: Database connection failed\n";
         $content .= "[2026-05-08 10:00:01] local.ERROR: Queue timeout\n";
         $content .= "[2026-05-08 10:00:02] local.INFO: Database query completed\n";
@@ -216,6 +236,7 @@ describe('Filtering', function () {
     });
 
     it('returns empty lines when search finds nothing', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] INFO: Normal entry\n";
         File::put($this->logPath, $content);
 
@@ -227,6 +248,7 @@ describe('Filtering', function () {
     });
 
     it('returns empty lines when level filter finds nothing', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] INFO: Normal entry\n";
         File::put($this->logPath, $content);
 
@@ -238,6 +260,7 @@ describe('Filtering', function () {
     });
 
     it('passes filter values back to the view', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         File::put($this->logPath, "[2026-05-08 10:00:00] INFO: Test\n");
 
         actingAs($this->admin)
@@ -251,6 +274,7 @@ describe('Filtering', function () {
 
 describe('Edge Cases', function () {
     it('handles log file with only newlines', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         File::put($this->logPath, "\n\n");
 
         actingAs($this->admin)
@@ -262,6 +286,7 @@ describe('Edge Cases', function () {
     });
 
     it('handles very long log lines', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $longLine = str_repeat('A', 5000);
         File::put($this->logPath, "[2026-05-08 10:00:00] INFO: {$longLine}\n");
 
@@ -274,6 +299,7 @@ describe('Edge Cases', function () {
     });
 
     it('handles large log files with many lines', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = '';
         for ($i = 1; $i <= 500; $i++) {
             $content .= "[2026-05-08 10:00:00] INFO: Line {$i}\n";
@@ -290,6 +316,7 @@ describe('Edge Cases', function () {
     });
 
     it('logs INFO lines without ERROR/WARNING keyword are detected as info', function () {
+        /** @var TestCase&object{admin:User, cashier:User, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.INFO: Processing job App\\Jobs\\CalculateRevenue\n";
         File::put($this->logPath, $content);
 

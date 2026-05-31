@@ -11,6 +11,7 @@ use App\Models\SaleReturnItem;
 use App\Models\StockLog;
 use App\Models\Unit;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
@@ -264,6 +265,42 @@ describe('Search filter', function () {
         actingAs($this->admin)
             ->get(route('sale-return.index', ['search' => 'test']))
             ->assertInertia(fn ($page) => $page->where('filters.search', 'test'));
+    });
+
+    it('eager loads user roles to prevent implicit n plus one during serialization', function () {
+        /** @var TestCase&object{admin:User} $this */
+        $cashierA = User::factory()->create(['role' => 'cashier']);
+        $cashierB = User::factory()->create(['role' => 'cashier']);
+
+        SaleReturn::factory()->count(3)->create(['user_id' => $cashierA->id]);
+        SaleReturn::factory()->count(3)->create(['user_id' => $cashierB->id]);
+
+        DB::enableQueryLog();
+
+        actingAs($this->admin)
+            ->get(route('sale-return.index'))
+            ->assertSuccessful();
+
+        $roleQueries = collect(DB::getQueryLog())
+            ->filter(fn ($query) => str_contains($query['query'], 'model_has_roles'));
+
+        // Admin roles already loaded by factory; only eager-loaded return user roles query once.
+        expect($roleQueries)->toHaveCount(1);
+    });
+
+    it('exposes user role in paginated returns without triggering lazy loading', function () {
+        /** @var TestCase&object{admin:User} $this */
+        $cashier = User::factory()->create(['role' => 'cashier']);
+
+        SaleReturn::factory()->count(3)->create(['user_id' => $cashier->id]);
+
+        actingAs($this->admin)
+            ->get(route('sale-return.index'))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->has('returns.data.0.user.role')
+                    ->where('returns.data.0.user.role', 'cashier')
+            );
     });
 });
 
@@ -828,6 +865,38 @@ describe('Detail', function () {
         actingAs($this->admin)
             ->get(route('sale-return.detail', 999999))
             ->assertNotFound();
+    });
+
+    it('eager loads user roles to prevent duplicate roles queries', function () {
+        /** @var TestCase&object{admin:User} $this */
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        $return = SaleReturn::factory()->create(['user_id' => $cashier->id]);
+
+        DB::enableQueryLog();
+
+        actingAs($this->admin)
+            ->get(route('sale-return.detail', $return))
+            ->assertSuccessful();
+
+        $roleQueries = collect(DB::getQueryLog())
+            ->filter(fn ($query) => str_contains($query['query'], 'model_has_roles'));
+
+        // Admin roles already loaded by factory; only eager-loaded return user roles query once.
+        expect($roleQueries)->toHaveCount(1);
+    });
+
+    it('exposes user role in detail without triggering lazy loading', function () {
+        /** @var TestCase&object{admin:User} $this */
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        $return = SaleReturn::factory()->create(['user_id' => $cashier->id]);
+
+        actingAs($this->admin)
+            ->get(route('sale-return.detail', $return))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->has('saleReturn.user.role')
+                    ->where('saleReturn.user.role', 'cashier')
+            );
     });
 });
 

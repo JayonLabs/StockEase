@@ -12,9 +12,9 @@ use App\Models\Supplier;
 use App\Models\Unit;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 it('updates product expiry date correctly based on FEFO after multiple purchases and sales', function () {
     $category = Category::factory()->create();

@@ -12,12 +12,12 @@ use App\Models\StockLog;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\Sale\SaleReturnService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 function createProduct(int $stock = 50, int $purchasePrice = 5000): Product
 {
@@ -50,7 +50,7 @@ describe('SaleReturnService', function () {
 
     describe('getSaleForReturn', function () {
         it('loads sale with items and products', function () {
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct();
             $sale = Sale::factory()->create([
                 'payment_method' => 'cash',
@@ -69,6 +69,18 @@ describe('SaleReturnService', function () {
             expect($result->relationLoaded('user'))->toBeTrue();
             expect($result->saleItems)->toHaveCount(1);
         });
+
+        it('eager loads user roles to prevent n plus one', function () {
+            $service = app(SaleReturnService::class);
+            $sale = Sale::factory()->create([
+                'payment_method' => 'cash',
+                'status' => 'completed',
+            ]);
+
+            $result = $service->getSaleForReturn($sale);
+
+            expect($result->user->relationLoaded('roles'))->toBeTrue();
+        });
     });
 
     // ============================================================
@@ -78,7 +90,7 @@ describe('SaleReturnService', function () {
     describe('processReturn refund', function () {
         it('creates a sale return record with refund type', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct(50, 5000);
             $purchase = Purchase::factory()->create();
             PurchaseItem::factory()->create([
@@ -119,7 +131,7 @@ describe('SaleReturnService', function () {
 
         it('calculates correct refund amount', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct(50, 5000);
             $purchase = Purchase::factory()->create();
             PurchaseItem::factory()->create([
@@ -152,7 +164,7 @@ describe('SaleReturnService', function () {
 
         it('creates sale return items', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct(50, 5000);
             $purchase = Purchase::factory()->create();
             PurchaseItem::factory()->create([
@@ -195,7 +207,7 @@ describe('SaleReturnService', function () {
     describe('processReturn exchange', function () {
         it('creates a sale return with exchange type and zero refund', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct(50, 5000);
             $purchase = Purchase::factory()->create();
             PurchaseItem::factory()->create([
@@ -235,7 +247,7 @@ describe('SaleReturnService', function () {
     describe('processReturn stock management', function () {
         it('increments product stock on return', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct(50, 5000);
             $purchase = Purchase::factory()->create();
             PurchaseItem::factory()->create([
@@ -271,7 +283,7 @@ describe('SaleReturnService', function () {
 
         it('restores purchase item remaining_qty in FEFO order', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct(50, 5000);
             $purchase = Purchase::factory()->create();
 
@@ -324,7 +336,7 @@ describe('SaleReturnService', function () {
 
         it('creates stock log with type in', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct(50, 5000);
             $purchase = Purchase::factory()->create();
             PurchaseItem::factory()->create([
@@ -364,7 +376,7 @@ describe('SaleReturnService', function () {
 
         it('associates shift with return when active shift exists', function () {
             $user = authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct(50, 5000);
             $purchase = Purchase::factory()->create();
             PurchaseItem::factory()->create([
@@ -407,7 +419,7 @@ describe('SaleReturnService', function () {
     describe('processReturn error cases', function () {
         it('throws exception for non-completed sale', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct();
             $sale = Sale::factory()->create([
                 'payment_method' => 'cash',
@@ -430,7 +442,7 @@ describe('SaleReturnService', function () {
 
         it('throws exception when sale item not found in sale', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct();
             $sale = Sale::factory()->create([
                 'payment_method' => 'cash',
@@ -458,7 +470,7 @@ describe('SaleReturnService', function () {
 
         it('throws exception when return qty exceeds available', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct(50, 5000);
             $purchase = Purchase::factory()->create();
             PurchaseItem::factory()->create([
@@ -489,7 +501,7 @@ describe('SaleReturnService', function () {
 
         it('throws exception when no items provided', function () {
             authenticateAdmin();
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $product = createProduct();
             $sale = Sale::factory()->create([
                 'payment_method' => 'cash',
@@ -515,7 +527,7 @@ describe('SaleReturnService', function () {
 
     describe('getPaginatedReturns', function () {
         it('returns paginated results', function () {
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             SaleReturn::factory()->count(5)->create();
 
             $result = $service->getPaginatedReturns([], 10);
@@ -525,7 +537,7 @@ describe('SaleReturnService', function () {
         });
 
         it('filters by search', function () {
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             $saleA = Sale::factory()->create([
                 'payment_method' => 'cash',
                 'status' => 'completed',
@@ -545,7 +557,7 @@ describe('SaleReturnService', function () {
         });
 
         it('filters by date range', function () {
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             SaleReturn::factory()->create(['return_date' => '2024-01-15']);
             SaleReturn::factory()->create(['return_date' => '2024-02-01']);
             SaleReturn::factory()->create(['return_date' => '2024-03-01']);
@@ -559,13 +571,42 @@ describe('SaleReturnService', function () {
         });
 
         it('ignores date filter when only start provided', function () {
-            $service = new SaleReturnService;
+            $service = app(SaleReturnService::class);
             SaleReturn::factory()->create(['return_date' => '2024-01-15']);
             SaleReturn::factory()->create(['return_date' => '2024-03-01']);
 
             $result = $service->getPaginatedReturns(['start' => '2024-02-01'], 10);
 
             expect($result)->toHaveCount(2);
+        });
+
+        it('eager loads user roles to prevent n plus one', function () {
+            $user = User::factory()->create(['role' => 'admin']);
+            SaleReturn::factory()->count(3)->create(['user_id' => $user->id]);
+
+            $service = app(SaleReturnService::class);
+            $result = $service->getPaginatedReturns([], 10);
+
+            $firstReturn = $result->first();
+            expect($firstReturn->relationLoaded('user'))->toBeTrue();
+            expect($firstReturn->user->relationLoaded('roles'))->toBeTrue();
+        });
+
+        it('does not trigger duplicate roles queries when serializing paginated returns', function () {
+            $user = User::factory()->create(['role' => 'admin']);
+            SaleReturn::factory()->count(3)->create(['user_id' => $user->id]);
+
+            DB::enableQueryLog();
+
+            $service = app(SaleReturnService::class);
+            $returns = $service->getPaginatedReturns([], 10);
+
+            json_encode($returns->toArray());
+
+            $roleQueries = collect(DB::getQueryLog())
+                ->filter(fn ($query) => str_contains($query['query'], 'model_has_roles'));
+
+            expect($roleQueries)->toHaveCount(1);
         });
     });
 });

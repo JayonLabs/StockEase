@@ -5,15 +5,15 @@ use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Services\Payment\PaymentService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     config(['midtrans.server_key' => 'test_server_key']);
 
-    $this->paymentService = new PaymentService;
+    $this->paymentService = app(PaymentService::class);
 });
 
 it('can handle notification and update sale status to completed', function () {
@@ -56,7 +56,6 @@ it('can handle notification and update sale status to completed', function () {
     expect($sale->fresh()->status)->toBe('completed');
     expect($product->fresh()->stock)->toBe(8); // Stock reduced on settlement
 });
-
 
 it('uses payment status enum values for non-paid notification statuses', function (string $transactionStatus, string $expectedStatus) {
     $transaction = PaymentTransaction::factory()->create([

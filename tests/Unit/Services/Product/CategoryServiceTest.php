@@ -2,11 +2,11 @@
 
 use App\Models\Category;
 use App\Services\Product\CategoryService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /** @property CategoryService $service */
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     $this->service = new CategoryService;

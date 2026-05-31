@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\EmailStatus;
 use App\Enums\PaymentGateway;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
@@ -329,12 +330,56 @@ describe('PaymentType enum', function () {
 });
 
 // ============================================================
+// EmailStatus Enum
+// ============================================================
+
+describe('EmailStatus enum', function () {
+    it('has three cases', function () {
+        expect(EmailStatus::cases())->toHaveCount(3);
+    });
+
+    it('has correct values', function () {
+        expect(EmailStatus::Pending->value)->toBe('pending');
+        expect(EmailStatus::Sent->value)->toBe('sent');
+        expect(EmailStatus::Failed->value)->toBe('failed');
+    });
+
+    it('has correct labels', function () {
+        expect(EmailStatus::Pending->label())->toBe('Menunggu');
+        expect(EmailStatus::Sent->label())->toBe('Terkirim');
+        expect(EmailStatus::Failed->label())->toBe('Gagal');
+    });
+
+    it('isFinal returns true for Sent and Failed', function () {
+        expect(EmailStatus::Pending->isFinal())->toBeFalse();
+        expect(EmailStatus::Sent->isFinal())->toBeTrue();
+        expect(EmailStatus::Failed->isFinal())->toBeTrue();
+    });
+
+    it('tryFrom returns enum for valid value', function () {
+        expect(EmailStatus::tryFrom('pending'))->toBe(EmailStatus::Pending);
+        expect(EmailStatus::tryFrom('sent'))->toBe(EmailStatus::Sent);
+        expect(EmailStatus::tryFrom('failed'))->toBe(EmailStatus::Failed);
+    });
+
+    it('tryFrom returns null for invalid value', function () {
+        expect(EmailStatus::tryFrom('unknown'))->toBeNull();
+        expect(EmailStatus::tryFrom('queued'))->toBeNull();
+    });
+
+    it('Pending is not considered final', function () {
+        expect(EmailStatus::Pending->isFinal())->toBeFalse();
+    });
+});
+
+// ============================================================
 // Enum cross-compatibility
 // ============================================================
 
 describe('Enum cross-compatibility', function () {
     it('all enums are string-backed', function () {
         $enums = [
+            EmailStatus::class,
             Role::class,
             SaleStatus::class,
             StockLogType::class,
@@ -357,6 +402,9 @@ describe('Enum cross-compatibility', function () {
 
     it('all enum labels match known conventions', function () {
         // Every case must have a non-empty label
+        foreach (EmailStatus::cases() as $case) {
+            expect($case->label())->not->toBeEmpty();
+        }
         foreach (Role::cases() as $case) {
             expect($case->label())->not->toBeEmpty();
         }

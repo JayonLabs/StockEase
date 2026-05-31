@@ -4,7 +4,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Unit;
 use App\Services\Product\ProductService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -12,7 +12,7 @@ use Tests\TestCase;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertSoftDeleted;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     Storage::fake('public');
@@ -124,4 +124,31 @@ it('can delete a product and clean up image', function () {
 
     assertSoftDeleted('products', ['id' => $product->id]);
     expect(Storage::disk('public')->exists('product/delete.jpg'))->toBeFalse();
+});
+
+it('generates unique filenames for concurrent image uploads', function () {
+    $category = Category::factory()->create();
+    $image1 = UploadedFile::fake()->image('product1.jpg');
+    $image2 = UploadedFile::fake()->image('product2.jpg');
+    $data = [
+        'category_id' => $category->id,
+        'name' => 'Image Product',
+        'sku' => 'PROD003',
+        'purchase_price' => 1000,
+        'selling_price' => 2000,
+        'stock' => 10,
+        'alert_stock' => 2,
+        'unit_id' => Unit::factory()->create()->id,
+    ];
+
+    $service = new ProductService;
+    $product1 = $service->storeProduct($data, $image1);
+    $product2 = $service->storeProduct($data, $image2);
+
+    // Filenames should be different (UUID-based)
+    expect($product1->image_path)->not->toBe($product2->image_path);
+
+    // Both files should exist
+    expect(Storage::disk('public')->exists(str_replace('storage/', '', $product1->image_path)))->toBeTrue();
+    expect(Storage::disk('public')->exists(str_replace('storage/', '', $product2->image_path)))->toBeTrue();
 });

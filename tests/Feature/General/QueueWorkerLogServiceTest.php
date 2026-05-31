@@ -2,8 +2,10 @@
 
 use App\Services\General\QueueWorkerLogService;
 use Illuminate\Support\Facades\File;
+use Tests\TestCase;
 
 beforeEach(function () {
+    /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
     $this->service = new QueueWorkerLogService;
     $this->logPath = storage_path('logs/queue-worker.log');
 
@@ -13,6 +15,7 @@ beforeEach(function () {
 });
 
 afterEach(function () {
+    /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
     if (File::exists($this->logPath)) {
         File::delete($this->logPath);
     }
@@ -20,6 +23,7 @@ afterEach(function () {
 
 describe('getLogPath', function () {
     it('returns the correct storage path', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $path = $this->service->getLogPath();
 
         expect($path)->toBe(storage_path('logs/queue-worker.log'));
@@ -28,56 +32,67 @@ describe('getLogPath', function () {
 
 describe('detectLevel', function () {
     it('detects ERROR as error level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('[2026-05-08 10:00:00] local.ERROR: Something failed'))
             ->toBe('error');
     });
 
     it('detects CRITICAL as error level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('[2026-05-08 10:00:00] local.CRITICAL: System crash'))
             ->toBe('error');
     });
 
     it('detects ALERT as error level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('[2026-05-08 10:00:00] local.ALERT: High alert'))
             ->toBe('error');
     });
 
     it('detects EMERGENCY as error level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('[2026-05-08 10:00:00] local.EMERGENCY: Fatal'))
             ->toBe('error');
     });
 
     it('detects WARNING as warning level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('[2026-05-08 10:00:00] local.WARNING: Low memory'))
             ->toBe('warning');
     });
 
     it('detects WARN as warning level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('[2026-05-08 10:00:00] local.WARN: Deprecated'))
             ->toBe('warning');
     });
 
     it('detects INFO as info level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('[2026-05-08 10:00:00] local.INFO: Normal entry'))
             ->toBe('info');
     });
 
     it('detects lines without known keywords as info level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('[2026-05-08 10:00:00] Processing job'))
             ->toBe('info');
     });
 
     it('detects DEBUG as info level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('[2026-05-08 10:00:00] local.DEBUG: Debug info'))
             ->toBe('info');
     });
 
     it('detects NOTICE as info level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('[2026-05-08 10:00:00] local.NOTICE: Notice'))
             ->toBe('info');
     });
 
     it('does not match level keywords outside the pattern', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         expect($this->service->detectLevel('Some ERROR text but not in pattern'))
             ->toBe('info');
     });
@@ -85,6 +100,7 @@ describe('detectLevel', function () {
 
 describe('formatBytes integration', function () {
     it('delegates to FormatBytes helper for human-readable file size in stats', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = str_repeat('x', 1024);
         File::put($this->logPath, $content);
 
@@ -96,12 +112,14 @@ describe('formatBytes integration', function () {
 
 describe('parseLines', function () {
     it('returns empty collection for empty array', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $result = $this->service->parseLines([]);
 
         expect($result)->toBeEmpty();
     });
 
     it('parses a single line with level detection', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $result = $this->service->parseLines([
             '[2026-05-08 10:00:00] local.ERROR: Failed',
         ]);
@@ -114,6 +132,7 @@ describe('parseLines', function () {
     });
 
     it('parses multiple lines with different levels', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $result = $this->service->parseLines([
             '[2026-05-08 10:00:00] local.INFO: Normal',
             '[2026-05-08 10:00:01] local.ERROR: Bad',
@@ -127,6 +146,7 @@ describe('parseLines', function () {
     });
 
     it('preserves original line text in result', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $line = '[2026-05-08 10:00:00] local.INFO: Processing job App\\Jobs\\CalculateRevenue';
 
         $result = $this->service->parseLines([$line]);
@@ -135,6 +155,7 @@ describe('parseLines', function () {
     });
 
     it('handles empty strings in lines', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $result = $this->service->parseLines(['']);
 
         expect($result)->toHaveCount(1);
@@ -144,6 +165,7 @@ describe('parseLines', function () {
 
 describe('filterBySearch', function () {
     it('filters lines containing the search term', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = $this->service->parseLines([
             'User created',
             'Order processed',
@@ -156,6 +178,7 @@ describe('filterBySearch', function () {
     });
 
     it('is case-insensitive', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = $this->service->parseLines([
             'USER CREATED',
             'user updated',
@@ -168,6 +191,7 @@ describe('filterBySearch', function () {
     });
 
     it('returns empty collection when no match found', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = $this->service->parseLines([
             'Normal entry',
             'Another entry',
@@ -179,6 +203,7 @@ describe('filterBySearch', function () {
     });
 
     it('handles empty collection input', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = collect();
 
         $result = $this->service->filterBySearch($lines, 'anything');
@@ -187,6 +212,7 @@ describe('filterBySearch', function () {
     });
 
     it('re-indexes filtered results', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = $this->service->parseLines([
             'Apple entry',
             'Banana entry',
@@ -201,6 +227,7 @@ describe('filterBySearch', function () {
 
 describe('filterByLevel', function () {
     it('filters lines by error level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = $this->service->parseLines([
             '[2026-05-08 10:00:00] local.INFO: Normal',
             '[2026-05-08 10:00:01] local.ERROR: Bad',
@@ -214,6 +241,7 @@ describe('filterByLevel', function () {
     });
 
     it('filters lines by warning level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = $this->service->parseLines([
             '[2026-05-08 10:00:00] local.INFO: Normal',
             '[2026-05-08 10:00:01] local.WARNING: Warning',
@@ -226,6 +254,7 @@ describe('filterByLevel', function () {
     });
 
     it('filters lines by info level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = $this->service->parseLines([
             '[2026-05-08 10:00:00] local.INFO: Normal',
             '[2026-05-08 10:00:01] local.ERROR: Bad',
@@ -238,6 +267,7 @@ describe('filterByLevel', function () {
     });
 
     it('returns empty collection when no lines match level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = $this->service->parseLines([
             '[2026-05-08 10:00:00] local.INFO: Normal',
         ]);
@@ -248,6 +278,7 @@ describe('filterByLevel', function () {
     });
 
     it('handles empty collection input', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = collect();
 
         $result = $this->service->filterByLevel($lines, 'error');
@@ -256,6 +287,7 @@ describe('filterByLevel', function () {
     });
 
     it('re-indexes filtered results', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $lines = $this->service->parseLines([
             '[2026-05-08 10:00:00] local.ERROR: First',
             '[2026-05-08 10:00:01] local.INFO: Normal',
@@ -270,6 +302,7 @@ describe('filterByLevel', function () {
 
 describe('getLogData', function () {
     it('returns null stats and empty lines when log file does not exist', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $result = $this->service->getLogData();
 
         expect($result['stats'])->toBeNull();
@@ -277,6 +310,7 @@ describe('getLogData', function () {
     });
 
     it('returns stats when log file exists', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         File::put($this->logPath, "[2026-05-08 10:00:00] INFO: Test entry\n");
 
         $result = $this->service->getLogData();
@@ -287,6 +321,7 @@ describe('getLogData', function () {
     });
 
     it('correctly counts lines in log file', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = '';
         for ($i = 1; $i <= 10; $i++) {
             $content .= "[2026-05-08 10:00:0{$i}] INFO: Line {$i}\n";
@@ -300,6 +335,7 @@ describe('getLogData', function () {
     });
 
     it('returns parsed lines with correct level detection', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.INFO: Normal entry\n";
         $content .= "[2026-05-08 10:00:01] local.ERROR: Something failed\n";
         $content .= "[2026-05-08 10:00:02] local.WARNING: Low memory\n";
@@ -314,6 +350,7 @@ describe('getLogData', function () {
     });
 
     it('detects CRITICAL, ALERT, and EMERGENCY as error level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.CRITICAL: System crash\n";
         $content .= "[2026-05-08 10:00:01] local.ALERT: High alert\n";
         $content .= "[2026-05-08 10:00:02] local.EMERGENCY: Fatal\n";
@@ -328,6 +365,7 @@ describe('getLogData', function () {
     });
 
     it('detects WARN as warning level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.WARN: Deprecated method\n";
         File::put($this->logPath, $content);
 
@@ -337,6 +375,7 @@ describe('getLogData', function () {
     });
 
     it('provides human-readable file size', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = str_repeat('x', 1024);
         File::put($this->logPath, $content);
 
@@ -346,6 +385,7 @@ describe('getLogData', function () {
     });
 
     it('provides last modified date', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         File::put($this->logPath, "test\n");
 
         $result = $this->service->getLogData();
@@ -354,6 +394,7 @@ describe('getLogData', function () {
     });
 
     it('filters by search query', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] INFO: User created\n";
         $content .= "[2026-05-08 10:00:01] INFO: Order processed\n";
         $content .= "[2026-05-08 10:00:02] INFO: User updated\n";
@@ -365,6 +406,7 @@ describe('getLogData', function () {
     });
 
     it('filters by level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.INFO: Normal\n";
         $content .= "[2026-05-08 10:00:01] local.ERROR: Bad\n";
         $content .= "[2026-05-08 10:00:02] local.INFO: Normal again\n";
@@ -377,6 +419,7 @@ describe('getLogData', function () {
     });
 
     it('filters by warning level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.INFO: Normal\n";
         $content .= "[2026-05-08 10:00:01] local.WARNING: Warning\n";
         $content .= "[2026-05-08 10:00:02] local.ERROR: Error\n";
@@ -389,6 +432,7 @@ describe('getLogData', function () {
     });
 
     it('filters by info level', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.INFO: Normal\n";
         $content .= "[2026-05-08 10:00:01] local.ERROR: Bad\n";
         File::put($this->logPath, $content);
@@ -400,6 +444,7 @@ describe('getLogData', function () {
     });
 
     it('combines search and level filters', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] local.ERROR: Database connection failed\n";
         $content .= "[2026-05-08 10:00:01] local.ERROR: Queue timeout\n";
         $content .= "[2026-05-08 10:00:02] local.INFO: Database query completed\n";
@@ -412,6 +457,7 @@ describe('getLogData', function () {
     });
 
     it('returns empty lines when search finds nothing', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] INFO: Normal entry\n";
         File::put($this->logPath, $content);
 
@@ -421,6 +467,7 @@ describe('getLogData', function () {
     });
 
     it('returns empty lines when level filter finds nothing', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = "[2026-05-08 10:00:00] INFO: Normal entry\n";
         File::put($this->logPath, $content);
 
@@ -430,6 +477,7 @@ describe('getLogData', function () {
     });
 
     it('handles log file with only newlines', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         File::put($this->logPath, "\n\n\n");
 
         $result = $this->service->getLogData();
@@ -439,6 +487,7 @@ describe('getLogData', function () {
     });
 
     it('handles very long log lines', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $longLine = str_repeat('A', 10000);
         File::put($this->logPath, "[2026-05-08 10:00:00] INFO: {$longLine}\n");
 
@@ -449,6 +498,7 @@ describe('getLogData', function () {
     });
 
     it('handles large log files with many lines', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         $content = '';
         for ($i = 1; $i <= 500; $i++) {
             $content .= "[2026-05-08 10:00:00] INFO: Line {$i}\n";
@@ -462,6 +512,7 @@ describe('getLogData', function () {
     });
 
     it('handles log file with empty content', function () {
+        /** @var TestCase&object{service:QueueWorkerLogService, logPath:string} $this */
         File::put($this->logPath, '');
 
         $result = $this->service->getLogData();

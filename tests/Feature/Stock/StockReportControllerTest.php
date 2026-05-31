@@ -10,6 +10,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
+use Maatwebsite\Excel\Facades\Excel;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
@@ -644,4 +645,29 @@ describe('Export to Excel', function () {
             ['supplier'],
         ],
     ]);
+
+    it('stores and downloads Excel exactly once per export', function () {
+        /** @var TestCase&object{admin:User, product:Product, supplier:Supplier} $this */
+        Excel::fake();
+        stockProduct($this->product, $this->supplier);
+
+        $today = Carbon::today()->toDateString();
+        $year = Carbon::now('Asia/Shanghai')->format('Y');
+        $month = Carbon::now('Asia/Shanghai')->translatedFormat('F');
+        $fileName = 'Laporan Stock '
+            .Carbon::parse($today)->translatedFormat('d F Y').' - '
+            .Carbon::parse($today)->translatedFormat('d F Y').' StockEase.xlsx';
+
+        actingAs($this->admin)
+            ->get(route('reports.stock.export-to-excel', [
+                'start_date' => $today,
+                'end_date' => $today,
+                'category' => 'semua-kategori',
+                'supplier' => 'semua-supplier',
+            ]))
+            ->assertSuccessful();
+
+        Excel::assertStored("reports/stock/{$year}/{$month}/{$fileName}", 'local');
+        Excel::assertDownloaded($fileName);
+    });
 });

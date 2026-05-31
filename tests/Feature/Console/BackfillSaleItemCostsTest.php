@@ -3,11 +3,11 @@
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 use function Pest\Laravel\artisan;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 describe('BackfillSaleItemCosts Command', function () {
     it('backfills cost_price for sale items with zero cost_price', function () {

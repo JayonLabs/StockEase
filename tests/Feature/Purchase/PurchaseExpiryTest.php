@@ -5,11 +5,11 @@ use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Warehouse;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{admin: User, supplier: Supplier, product: Product, warehouseModel: Warehouse} $this */

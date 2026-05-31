@@ -4,14 +4,14 @@ namespace Tests\Feature\Stock;
 
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\getJson;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{admin: User, warehouse: User, cashier: User, superAdmin: User} $this */

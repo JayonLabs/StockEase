@@ -3,29 +3,37 @@
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\StockLog;
+use App\Models\User;
 use App\Services\General\DashboardService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 it('can get cashier dashboard data', function () {
-    Sale::factory()->create(['total' => 1000, 'payment_method' => 'cash', 'status' => 'completed']);
+    $cashier = User::factory()->create(['role' => 'cashier']);
+    Sale::factory()->create([
+        'user_id' => $cashier->id,
+        'total' => 1000,
+        'payment_method' => 'cash',
+        'status' => 'completed',
+    ]);
     $dashboardService = new DashboardService;
 
-    $data = $dashboardService->getDashboardData('cashier');
+    $data = $dashboardService->getDashboardData($cashier);
 
     expect($data)->toHaveKeys(['cashierSalesSummary', 'recentTransaction', 'weeklySalesChart']);
     expect((int) $data['cashierSalesSummary']['todaysIncome'])->toBe(1000);
 });
 
 it('can get warehouse dashboard data', function () {
+    $warehouse = User::factory()->create(['role' => 'warehouse']);
     Product::query()->delete();
     $products = Product::factory()->count(5)->create();
     StockLog::factory()->create(['product_id' => $products->first()->id, 'type' => 'in', 'qty' => 10]);
     $dashboardService = new DashboardService;
 
-    $data = $dashboardService->getDashboardData('warehouse');
+    $data = $dashboardService->getDashboardData($warehouse);
 
     expect($data)->toHaveKeys(['warehouseSummary', 'activityLogWarehouse', 'warehouseChart']);
     expect($data['warehouseSummary']['totalProduct'])->toBe(5);

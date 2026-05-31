@@ -2,10 +2,11 @@
 
 use App\Models\Product;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 it('gets all user notifications', function () {
     $user = User::factory()->create();
@@ -100,4 +101,36 @@ it('can delete a notification', function () {
 
     $response->assertSuccessful();
     expect($user->notifications()->count())->toBe(0);
+});
+
+it('loads product slugs with a single query to prevent N+1', function () {
+    $user = User::factory()->create();
+    $products = Product::factory()->count(5)->create();
+
+    foreach ($products as $product) {
+        $user->notifications()->create([
+            'id' => Str::uuid(),
+            'type' => 'App\Notifications\StockAlertNotification',
+            'data' => [
+                'product_id' => $product->id,
+                'product_name' => $product->name,
+                'message' => 'Stock is low!',
+            ],
+            'read_at' => null,
+        ]);
+    }
+
+    DB::enableQueryLog();
+
+    $response = $this->actingAs($user)->getJson(route('notifications.index'));
+
+    $response->assertSuccessful();
+
+    $productQueries = collect(DB::getQueryLog())
+        ->filter(fn ($q) => str_contains($q['query'], '`products`'));
+
+    DB::disableQueryLog();
+
+    // All 5 product slugs should be resolved in a single batch query
+    expect($productQueries)->toHaveCount(1);
 });

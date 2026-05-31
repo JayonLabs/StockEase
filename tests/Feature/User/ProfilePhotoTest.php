@@ -1,11 +1,11 @@
 <?php
 
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
-uses(RefreshDatabase::class);
+uses(LazilyRefreshDatabase::class);
 
 it('allows user to upload photo profile', function () {
     Storage::fake('public');
@@ -39,7 +39,7 @@ it('removes old photo when uploading new photo profile', function () {
         ]);
 
     Storage::disk('public')->assertMissing('photo_profile/old.jpg');
-    expect($user->refresh()->photo_profile)->toMatch('/storage\/photo_profile\/\d+\.jpg/');
+    expect($user->refresh()->photo_profile)->toMatch('/storage\/photo_profile\/[a-f0-9-]+\.jpg/');
 });
 
 it('allows user to delete photo profile', function () {
@@ -106,4 +106,30 @@ it('validates photo profile is required', function () {
 
     $response->assertUnprocessable()
         ->assertJsonValidationErrors('photo_profile');
+});
+
+it('generates unique filenames for concurrent photo uploads', function () {
+    Storage::fake('public');
+    $user = User::factory()->create();
+
+    $file1 = UploadedFile::fake()->image('profile1.jpg');
+    $file2 = UploadedFile::fake()->image('profile2.jpg');
+
+    $this->actingAs($user)
+        ->postJson(route('profile.photo-profile'), [
+            'photo_profile' => $file1,
+        ]);
+
+    $photo1 = $user->refresh()->photo_profile;
+
+    $this->actingAs($user)
+        ->postJson(route('profile.photo-profile'), [
+            'photo_profile' => $file2,
+        ]);
+
+    $photo2 = $user->refresh()->photo_profile;
+
+    // Filenames should be different (UUID-based)
+    expect($photo1)->not->toBe($photo2);
+    Storage::disk('public')->assertExists(str_replace('storage/', '', $photo2));
 });

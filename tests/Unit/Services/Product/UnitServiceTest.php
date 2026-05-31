@@ -2,11 +2,11 @@
 
 use App\Models\Unit;
 use App\Services\Product\UnitService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /** @property UnitService $unitService */
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     $this->unitService = new UnitService;

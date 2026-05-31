@@ -6,13 +6,13 @@ use App\Actions\NotifyStockAlert;
 use App\Models\Product;
 use App\Models\User;
 use App\Notifications\StockAlertNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 it('notifies users with view_stock_alerts permission when stock is low', function () {
     Notification::fake();

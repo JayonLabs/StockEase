@@ -3,10 +3,10 @@
 use App\Models\Product;
 use App\Models\StockLog;
 use App\Services\Stock\StockLogService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     $this->service = new StockLogService;
@@ -160,4 +160,23 @@ it('orders stock logs by latest first', function () {
     $result = $this->service->getPaginatedStockLogs([]);
 
     expect($result->first()->id)->toBe($new->id);
+});
+
+it('filters stock logs by exact numeric reference_id', function () {
+    $product = Product::factory()->create(['name' => 'Item', 'sku' => '44444444', 'barcode' => '3333333333333']);
+    $log1 = StockLog::factory()->create([
+        'product_id' => $product->id,
+        'reference_id' => 123,
+        'reference_type' => 'purchase',
+    ]);
+    StockLog::factory()->create([
+        'product_id' => $product->id,
+        'reference_id' => 1234,
+        'reference_type' => 'purchase',
+    ]);
+
+    $result = $this->service->getPaginatedStockLogs(['search' => '123']);
+
+    expect($result->total())->toBe(1);
+    expect($result->first()->id)->toBe($log1->id);
 });

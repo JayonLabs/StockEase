@@ -26,13 +26,14 @@ use App\Services\Purchase\PurchaseService;
 use App\Services\Purchase\SupplierService;
 use App\Services\Sale\PosService;
 use App\Services\User\UserService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
 use function Pest\Laravel\assertSoftDeleted;
 
-// TestCase and RefreshDatabase already configured globally in tests/Pest.php
+// TestCase and LazilyRefreshDatabase already configured globally in tests/Pest.php
 
 // --- Model-Level Soft Delete Behavior ---
 
@@ -199,9 +200,11 @@ it('soft deletes a purchase and its items', function () {
     $product->syncStockFromWarehouses();
     $supplier = Supplier::factory()->create();
     $admin = User::factory()->create(['role' => 'admin']);
+
+    /** @var User $admin */
     actingAs($admin);
 
-    $purchaseService = new PurchaseService;
+    $purchaseService = app(PurchaseService::class);
     $purchase = $purchaseService->storePurchase([
         'supplier_id' => $supplier->id,
         'warehouse_id' => $warehouse->id,
@@ -229,9 +232,11 @@ it('reverts stock on soft delete of a purchase', function () {
     $product->syncStockFromWarehouses();
     $supplier = Supplier::factory()->create();
     $admin = User::factory()->create(['role' => 'admin']);
+
+    /** @var User $admin */
     actingAs($admin);
 
-    $purchaseService = new PurchaseService;
+    $purchaseService = app(PurchaseService::class);
     $purchase = $purchaseService->storePurchase([
         'supplier_id' => $supplier->id,
         'warehouse_id' => $warehouse->id,
@@ -265,9 +270,11 @@ it('force deletes purchase items removed during update', function () {
     $productB->syncStockFromWarehouses();
     $supplier = Supplier::factory()->create();
     $admin = User::factory()->create(['role' => 'admin']);
+
+    /** @var User $admin */
     actingAs($admin);
 
-    $purchaseService = new PurchaseService;
+    $purchaseService = app(PurchaseService::class);
     $purchase = $purchaseService->storePurchase([
         'supplier_id' => $supplier->id,
         'warehouse_id' => $warehouse->id,
@@ -408,9 +415,10 @@ it('force deletes sale items when removing from cart', function () {
     DB::table('warehouse_product')->insert(['warehouse_id' => $warehouse->id, 'product_id' => $product->id, 'stock' => 50, 'created_at' => now(), 'updated_at' => now()]);
     session(['pos_active_warehouse_id' => $warehouse->id]);
 
+    /** @var User $user */
     actingAs($user);
 
-    $posService = new PosService;
+    $posService = app(PosService::class);
     $posService->addToCart($product->id, 3);
 
     $cart = $posService->getOrCreateCart();
@@ -431,9 +439,10 @@ it('force deletes all sale items when emptying cart', function () {
     DB::table('warehouse_product')->insert(['warehouse_id' => $warehouse->id, 'product_id' => $product->id, 'stock' => 50, 'created_at' => now(), 'updated_at' => now()]);
     session(['pos_active_warehouse_id' => $warehouse->id]);
 
+    /** @var User $user */
     actingAs($user);
 
-    $posService = new PosService;
+    $posService = app(PosService::class);
     $posService->addToCart($product->id, 3);
 
     $cart = $posService->getOrCreateCart();

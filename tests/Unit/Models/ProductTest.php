@@ -6,13 +6,14 @@ use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\User;
 use App\Notifications\StockAlertNotification;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Notification;
+use Spatie\Permission\PermissionRegistrar;
 use Tests\TestCase;
 
 use function Pest\Laravel\assertDatabaseHas;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 it('can reduce stock from sale items', function () {
     $product = Product::factory()->create(['stock' => 10, 'alert_stock' => 5]);
@@ -47,8 +48,7 @@ it('throws exception if stock is insufficient', function () {
 });
 
 it('triggers stock alert notification when stock hits alert level', function () {
-    Notification::fake();
-    User::factory()->create(['role' => 'admin']); // To receive notification
+    $admin = User::factory()->create(['role' => 'admin']); // To receive notification
 
     $product = Product::factory()->create(['stock' => 6, 'alert_stock' => 5]);
     $sale = Sale::factory()->create();
@@ -56,10 +56,13 @@ it('triggers stock alert notification when stock hits alert level', function () 
         new SaleItem(['product_id' => $product->id, 'qty' => 2, 'price' => 1000, 'sale_id' => $sale->id]),
     ]);
 
+    Notification::fake();
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
     resolve(ReduceProductStock::class)->execute($saleItems);
 
     $product->refresh();
     expect($product->stock)->toBe(4); // 6 - 2 = 4 (<= 5)
 
-    Notification::assertSentTo(User::all(), StockAlertNotification::class);
+    Notification::assertSentTo($admin, StockAlertNotification::class);
 });

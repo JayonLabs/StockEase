@@ -1,11 +1,12 @@
 <?php
 
 use App\Models\Sale;
+use App\Models\User;
 use App\Services\Sale\SaleService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 it('can get paginated sales history', function () {
     // Create sales that are completed/not pending
@@ -25,8 +26,9 @@ it('can get paginated sales history', function () {
 });
 
 it('can filter sales by search query', function () {
-    Sale::factory()->create(['customer_name' => 'John Doe', 'payment_method' => 'cash', 'status' => 'completed']);
-    Sale::factory()->create(['customer_name' => 'Jane Smith', 'payment_method' => 'cash', 'status' => 'completed']);
+    $user = User::factory()->create(['name' => 'Test User', 'email' => 'test@example.com']);
+    Sale::factory()->create(['user_id' => $user->id, 'customer_name' => 'John Doe', 'payment_method' => 'cash', 'status' => 'completed']);
+    Sale::factory()->create(['user_id' => $user->id, 'customer_name' => 'Jane Smith', 'payment_method' => 'cash', 'status' => 'completed']);
 
     $saleService = new SaleService;
     $sales = $saleService->getPaginatedSales(['search' => 'John']);
@@ -59,4 +61,43 @@ it('can get sale details with relations', function () {
 
     expect($details->relationLoaded('user'))->toBeTrue();
     expect($details->relationLoaded('saleItems'))->toBeTrue();
+});
+
+it('eager loads user roles in paginated sales to prevent n plus one', function () {
+    $user = User::factory()->create(['role' => 'admin']);
+    Sale::factory()->count(3)->create(['user_id' => $user->id, 'payment_method' => 'cash']);
+
+    $saleService = new SaleService;
+    $sales = $saleService->getPaginatedSales([], 10);
+
+    $firstSale = $sales->first();
+    expect($firstSale->relationLoaded('user'))->toBeTrue();
+    expect($firstSale->user->relationLoaded('roles'))->toBeTrue();
+});
+
+it('eager loads user roles in sale details to prevent n plus one', function () {
+    $sale = Sale::factory()->create(['payment_method' => 'cash', 'status' => 'completed']);
+
+    $saleService = new SaleService;
+    $details = $saleService->getSaleDetails($sale);
+
+    expect($details->user->relationLoaded('roles'))->toBeTrue();
+});
+
+it('does not trigger duplicate roles queries when serializing paginated sales', function () {
+    $user = User::factory()->create(['role' => 'admin']);
+    Sale::factory()->count(3)->create(['user_id' => $user->id, 'payment_method' => 'cash']);
+
+    DB::enableQueryLog();
+
+    $saleService = new SaleService;
+    $sales = $saleService->getPaginatedSales([], 10);
+
+    // Force serialization to trigger any lazy-loaded relations
+    json_encode($sales->toArray());
+
+    $roleQueries = collect(DB::getQueryLog())
+        ->filter(fn ($query) => str_contains($query['query'], 'model_has_roles'));
+
+    expect($roleQueries)->toHaveCount(1);
 });

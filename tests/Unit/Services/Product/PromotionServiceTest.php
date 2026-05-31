@@ -4,10 +4,10 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Promotion;
 use App\Services\Product\PromotionService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     $this->service = new PromotionService;

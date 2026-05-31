@@ -22,11 +22,13 @@ use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\Trash\TrashService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{trashService: TrashService} $this */
@@ -35,7 +37,7 @@ beforeEach(function () {
 
 it('returns empty paginator when no trashed items exist', function () {
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->total())->toBe(0);
 });
@@ -48,7 +50,7 @@ it('retrieves trashed items from multiple models', function () {
     $product->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->total())->toBe(2);
 });
@@ -79,7 +81,7 @@ it('includes trashed items from all tracked models', function () {
     }
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->total())->toBe(count($models));
 });
@@ -173,7 +175,7 @@ it('paginates trashed items correctly', function () {
     Category::factory()->count(5)->create()->each->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems(3);
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems(3);
 
     expect($result->total())->toBe(5);
     expect($result->perPage())->toBe(3);
@@ -283,7 +285,7 @@ it('retrieves trashed warehouse with name', function () {
     $warehouse->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->total())->toBe(1);
     expect($result->first()['type'])->toBe('Warehouse');
@@ -313,7 +315,7 @@ it('retrieves trashed stockLog', function () {
     $log->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->first()['type'])->toBe('StockLog');
     expect($result->first()['name'])->toStartWith('Log Stok #');
@@ -324,7 +326,7 @@ it('retrieves trashed stockAdjustment', function () {
     $adj->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->first()['type'])->toBe('StockAdjustment');
     expect($result->first()['name'])->toStartWith('Penyesuaian Stok #');
@@ -335,7 +337,7 @@ it('retrieves trashed stockTransfer', function () {
     $transfer->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->first()['type'])->toBe('StockTransfer');
     expect($result->first()['name'])->toStartWith('Transfer Stok #');
@@ -348,7 +350,7 @@ it('retrieves trashed purchaseItem', function () {
     $item->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->first()['type'])->toBe('PurchaseItem');
     expect($result->first()['name'])->toStartWith('Item Pembelian #');
@@ -359,7 +361,7 @@ it('retrieves trashed saleItem', function () {
     $item->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->first()['type'])->toBe('SaleItem');
     expect($result->first()['name'])->toStartWith('Item Penjualan #');
@@ -372,7 +374,7 @@ it('retrieves trashed saleReturn', function () {
     $ret->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->first()['type'])->toBe('SaleReturn');
     expect($result->first()['name'])->toStartWith('Retur Penjualan #');
@@ -383,7 +385,7 @@ it('retrieves trashed saleReturnItem', function () {
     $item->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->first()['type'])->toBe('SaleReturnItem');
     expect($result->first()['name'])->toStartWith('Item Retur #');
@@ -396,7 +398,7 @@ it('retrieves trashed paymentTransaction', function () {
     $tx->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->first()['type'])->toBe('PaymentTransaction');
     expect($result->first()['name'])->toStartWith('Pembayaran #');
@@ -407,7 +409,7 @@ it('retrieves trashed priceHistory', function () {
     $ph->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->first()['type'])->toBe('PriceHistory');
     expect($result->first()['name'])->toStartWith('Riwayat Harga #');
@@ -430,7 +432,7 @@ it('retrieves trashed saleEmail with correct name format', function () {
     $email->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems();
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
 
     expect($result->first()['type'])->toBe('SaleEmail');
     expect($result->first()['name'])->toBe('buyer@test.com');
@@ -443,7 +445,7 @@ it('searches trashed saleEmail by email', function () {
     SaleEmail::factory()->create(['email' => 'other@example.com'])->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->searchTrashedItems('test@example.com');
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->searchTrashedItems('test@example.com');
 
     expect($result->total())->toBe(1);
     expect($result->first()['name'])->toBe('test@example.com');
@@ -454,7 +456,7 @@ it('searches trashed saleReturn by reason', function () {
     SaleReturn::factory()->create(['reason' => 'Wrong size'])->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->searchTrashedItems('Defective');
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->searchTrashedItems('Defective');
 
     expect($result->total())->toBe(1);
     expect($result->first()['type'])->toBe('SaleReturn');
@@ -465,7 +467,7 @@ it('searches trashed paymentTransaction by external_id', function () {
     PaymentTransaction::factory()->create(['external_id' => 'uuid-def-456'])->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->searchTrashedItems('uuid-abc');
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->searchTrashedItems('uuid-abc');
 
     expect($result->total())->toBe(1);
     expect($result->first()['type'])->toBe('PaymentTransaction');
@@ -476,7 +478,7 @@ it('searches trashed stockAdjustment by reason', function () {
     StockAdjustment::factory()->create(['reason' => 'Damaged goods'])->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->searchTrashedItems('recount');
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->searchTrashedItems('recount');
 
     expect($result->total())->toBe(1);
 });
@@ -664,9 +666,244 @@ it('paginates all tracked models together across 20 types', function () {
     Unit::factory()->create()->delete();
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    $result = $this->trashService->getPaginatedTrashedItems(2);
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems(2);
 
     expect($result->total())->toBe(5);
     expect($result->perPage())->toBe(2);
     expect($result->lastPage())->toBe(3);
+});
+
+// ─── Performance-optimized UNION ALL tests ─────────────────────────────
+
+it('sorts trashed items across models by deleted_at descending', function () {
+    $category = Category::factory()->create(['name' => 'Older']);
+    $product = Product::factory()->create(['name' => 'Newer']);
+
+    DB::table('categories')->where('id', $category->id)->update(['deleted_at' => now()->subDays(3)]);
+    DB::table('products')->where('id', $product->id)->update(['deleted_at' => now()->subDay()]);
+    $category->refresh();
+    $product->refresh();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
+
+    expect($result->total())->toBe(2);
+    expect($result->first()['name'])->toBe('Newer');
+    expect($result->last()['name'])->toBe('Older');
+});
+
+it('handles large number of trashed items efficiently', function () {
+    $count = 50;
+    for ($i = 0; $i < $count; $i++) {
+        $category = Category::factory()->create(['name' => "Category {$i}"]);
+        DB::table('categories')->where('id', $category->id)->update(['deleted_at' => now()->subDays($i)]);
+    }
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems(10);
+
+    expect($result->total())->toBe($count);
+    expect($result->count())->toBe(10);
+    expect($result->first()['name'])->toBe('Category 0');
+});
+
+it('paginates correctly when search matches across multiple models', function () {
+    Category::factory()->create(['name' => 'Electronics Gadget'])->delete();
+    Product::factory()->create(['name' => 'Smart Gadget'])->delete();
+    Supplier::factory()->create(['name' => 'Gadget World'])->delete();
+    Warehouse::factory()->create(['name' => 'Unrelated'])->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->searchTrashedItems('Gadget');
+
+    expect($result->total())->toBe(3);
+    $types = $result->pluck('type')->toArray();
+    expect($types)->toContain('Category');
+    expect($types)->toContain('Product');
+    expect($types)->toContain('Supplier');
+});
+
+it('returns empty paginator when no items match search', function () {
+    Category::factory()->create(['name' => 'Electronics'])->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->searchTrashedItems('nonexistent');
+
+    expect($result->total())->toBe(0);
+});
+
+it('searches sale items by id across models', function () {
+    $purchaseItem = PurchaseItem::factory()->create();
+    $purchaseItem->delete();
+    $saleItem = SaleItem::factory()->create();
+    $saleItem->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->searchTrashedItems((string) $saleItem->id);
+
+    expect($result->total())->toBe(1);
+    expect($result->first()['type'])->toBe('SaleItem');
+});
+
+it('correctly formats user name in union query', function () {
+    $user = User::factory()->create(['name' => 'Alice', 'email' => 'alice@example.com']);
+    $user->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
+
+    expect($result->first()['name'])->toBe('Alice (alice@example.com)');
+});
+
+it('correctly formats shift name with status in union query', function () {
+    $shift = Shift::factory()->create(['status' => 'open']);
+    $shift->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
+
+    $name = $result->first()['name'];
+    expect($name)->toStartWith('Shift #');
+    expect($name)->toEndWith('(open)');
+});
+
+it('correctly formats sale name with customer_name fallback', function () {
+    $saleWithCustomer = Sale::factory()->create(['customer_name' => 'John']);
+    $saleWithCustomer->delete();
+    $saleWithoutCustomer = Sale::factory()->create(['customer_name' => null]);
+    $saleWithoutCustomer->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
+
+    $names = $result->pluck('name')->toArray();
+    expect($names)->toContain('John');
+    expect(collect($names)->first(fn ($n) => str_starts_with($n, 'Penjualan #')))->not->toBeNull();
+});
+
+it('correctly formats saleEmail name in union query', function () {
+    $emailWithAddress = SaleEmail::factory()->create(['email' => 'buyer@test.com']);
+    $emailWithAddress->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems();
+
+    expect($result->first()['name'])->toBe('buyer@test.com');
+});
+
+it('handles perPage parameter correctly on second page', function () {
+    Category::factory()->count(5)->create()->each->delete();
+
+    Paginator::currentPageResolver(fn () => 2);
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    /** @var LengthAwarePaginator $result */ $result = $this->trashService->getPaginatedTrashedItems(3);
+
+    expect($result->currentPage())->toBe(2);
+    expect($result->count())->toBe(2);
+});
+
+// ─── FK resolution cache tests ────────────────────────────────────────
+
+it('caches resolved foreign key values within the same service instance', function () {
+    $supplier = Supplier::factory()->create(['name' => 'PT Sumber Jaya']);
+    $purchase = Purchase::factory()->create(['supplier_id' => $supplier->id]);
+    $purchase->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    DB::enableQueryLog();
+
+    // First call — should hit the database
+    $this->trashService->getTrashedItem(Purchase::class, $purchase->id);
+    $firstQueryCount = count(DB::getQueryLog());
+    DB::flushQueryLog();
+
+    // Second call for the same item — FK values should come from cache
+    $this->trashService->getTrashedItem(Purchase::class, $purchase->id);
+    $secondQueryCount = count(DB::getQueryLog());
+
+    DB::disableQueryLog();
+
+    // The second call should execute fewer FK resolution queries
+    expect($secondQueryCount)->toBeLessThan($firstQueryCount);
+});
+
+it('resolves multiple FK attributes on the same record with caching', function () {
+    $supplier = Supplier::factory()->create(['name' => 'PT Abadi']);
+    $user = User::factory()->create(['name' => 'John Doe', 'email' => 'john@test.com']);
+    $purchase = Purchase::factory()->create([
+        'supplier_id' => $supplier->id,
+        'user_id' => $user->id,
+    ]);
+    $purchase->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    $item = $this->trashService->getTrashedItem(Purchase::class, $purchase->id);
+
+    $attrs = collect($item['attributes']);
+    $supplierAttr = $attrs->firstWhere('key', 'Supplier id');
+    $userAttr = $attrs->firstWhere('key', 'User id');
+
+    expect($supplierAttr['value'])->toBe('PT Abadi');
+    expect($userAttr['value'])->toBe('John Doe');
+});
+
+it('cache is effective for repeated FK lookups across items', function () {
+    $category = Category::factory()->create(['name' => 'Elektronik']);
+    $productA = Product::factory()->create(['category_id' => $category->id, 'name' => 'TV']);
+    $productB = Product::factory()->create(['category_id' => $category->id, 'name' => 'Radio']);
+    $productA->delete();
+    $productB->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    DB::enableQueryLog();
+
+    $this->trashService->getTrashedItem(Product::class, $productA->id);
+    DB::flushQueryLog();
+
+    $this->trashService->getTrashedItem(Product::class, $productB->id);
+    $queriesForSecond = collect(DB::getQueryLog())
+        ->filter(fn ($q) => str_contains($q['query'], 'categories'))
+        ->count();
+
+    DB::disableQueryLog();
+
+    // The second call should NOT query categories again (cached)
+    expect($queriesForSecond)->toBe(0);
+});
+
+it('caches null values for FK attributes correctly', function () {
+    $promotion = Promotion::factory()->create(['category_id' => null]);
+    $promotion->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    $item = $this->trashService->getTrashedItem(Promotion::class, $promotion->id);
+
+    $attrs = collect($item['attributes']);
+    $categoryAttr = $attrs->firstWhere('key', 'Category id');
+
+    expect($categoryAttr['value'])->toBeNull();
+});
+
+it('caches warehouse FK resolution across multiple records', function () {
+    $warehouse = Warehouse::factory()->create(['name' => 'Gudang Pusat']);
+    $purchaseA = Purchase::factory()->create(['warehouse_id' => $warehouse->id]);
+    $purchaseB = Purchase::factory()->create(['warehouse_id' => $warehouse->id]);
+    $purchaseA->delete();
+    $purchaseB->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    DB::enableQueryLog();
+
+    $this->trashService->getTrashedItem(Purchase::class, $purchaseA->id);
+    DB::flushQueryLog();
+
+    $this->trashService->getTrashedItem(Purchase::class, $purchaseB->id);
+    $warehouseQueries = collect(DB::getQueryLog())
+        ->filter(fn ($q) => str_contains($q['query'], 'warehouses'))
+        ->count();
+
+    DB::disableQueryLog();
+
+    expect($warehouseQueries)->toBe(0);
 });

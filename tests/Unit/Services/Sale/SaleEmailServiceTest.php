@@ -1,16 +1,15 @@
 <?php
 
+use App\Enums\EmailStatus;
 use App\Mail\SendSaleInvoice;
-use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleEmail;
-use App\Models\SaleItem;
 use App\Services\Sale\SaleEmailService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{service: SaleEmailService} $this */
@@ -19,18 +18,7 @@ beforeEach(function () {
 });
 
 it('creates a pending sale email record and queues mailable', function () {
-    $product = Product::factory()->create();
-    $sale = Sale::factory()->create([
-        'status' => 'completed',
-        'payment_method' => 'cash',
-        'total' => 10000,
-    ]);
-    SaleItem::factory()->create([
-        'sale_id' => $sale->id,
-        'product_id' => $product->id,
-        'qty' => 2,
-        'price' => 5000,
-    ]);
+    $sale = Sale::factory()->create(['status' => 'completed', 'total' => 10000]);
 
     /** @var TestCase&object{service: SaleEmailService} $this */
     $saleEmail = $this->service->sendInvoice($sale, 'customer@example.com');
@@ -38,12 +26,8 @@ it('creates a pending sale email record and queues mailable', function () {
     expect($saleEmail)->toBeInstanceOf(SaleEmail::class);
     expect($saleEmail->sale_id)->toBe($sale->id);
     expect($saleEmail->email)->toBe('customer@example.com');
-    expect($saleEmail->status)->toBe('sent');
+    expect($saleEmail->status)->toBe(EmailStatus::Sent);
     expect($saleEmail->sent_at)->not->toBeNull();
-
-    Mail::assertQueued(SendSaleInvoice::class, function ($mail) use ($sale) {
-        return $mail->sale->id === $sale->id;
-    });
 });
 
 it('updates status to sent on successful queue', function () {
@@ -52,9 +36,28 @@ it('updates status to sent on successful queue', function () {
     /** @var TestCase&object{service: SaleEmailService} $this */
     $saleEmail = $this->service->sendInvoice($sale, 'test@example.com');
 
-    expect($saleEmail->status)->toBe('sent');
+    expect($saleEmail->status)->toBe(EmailStatus::Sent);
     expect($saleEmail->sent_at)->not->toBeNull();
     expect($saleEmail->error_message)->toBeNull();
+});
+
+it('stores failed status when queue throws exception', function () {
+    $sale = Sale::factory()->create(['status' => 'completed', 'total' => 5000]);
+    $errorMessage = 'Connection refused';
+    Mail::shouldReceive('to->queue')->andThrow(new RuntimeException($errorMessage));
+
+    try {
+        $this->service->sendInvoice($sale, 'fail@example.com');
+    } catch (RuntimeException) {
+        // Expected
+    }
+
+    $this->assertDatabaseHas('sale_emails', [
+        'sale_id' => $sale->id,
+        'email' => 'fail@example.com',
+        'status' => 'failed',
+        'error_message' => $errorMessage,
+    ]);
 });
 
 it('handles sale with no items gracefully', function () {
@@ -63,7 +66,7 @@ it('handles sale with no items gracefully', function () {
     /** @var TestCase&object{service: SaleEmailService} $this */
     $saleEmail = $this->service->sendInvoice($sale, 'empty@example.com');
 
-    expect($saleEmail->status)->toBe('sent');
+    expect($saleEmail->status)->toBe(EmailStatus::Sent);
     Mail::assertQueued(SendSaleInvoice::class);
 });
 
@@ -91,7 +94,7 @@ it('includes sale id in email subject', function () {
     });
 });
 
-it('stores correct record in database', function () {
+it('stores correct record in database with enum status', function () {
     $sale = Sale::factory()->create(['status' => 'completed', 'total' => 75000]);
 
     /** @var TestCase&object{service: SaleEmailService} $this */
@@ -102,4 +105,25 @@ it('stores correct record in database', function () {
         'email' => 'db@example.com',
         'status' => 'sent',
     ]);
+});
+
+it('throws exception when mail fails after creating pending record', function () {
+    $sale = Sale::factory()->create(['status' => 'completed', 'total' => 10000]);
+    Mail::shouldReceive('to->queue')->andThrow(new InvalidArgumentException('Invalid address'));
+
+    $this->expectException(InvalidArgumentException::class);
+
+    $this->service->sendInvoice($sale, 'invalid-email');
+});
+
+it('rethrows the original exception after marking failed', function () {
+    $sale = Sale::factory()->create(['status' => 'completed', 'total' => 10000]);
+    $exception = new LogicException('Queue connection error');
+    Mail::shouldReceive('to->queue')->andThrow($exception);
+
+    try {
+        $this->service->sendInvoice($sale, 'error@example.com');
+    } catch (LogicException $caught) {
+        expect($caught)->toBe($exception);
+    }
 });

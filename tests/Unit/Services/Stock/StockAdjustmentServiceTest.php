@@ -5,12 +5,12 @@ use App\Models\StockAdjustment;
 use App\Models\User;
 use App\Models\Warehouse;
 use App\Services\Stock\StockAdjustmentService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     $user = User::factory()->create(['role' => 'admin']);
@@ -25,7 +25,7 @@ it('can get paginated adjustments', function () {
         'product_id' => $product->id,
         'user_id' => Auth::id(),
     ]);
-    $service = new StockAdjustmentService;
+    $service = app(StockAdjustmentService::class);
 
     $results = $service->getPaginatedAdjustments([], 10);
 
@@ -44,7 +44,7 @@ it('can store a new stock adjustment', function () {
         'reason' => 'Penambahan stok fisik',
         'date' => now()->toDateString(),
     ];
-    $service = new StockAdjustmentService;
+    $service = app(StockAdjustmentService::class);
 
     $adjustment = $service->storeAdjustment($data);
 
@@ -78,7 +78,7 @@ it('eager loads user roles in a single query to prevent N+1', function () {
         'product_id' => $product->id,
         'user_id' => User::factory()->create(['role' => 'warehouse'])->id,
     ]);
-    $service = new StockAdjustmentService;
+    $service = app(StockAdjustmentService::class);
 
     DB::enableQueryLog();
     $results = $service->getPaginatedAdjustments([]);
@@ -100,7 +100,7 @@ it('does not run duplicate role queries when same user has multiple adjustments'
         'product_id' => $product->id,
         'user_id' => $sameUser->id,
     ]);
-    $service = new StockAdjustmentService;
+    $service = app(StockAdjustmentService::class);
 
     DB::enableQueryLog();
     $results = $service->getPaginatedAdjustments([]);
@@ -127,7 +127,7 @@ it('can handle negative stock adjustment', function () {
         'reason' => 'Barang rusak',
         'date' => now()->toDateString(),
     ];
-    $service = new StockAdjustmentService;
+    $service = app(StockAdjustmentService::class);
 
     $adjustment = $service->storeAdjustment($data);
 
@@ -136,7 +136,103 @@ it('can handle negative stock adjustment', function () {
     $this->assertDatabaseHas('stock_logs', [
         'product_id' => $product->id,
         'warehouse_id' => $this->warehouseModel->id,
-        'qty' => 3,
+        'qty' => -3,
         'type' => 'adjust',
     ]);
+});
+
+it('preserves signed qty for increase adjustments', function () {
+    $product = Product::factory()->create();
+    $this->warehouseModel->products()->attach($product->id, ['stock' => 10]);
+    $product->syncStockFromWarehouses();
+    $service = app(StockAdjustmentService::class);
+
+    $service->storeAdjustment([
+        'warehouse_id' => $this->warehouseModel->id,
+        'product_id' => $product->id,
+        'new_stock' => 20,
+        'reason' => 'Restock',
+        'date' => now()->toDateString(),
+    ]);
+
+    $this->assertDatabaseHas('stock_logs', [
+        'product_id' => $product->id,
+        'qty' => 10,
+        'type' => 'adjust',
+    ]);
+});
+
+it('preserves signed qty for decrease adjustments', function () {
+    $product = Product::factory()->create();
+    $this->warehouseModel->products()->attach($product->id, ['stock' => 15]);
+    $product->syncStockFromWarehouses();
+    $service = app(StockAdjustmentService::class);
+
+    $service->storeAdjustment([
+        'warehouse_id' => $this->warehouseModel->id,
+        'product_id' => $product->id,
+        'new_stock' => 5,
+        'reason' => 'Damaged',
+        'date' => now()->toDateString(),
+    ]);
+
+    $this->assertDatabaseHas('stock_logs', [
+        'product_id' => $product->id,
+        'qty' => -10,
+        'type' => 'adjust',
+    ]);
+});
+
+it('increase and decrease adjustments produce distinct log entries', function () {
+    $product = Product::factory()->create();
+    $this->warehouseModel->products()->attach($product->id, ['stock' => 10]);
+    $product->syncStockFromWarehouses();
+    $service = app(StockAdjustmentService::class);
+
+    $service->storeAdjustment([
+        'warehouse_id' => $this->warehouseModel->id,
+        'product_id' => $product->id,
+        'new_stock' => 15,
+        'reason' => 'Increase',
+        'date' => now()->toDateString(),
+    ]);
+
+    $service->storeAdjustment([
+        'warehouse_id' => $this->warehouseModel->id,
+        'product_id' => $product->id,
+        'new_stock' => 5,
+        'reason' => 'Decrease',
+        'date' => now()->toDateString(),
+    ]);
+
+    $logs = DB::table('stock_logs')
+        ->where('product_id', $product->id)
+        ->where('type', 'adjust')
+        ->orderBy('id')
+        ->get();
+
+    expect($logs)->toHaveCount(2);
+    expect((int) $logs[0]->qty)->toBe(5);
+    expect((int) $logs[1]->qty)->toBe(-10);
+});
+
+it('signed qty allows distinguishing direction in stock log', function () {
+    $product = Product::factory()->create();
+    $this->warehouseModel->products()->attach($product->id, ['stock' => 10]);
+    $product->syncStockFromWarehouses();
+    $service = app(StockAdjustmentService::class);
+
+    $service->storeAdjustment([
+        'warehouse_id' => $this->warehouseModel->id,
+        'product_id' => $product->id,
+        'new_stock' => 5,
+        'reason' => 'Decrease',
+        'date' => now()->toDateString(),
+    ]);
+
+    $log = DB::table('stock_logs')->where('product_id', $product->id)->first();
+
+    $isDecrease = (int) $log->qty < 0;
+    expect($isDecrease)->toBeTrue();
+    expect(abs((int) $log->qty))->toBe(5);
 });

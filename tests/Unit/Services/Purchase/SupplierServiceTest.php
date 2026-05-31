@@ -2,11 +2,11 @@
 
 use App\Models\Supplier;
 use App\Services\Purchase\SupplierService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
 /** @property SupplierService $service */
-uses(TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     $this->service = new SupplierService;
