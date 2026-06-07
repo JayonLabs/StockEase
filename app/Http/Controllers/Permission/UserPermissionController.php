@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Permission\UpdateUserPermissionRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Permission;
 
@@ -24,9 +25,12 @@ class UserPermissionController extends Controller
 
         $users = User::query()
             ->with(['permissions', 'roles'])
+            ->where('company_id', Auth::user()->company_id)
             ->when($request->input('search'), function ($query, $search) {
-                $query->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('email', 'like', '%'.$search.'%');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('email', 'like', '%'.$search.'%');
+                });
             })
             ->latest()
             ->paginate($perPage)
@@ -45,6 +49,7 @@ class UserPermissionController extends Controller
      */
     public function edit(User $user)
     {
+        $this->authorizeCompanyAccess($user);
         $user->load(['permissions', 'roles']);
 
         $permissions = Permission::all();
@@ -63,8 +68,21 @@ class UserPermissionController extends Controller
      */
     public function update(UpdateUserPermissionRequest $request, User $user)
     {
+        $this->authorizeCompanyAccess($user);
         $user->syncPermissions($request->input('permissions', []));
 
         return redirect()->back()->with('success', 'Permission user berhasil diperbarui');
+    }
+
+    /**
+     * Ensure the user belongs to the same company as the authenticated user.
+     */
+    private function authorizeCompanyAccess(User $user): void
+    {
+        $currentUser = Auth::user();
+
+        if ($currentUser->company_id && $user->company_id !== $currentUser->company_id) {
+            abort(403, 'Unauthorized access.');
+        }
     }
 }

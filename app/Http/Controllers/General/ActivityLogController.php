@@ -4,6 +4,8 @@ namespace App\Http\Controllers\General;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Spatie\Activitylog\Models\Activity;
 
@@ -14,7 +16,8 @@ class ActivityLogController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Activity::with('causer:id,name,email', 'causer.roles')
+        $query = Activity::with('causer:id,name,email')
+            ->where('company_id', Auth::user()->company_id)
             ->latest();
 
         if ($request->filled('search')) {
@@ -36,8 +39,17 @@ class ActivityLogController extends Controller
 
         $activities = $query->paginate(50)->withQueryString();
 
-        $events = Activity::distinct()->pluck('event')->filter()->values();
-        $logNames = Activity::distinct()->pluck('log_name')->filter()->values();
+        $activities->each(fn ($activity) => $activity->causer?->makeHidden('role'));
+
+        $companyId = Auth::user()->company_id;
+
+        $events = Cache::remember('activity_log_events_'.$companyId, now()->addHours(6),
+            fn () => Activity::where('company_id', $companyId)->distinct()->pluck('event')->filter()->values()
+        );
+
+        $logNames = Cache::remember('activity_log_names_'.$companyId, now()->addHours(6),
+            fn () => Activity::where('company_id', $companyId)->distinct()->pluck('log_name')->filter()->values()
+        );
 
         return Inertia::render('ActivityLog/Index', [
             'activities' => $activities,
@@ -56,7 +68,12 @@ class ActivityLogController extends Controller
      */
     public function show(Activity $activity)
     {
-        $activity->load('causer:id,name,email', 'causer.roles');
+        if ($activity->company_id !== Auth::user()->company_id) {
+            abort(403);
+        }
+
+        $activity->load('causer:id,name,email');
+        $activity->causer?->makeHidden('role');
 
         return Inertia::render('ActivityLog/Show', [
             'activity' => $activity,
