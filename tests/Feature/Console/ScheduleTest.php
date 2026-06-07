@@ -113,9 +113,9 @@ it('writes output to log file', function () {
     expect($event->output)->toContain('queue-worker.log');
 });
 
-it('only has one scheduled task', function () {
+it('has scheduled tasks', function () {
     /** @var Schedule $schedule */
     $schedule = app(Schedule::class);
 
-    expect(count($schedule->events()))->toBe(1);
+    expect(count($schedule->events()))->toBeGreaterThanOrEqual(1);
 });

@@ -2,6 +2,7 @@
 
 use App\Enums\Role as RoleEnum;
 use App\Models\User;
+use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -79,7 +80,7 @@ describe('SeedProduction Command', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
-        $user = User::where('email', 'dewajayon3@gmail.com')->first();
+        $user = User::where('email', UserSeeder::DEMO_EMAIL)->first();
 
         expect($user)->not->toBeNull();
         expect($user->name)->toBe('Dewa Jayon');
@@ -89,7 +90,7 @@ describe('SeedProduction Command', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
-        $user = User::where('email', 'dewajayon3@gmail.com')->first();
+        $user = User::where('email', UserSeeder::DEMO_EMAIL)->first();
 
         expect($user->hasRole(RoleEnum::SuperAdmin->value))->toBeTrue();
     });
@@ -98,7 +99,7 @@ describe('SeedProduction Command', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
-        $user = User::where('email', 'dewajayon3@gmail.com')->first();
+        $user = User::where('email', UserSeeder::DEMO_EMAIL)->first();
         $totalPermissions = Permission::count();
 
         expect($user->permissions)->toHaveCount($totalPermissions);
@@ -141,14 +142,14 @@ describe('SeedProduction Command', function () {
             ->assertSuccessful();
 
         expect(User::count())->toBe($firstCount);
-        expect(User::where('email', 'dewajayon3@gmail.com')->count())->toBe(1);
+        expect(User::where('email', UserSeeder::DEMO_EMAIL)->count())->toBe(1);
     });
 
     it('re-syncs permissions for existing admin user', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
-        $user = User::where('email', 'dewajayon3@gmail.com')->first();
+        $user = User::where('email', UserSeeder::DEMO_EMAIL)->first();
 
         // Manually remove a permission to test re-sync
         $perm = $user->permissions->first();

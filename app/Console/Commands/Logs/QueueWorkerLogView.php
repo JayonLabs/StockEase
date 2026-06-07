@@ -90,6 +90,9 @@ class QueueWorkerLogView extends Command
         return static::SUCCESS;
     }
 
+    /**
+     * Format the given bytes to human-readable format.
+     */
     private function formatBytes(int $bytes, int $precision = 2): string
     {
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
