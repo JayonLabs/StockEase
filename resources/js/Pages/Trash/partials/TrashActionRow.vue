@@ -86,6 +86,7 @@ const handleForceDelete = () => {
         <!-- Show Button -->
         <Link :href="route('trash.show', { type: row.type, id: row.id })">
             <Button
+                aria-label="Lihat detail"
                 variant="ghost"
                 size="icon"
                 class="dark:hover:bg-blue-900 hover:bg-blue-500 group"
@@ -100,6 +101,7 @@ const handleForceDelete = () => {
         <AlertDialog v-model:open="isRestoreOpen">
             <AlertDialogTrigger>
                 <Button
+                    aria-label="Pulihkan"
                     variant="ghost"
                     size="icon"
                     class="dark:hover:bg-green-900 hover:bg-green-500 group"
@@ -138,6 +140,7 @@ const handleForceDelete = () => {
         <AlertDialog v-model:open="isForceDeleteOpen">
             <AlertDialogTrigger>
                 <Button
+                    aria-label="Hapus permanen"
                     variant="ghost"
                     size="icon"
                     class="dark:hover:bg-red-900 hover:bg-red-500 group"

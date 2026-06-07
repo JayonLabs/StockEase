@@ -120,7 +120,6 @@ const submit = () => {
         },
         onError: () => {
             toast.error('Pembelian gagal ditambahkan');
-            console.log(form.errors);
         },
     });
 };

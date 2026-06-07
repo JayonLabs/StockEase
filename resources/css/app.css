@@ -1,5 +1,107 @@
 @import 'tailwindcss';
 
+/* ================================================================
+   LANDING PAGE — Design System tokens (Material You / Emerald)
+   Scoped tokens live under .landing; non-conflicting tokens are
+   added globally so Tailwind can generate utility classes.
+   ================================================================ */
+
+/* Scope the M3 primary/secondary/background inside .landing so
+   these overrides don't affect the dashboard shadcn design system */
+.landing {
+    --background: #f8f9ff;
+    --primary: #006c49;
+    --primary-foreground: #ffffff;
+    --secondary: #2b6954;
+    --secondary-foreground: #ffffff;
+}
+
+/* Dark-mode overrides for the landing page */
+.landing.dark,
+.dark .landing {
+    --background: #213145;
+    --primary: #4edea3;
+    --primary-foreground: #002113;
+    --secondary: #95d3ba;
+    --secondary-foreground: #002117;
+}
+
+@theme inline {
+    /* Landing-specific M3 tokens — no shadcn name conflicts */
+    --color-surface: #f8f9ff;
+    --color-surface-dim: #cbdbf5;
+    --color-surface-bright: #f8f9ff;
+    --color-surface-variant: #d3e4fe;
+    --color-surface-tint: #006c49;
+    --color-surface-container: #e5eeff;
+    --color-surface-container-low: #eff4ff;
+    --color-surface-container-high: #dce9ff;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-highest: #d3e4fe;
+    --color-on-surface: #0b1c30;
+    --color-on-surface-variant: #3c4a42;
+    --color-on-background: #0b1c30;
+    --color-inverse-surface: #213145;
+    --color-inverse-on-surface: #eaf1ff;
+    --color-inverse-primary: #4edea3;
+    --color-on-primary: #ffffff;
+    --color-on-primary-fixed: #002113;
+    --color-on-primary-fixed-variant: #005236;
+    --color-primary-container: #10b981;
+    --color-on-primary-container: #00422b;
+    --color-primary-fixed: #6ffbbe;
+    --color-primary-fixed-dim: #4edea3;
+    --color-on-secondary: #ffffff;
+    --color-secondary-container: #adedd3;
+    --color-on-secondary-container: #306d58;
+    --color-secondary-fixed: #b0f0d6;
+    --color-secondary-fixed-dim: #95d3ba;
+    --color-on-secondary-fixed: #002117;
+    --color-on-secondary-fixed-variant: #0b513d;
+    --color-tertiary: #55615f;
+    --color-on-tertiary: #ffffff;
+    --color-tertiary-container: #98a5a3;
+    --color-on-tertiary-container: #2f3b39;
+    --color-tertiary-fixed: #d8e5e2;
+    --color-tertiary-fixed-dim: #bcc9c6;
+    --color-on-tertiary-fixed: #121e1c;
+    --color-on-tertiary-fixed-variant: #3d4947;
+    --color-outline: #6c7a71;
+    --color-outline-variant: #bbcabf;
+}
+
+/* Landing page glass card utility */
+@layer utilities {
+    .glass-card {
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .dark .glass-card {
+        background: rgba(30, 41, 59, 0.7);
+    }
+}
+
+/* Float keyframe for hero mockup */
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}
+
+@layer utilities {
+    .floating {
+        animation: float 6s ease-in-out infinite;
+    }
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 

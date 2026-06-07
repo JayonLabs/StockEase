@@ -329,6 +329,7 @@ function parseCurrency(value) {
                     </TableCell>
                     <TableCell>
                         <Button
+                            aria-label="Hapus"
                             size="icon"
                             variant="ghost"
                             class="text-destructive hover:text-destructive hover:bg-destructive/10"

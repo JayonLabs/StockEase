@@ -27,6 +27,7 @@ import {
     History,
     Building2,
     ArrowLeftRight,
+    CreditCard,
 } from 'lucide-vue-next';
 
 export const menuSections = [
@@ -38,6 +39,13 @@ export const menuSections = [
                 title: 'Dashboard',
                 routeName: 'dashboard',
                 icon: LayoutDashboard,
+                roles: ['super_admin', 'admin', 'cashier', 'warehouse'],
+            },
+            {
+                title: 'Langganan',
+                routeName: 'subscription.index',
+                activeRoute: 'subscription.*',
+                icon: CreditCard,
                 roles: ['super_admin', 'admin', 'cashier', 'warehouse'],
             },
             {

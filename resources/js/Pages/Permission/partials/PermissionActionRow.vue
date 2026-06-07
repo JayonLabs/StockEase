@@ -12,7 +12,13 @@ const props = defineProps({
 <template>
     <div class="flex items-center justify-center gap-2">
         <PermissionUpdateForm :row="row" />
-        <Button variant="ghost" size="icon" class="group" as-child>
+        <Button
+            aria-label="Hapus"
+            variant="ghost"
+            size="icon"
+            class="group"
+            as-child
+        >
             <Link
                 :href="route('permissions.destroy', row.id)"
                 method="delete"

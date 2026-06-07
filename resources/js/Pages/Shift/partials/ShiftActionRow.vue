@@ -14,12 +14,12 @@ defineProps({
 <template>
     <div class="flex items-center justify-center gap-1">
         <Link :href="route('shift.show', row.id)">
-            <Button variant="ghost" size="icon">
+            <Button aria-label="Lihat detail" variant="ghost" size="icon">
                 <Eye class="w-4 h-4" />
             </Button>
         </Link>
         <Link v-if="row.status === 'open'" :href="route('shift.show', row.id)">
-            <Button variant="ghost" size="icon">
+            <Button aria-label="Tutup" variant="ghost" size="icon">
                 <Lock class="w-4 h-4" />
             </Button>
         </Link>
