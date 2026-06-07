@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Media;
 
 use App\Helpers\FormatBytes;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Media\DestroyFileRequest;
+use App\Http\Requests\Media\DownloadFileRequest;
 use App\Http\Requests\Media\StoreFileRequest;
 use Carbon\Carbon;
 use Illuminate\Filesystem\FilesystemAdapter;
@@ -12,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -68,16 +71,37 @@ class FileManagerController extends Controller
     }
 
     /**
-     * Get all files in the given path.
+     * Get the company-specific base path for file storage.
+     *
+     * Accepts paths with or without the 'uploads/' prefix.
+     * Returns a path scoped to the current user's company:
+     *   'uploads/{company_id}/{filename}'
+     */
+    protected function getStoragePath(string $path = ''): string
+    {
+        $companyId = Auth::user()?->company_id ?? 'common';
+
+        if (empty(trim($path))) {
+            return 'uploads/'.$companyId;
+        }
+
+        $cleanPath = preg_replace('#^uploads/?#', '', $path);
+
+        return 'uploads/'.$companyId.'/'.ltrim($cleanPath, '/');
+    }
+
+    /**
+     * Get all files in the given path scoped to the current company.
      *
      * @param  string  $path
-     * @return LengthAwarePaginator
+     * @return array
      */
     protected function _getFiles($path = '')
     {
         $disk = Storage::disk('local');
+        $basePath = $this->getStoragePath($path);
 
-        $allFiles = collect($disk->allFiles($path))
+        $allFiles = collect($disk->allFiles($basePath))
             ->filter(fn ($file) => ! preg_match('/^\./', basename($file)))
             ->values();
 
@@ -85,9 +109,14 @@ class FileManagerController extends Controller
             return [];
         }
 
-        return $allFiles->map(function ($file) use ($disk) {
+        $companyId = Auth::user()?->company_id ?? 'common';
+        $prefix = 'uploads/'.$companyId.'/';
+
+        return $allFiles->map(function ($file) use ($disk, $prefix) {
+            $publicPath = 'uploads/'.substr($file, strlen($prefix));
+
             return [
-                'path' => $file,
+                'path' => $publicPath,
                 'name' => basename($file),
                 'size' => FormatBytes::formatBytes($disk->size($file)),
                 'last_modified' => Carbon::createFromTimestamp($disk->lastModified($file))->format('d M Y'),
@@ -110,11 +139,10 @@ class FileManagerController extends Controller
         try {
             $data = $request->validated();
             $files = $data['file'];
-            $filePath = 'uploads';
+            $filePath = $this->getStoragePath();
             $disk = Storage::disk('local');
 
             foreach ($files as $file) {
-
                 $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
                 $extension = $file->getClientOriginalExtension();
 
@@ -126,7 +154,9 @@ class FileManagerController extends Controller
                     $counter++;
                 }
 
-                $disk->put($filePath.'/'.$fileName, file_get_contents($file));
+                $stream = fopen($file->getRealPath(), 'r');
+                $disk->put($filePath.'/'.$fileName, $stream);
+                fclose($stream);
             }
 
             return redirect()->back()->with('success', 'File uploaded successfully');
@@ -143,16 +173,14 @@ class FileManagerController extends Controller
      *
      * @throws NotFoundHttpException
      */
-    public function download(Request $request)
+    public function download(DownloadFileRequest $request)
     {
-
-        $file = $request->input('file');
+        $file = $this->getStoragePath($request->validated('file'));
 
         /** @var FilesystemAdapter $disk */
         $disk = Storage::disk('local');
-        $exists = $disk->exists($file);
 
-        if (! $exists) {
+        if (! $disk->exists($file)) {
             abort(404, 'File not found');
         }
 
@@ -167,10 +195,10 @@ class FileManagerController extends Controller
      *
      * @throws NotFoundHttpException
      */
-    public function destroy(Request $request)
+    public function destroy(DestroyFileRequest $request)
     {
-
-        $filePath = $request->input('file');
+        $requestedFile = $request->validated('file');
+        $filePath = $this->getStoragePath($requestedFile);
 
         try {
             $disk = Storage::disk('local');
