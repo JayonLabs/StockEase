@@ -27,6 +27,9 @@ class PosService
      */
     private const SESSION_KEY = 'pos_active_warehouse_id';
 
+    /**
+     * Create a new service instance.
+     */
     public function __construct(
         private readonly RecalculateSaleTotal $recalculateSaleTotal,
         private readonly ReduceProductStock $reduceProductStock,
@@ -182,11 +185,19 @@ class PosService
             });
         } catch (UniqueConstraintViolationException $e) {
             // Another request won the race and created the draft sale.
-            // Re-fetch the existing draft and return it.
-            return Sale::with('saleItems.product')
+            // Bypass TenantScope to find the draft regardless of company_id,
+            // since scoping by user_id alone is sufficient here.
+            $cart = Sale::withoutTenancy()
+                ->with('saleItems.product')
                 ->where('user_id', Auth::id())
                 ->where('status', SaleStatus::Draft->value)
-                ->firstOrFail();
+                ->first();
+
+            if (! $cart) {
+                throw $e;
+            }
+
+            return $cart;
         }
     }
 
@@ -355,8 +366,13 @@ class PosService
                 throw new \Exception('Keranjang kosong, tidak bisa checkout');
             }
 
+            $warehouseStocks = DB::table('warehouse_product')
+                ->where('warehouse_id', $warehouseId)
+                ->whereIn('product_id', $sale->saleItems->pluck('product_id'))
+                ->pluck('stock', 'product_id');
+
             foreach ($sale->saleItems as $item) {
-                $availableStock = $item->product->stockInWarehouse($warehouseId);
+                $availableStock = (int) ($warehouseStocks[$item->product_id] ?? 0);
 
                 if ($availableStock < $item->qty) {
                     throw new \Exception("Stok produk {$item->product->name} tidak mencukupi untuk checkout.");

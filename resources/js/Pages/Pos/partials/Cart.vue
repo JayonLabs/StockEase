@@ -1,20 +1,15 @@
 <script setup>
-import { Button } from '@/Components/ui/button';
-import { Loader2, Send, Trash2 } from 'lucide-vue-next';
-import { RadioGroup, RadioGroupItem } from '@/Components/ui/radio-group';
-import { Label } from '@/Components/ui/label';
-import { formatPrice, formatNumber } from '@/lib/utils';
-import { Input } from '@/Components/ui/input';
-import { ref, watch, computed } from 'vue';
+import { computed, ref, watch } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-
-import {
-    NumberField,
-    NumberFieldContent,
-    NumberFieldDecrement,
-    NumberFieldIncrement,
-    NumberFieldInput,
-} from '@/Components/ui/number-field';
+import { toast } from 'vue-sonner';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { Loader2, Trash2 } from 'lucide-vue-next';
+import { formatPrice, formatNumber } from '@/lib/utils';
+import CartItemList from './CartItemList.vue';
+import PaymentSection from './PaymentSection.vue';
+import InvoiceForm from './InvoiceForm.vue';
 
 import {
     Tooltip,
@@ -22,7 +17,6 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from '@/Components/ui/tooltip';
-import { toast } from 'vue-sonner';
 
 const props = defineProps({
     cart: {
@@ -64,20 +58,6 @@ if (props.cart?.sale_items?.length) {
     });
 }
 
-const changeQty = (id, qty) => {
-    axios
-        .patch(route('pos.change-qty', { product_id: id, qty: qty }))
-        .then((response) => {
-            if (response.data.cart) {
-                cartItems.value = response.data.cart.sale_items;
-            }
-            totalCart.value = response.data.total;
-        })
-        .catch((error) => {
-            console.log(error);
-        });
-};
-
 const removeItemFromCart = (productId) => {
     loadingItemId.value = productId;
     axios
@@ -87,11 +67,30 @@ const removeItemFromCart = (productId) => {
             totalCart.value = response.data.total;
             cartItems.value = response.data.cart.sale_items;
         })
-        .catch((error) => {
-            console.log(error);
-        })
+        .catch(() => {})
         .finally(() => {
             loadingItemId.value = null;
+        });
+};
+
+const changingQtyProductIds = ref(new Set());
+
+const changeQty = (id, qty) => {
+    if (changingQtyProductIds.value.has(id)) return;
+
+    changingQtyProductIds.value.add(id);
+
+    axios
+        .patch(route('pos.change-qty', { product_id: id, qty: qty }))
+        .then((response) => {
+            if (response.data.cart) {
+                cartItems.value = response.data.cart.sale_items;
+            }
+            totalCart.value = response.data.total;
+        })
+        .catch(() => {})
+        .finally(() => {
+            changingQtyProductIds.value.delete(id);
         });
 };
 
@@ -109,7 +108,6 @@ const clearCart = () => {
             })
             .catch((error) => {
                 toast.error(error.data.message);
-                console.log(error);
             })
             .finally(() => {
                 isClearCartLoading.value = false;
@@ -129,7 +127,6 @@ const change = computed(() => {
     return cashPayment.value - totalCart.value;
 });
 
-// Format input logic
 watch(displayCashPayment, (newValue) => {
     if (newValue === null || newValue === undefined) return;
 
@@ -140,7 +137,6 @@ watch(displayCashPayment, (newValue) => {
 
     const formatted = numericValue > 0 ? formatNumber(numericValue) : '';
 
-    // Only update if visually different to prevent input lag/cursor jumping
     if (String(newValue) !== formatted) {
         displayCashPayment.value = formatted;
     }
@@ -173,6 +169,22 @@ watch(
     },
 );
 
+const handleCheckoutSuccess = (response) => {
+    toast.success(response.data.message);
+    totalCart.value = response.data.total;
+    cartItems.value = response.data.cart.sale_items;
+    cashPayment.value = 0;
+    displayCashPayment.value = '';
+    customerName.value = null;
+
+    if (response.data.completed_sale_id) {
+        completedSaleId.value = response.data.completed_sale_id;
+        showInvoiceSection.value = true;
+    }
+
+    emit('checkout-success');
+};
+
 const checkout = () => {
     isCheckoutLoading.value = true;
 
@@ -183,7 +195,6 @@ const checkout = () => {
             return;
         }
 
-        axios;
         axios
             .put(
                 route('pos.checkout'),
@@ -192,30 +203,10 @@ const checkout = () => {
                     customer_name: customerName.value,
                     paid: cashPayment.value,
                 },
-                {
-                    headers: { Accept: 'application/json' },
-                },
+                { headers: { Accept: 'application/json' } },
             )
-            .then((response) => {
-                toast.success(response.data.message);
-                totalCart.value = response.data.total;
-                cartItems.value = response.data.cart.sale_items;
-                cashPayment.value = 0;
-                displayCashPayment.value = '';
-                change.value = 0;
-                customerName.value = null;
-
-                if (response.data.completed_sale_id) {
-                    completedSaleId.value = response.data.completed_sale_id;
-                    showInvoiceSection.value = true;
-                }
-
-                emit('checkout-success');
-            })
-            .catch((error) => {
-                toast.error('Gagal checkout');
-                console.log(error);
-            })
+            .then(handleCheckoutSuccess)
+            .catch(() => toast.error('Gagal checkout'))
             .finally(() => {
                 isCheckoutLoading.value = false;
             });
@@ -232,7 +223,6 @@ const checkout = () => {
 
                 window.snap.pay(snapToken, {
                     onSuccess: function (result) {
-                        axios;
                         axios
                             .put(
                                 route('pos.checkout'),
@@ -242,39 +232,16 @@ const checkout = () => {
                                     paid: cashPayment.value,
                                     order_id: result.order_id,
                                 },
-                                {
-                                    headers: { Accept: 'application/json' },
-                                },
+                                { headers: { Accept: 'application/json' } },
                             )
-                            .then((response) => {
-                                toast.success(response.data.message);
-                                totalCart.value = response.data.total;
-                                cartItems.value = response.data.cart.sale_items;
-                                cashPayment.value = 0;
-                                displayCashPayment.value = '';
-                                change.value = 0;
-                                customerName.value = null;
-
-                                if (response.data.completed_sale_id) {
-                                    completedSaleId.value =
-                                        response.data.completed_sale_id;
-                                    showInvoiceSection.value = true;
-                                }
-
-                                emit('checkout-success');
-                            })
-                            .catch((error) => {
-                                toast.error('Gagal checkout');
-                                console.log(error);
-                            })
+                            .then(handleCheckoutSuccess)
+                            .catch(() => toast.error('Gagal checkout'))
                             .finally(() => {
                                 isCheckoutLoading.value = false;
                             });
-                        console.log(result);
                     },
-                    onPending: function (result) {
+                    onPending: function () {
                         toast.info('Menunggu pembayaran QRIS');
-                        console.log(result);
                     },
                     onError: function (result) {
                         toast.error('Pembayaran gagal');
@@ -282,13 +249,13 @@ const checkout = () => {
                     },
                 });
             })
-            .catch((error) => {
+            .catch(() => {
                 toast.error('Gagal mendapatkan token pembayaran QRIS');
-                console.log(error);
                 isCheckoutLoading.value = false;
             });
     }
 };
+
 const sendInvoice = () => {
     if (!invoiceEmail.value || !completedSaleId.value) {
         toast.error('Email tidak boleh kosong');
@@ -322,84 +289,15 @@ const sendInvoice = () => {
     <div class="lg:w-1/3 rounded-lg shadow p-4 border dark:border-white/30">
         <h2 class="text-xl font-bold mb-4">Keranjang Belanja</h2>
 
-        <div class="space-y-3 mb-4" style="max-height: 50vh; overflow-y: auto">
-            <div v-if="cartItems && cartItems.length > 0">
-                <div
-                    v-for="cartItem in cartItems"
-                    :key="cartItem.id"
-                    class="flex justify-between items-center border-b pb-2"
-                >
-                    <div>
-                        <h4 class="font-medium">
-                            {{ cartItem.product.name }}
-                        </h4>
-                        <p class="text-gray-500 text-sm">
-                            {{ formatPrice(cartItem.price) }} x
-                            {{ qtyRefs[cartItem.product_id] }}
-                        </p>
-                        <p
-                            v-if="cartItem.discount_amount > 0"
-                            class="text-green-600 text-xs font-medium"
-                        >
-                            Diskon: -{{ formatPrice(cartItem.discount_amount) }}
-                        </p>
-                    </div>
-                    <div class="flex items-center">
-                        <NumberField
-                            :model-value="qtyRefs[cartItem.product_id]"
-                            :min="0"
-                        >
-                            <NumberFieldContent>
-                                <NumberFieldDecrement
-                                    :disabled="disabled"
-                                    @click="
-                                        qtyRefs[cartItem.product_id]--;
-                                        changeQty(
-                                            cartItem.product_id,
-                                            qtyRefs[cartItem.product_id],
-                                        );
-                                    "
-                                />
-                                <NumberFieldInput
-                                    class="w-24 border rounded"
-                                    readonly
-                                />
-                                <NumberFieldIncrement
-                                    :disabled="disabled"
-                                    @click="
-                                        qtyRefs[cartItem.product_id]++;
-                                        changeQty(
-                                            cartItem.product_id,
-                                            qtyRefs[cartItem.product_id],
-                                        );
-                                    "
-                                />
-                            </NumberFieldContent>
-                        </NumberField>
-                        <Button
-                            variant="destructive"
-                            size="icon"
-                            class="ml-2 disabled:cursor-not-allowed"
-                            :disabled="
-                                disabled ||
-                                loadingItemId === cartItem.product_id
-                            "
-                            @click="removeItemFromCart(cartItem.product_id)"
-                        >
-                            <Loader2
-                                v-if="loadingItemId === cartItem.product_id"
-                                class="w-4 h-4 animate-spin"
-                            />
-                            <Trash2 v-else class="w-4 h-4" />
-                        </Button>
-                    </div>
-                </div>
-            </div>
-
-            <div v-else>
-                <p class="text-center">Keranjang belanja kosong</p>
-            </div>
-        </div>
+        <CartItemList
+            :cart-items="cartItems"
+            :qty-refs="qtyRefs"
+            :loading-item-id="loadingItemId"
+            :changing-qty-product-ids="changingQtyProductIds"
+            :disabled="disabled"
+            @change-qty="changeQty"
+            @remove-item="removeItemFromCart"
+        />
 
         <div class="space-y-2 border-t pt-3">
             <div class="flex justify-between text-lg font-bold mt-2">
@@ -407,33 +305,14 @@ const sendInvoice = () => {
                 <span>{{ formatPrice(totalCart) }}</span>
             </div>
 
-            <div>
-                <span>Metode Pembayaran:</span>
-                <div class="flex items-center space-x-2 mt-2">
-                    <RadioGroup v-model="paymentMethod">
-                        <div class="flex items-center space-x-2">
-                            <RadioGroupItem id="cash" value="cash" />
-                            <Label for="cash">Cash</Label>
-                        </div>
-                        <div class="flex items-center space-x-2">
-                            <RadioGroupItem id="qris" value="qris" />
-                            <Label for="qris">Qris</Label>
-                        </div>
-                    </RadioGroup>
-                </div>
-            </div>
-
-            <div v-if="paymentMethod === 'cash'" class="flex flex-col mt-2">
-                <Input
-                    id="cashPayment"
-                    v-model="displayCashPayment"
-                    name="cashPayment"
-                    type="text"
-                    class="w-full mt-2"
-                    placeholder="Uang Pembayaran"
-                    autocomplete="off"
-                />
-            </div>
+            <PaymentSection
+                :payment-method="paymentMethod"
+                :display-cash-payment="displayCashPayment"
+                :total-cart="totalCart"
+                :change="change"
+                @update:payment-method="paymentMethod = $event"
+                @update:display-cash-payment="displayCashPayment = $event"
+            />
 
             <div class="flex mt-2">
                 <Input
@@ -445,11 +324,6 @@ const sendInvoice = () => {
                     placeholder="Nama Pelanggan (Opsional)"
                     autocomplete="off"
                 />
-            </div>
-
-            <div class="flex justify-between text-lg font-bold mt-2">
-                <span class="text-muted-foreground">Kembalian:</span>
-                <span>{{ formatPrice(change) }}</span>
             </div>
 
             <Button
@@ -474,6 +348,7 @@ const sendInvoice = () => {
                     <Tooltip>
                         <TooltipTrigger>
                             <Button
+                                aria-label="Hapus semua"
                                 size="icon"
                                 class="w-full"
                                 :disabled="
@@ -496,29 +371,13 @@ const sendInvoice = () => {
                 </TooltipProvider>
             </div>
 
-            <div v-if="showInvoiceSection" class="border-t pt-3 mt-3">
-                <p class="text-sm font-medium mb-2">Kirim Invoice ke Email</p>
-                <div class="flex gap-2">
-                    <Input
-                        v-model="invoiceEmail"
-                        type="email"
-                        placeholder="email@example.com"
-                        class="flex-1"
-                    />
-                    <Button
-                        size="sm"
-                        :disabled="!invoiceEmail || isSendingInvoice"
-                        @click="sendInvoice"
-                    >
-                        <Loader2
-                            v-if="isSendingInvoice"
-                            class="w-4 h-4 animate-spin mr-1"
-                        />
-                        <Send v-else class="w-4 h-4 mr-1" />
-                        Kirim
-                    </Button>
-                </div>
-            </div>
+            <InvoiceForm
+                :show-invoice-section="showInvoiceSection"
+                :invoice-email="invoiceEmail"
+                :is-sending-invoice="isSendingInvoice"
+                @send-invoice="sendInvoice"
+                @update:invoice-email="invoiceEmail = $event"
+            />
         </div>
     </div>
 </template>
