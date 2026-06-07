@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +13,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Purchase extends Model
 {
-    use HasFactory, LogsActivity, SoftDeletes;
+    use BelongsToTenant, HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'supplier_id',
@@ -31,6 +32,7 @@ class Purchase extends Model
     {
         return [
             'total' => 'decimal:4',
+            'company_id' => 'integer',
         ];
     }
 

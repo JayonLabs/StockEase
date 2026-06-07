@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ShiftStatus;
+use App\Tenancy\Concerns\BelongsToTenant;
 use Database\Factories\ShiftFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Shift extends Model
 {
     /** @use HasFactory<ShiftFactory> */
-    use HasFactory, LogsActivity, SoftDeletes;
+    use BelongsToTenant, HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -43,6 +44,7 @@ class Shift extends Model
             'expected_cash' => 'decimal:4',
             'actual_cash' => 'decimal:4',
             'cash_difference' => 'decimal:4',
+            'company_id' => 'integer',
         ];
     }
 

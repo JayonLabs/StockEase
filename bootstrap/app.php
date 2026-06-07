@@ -1,6 +1,8 @@
 <?php
 
+use App\Http\Middleware\CheckSubscriptionLimit;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\InitializeTenancyFromUser;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -22,12 +24,14 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->statefulApi();
 
         $middleware->web(append: [
+            InitializeTenancyFromUser::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
 
         $middleware->alias([
             'role' => RoleMiddleware::class,
+            'subscription.limit' => CheckSubscriptionLimit::class,
         ]);
         //
     })

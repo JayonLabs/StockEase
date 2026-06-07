@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\Concerns\BelongsToTenant;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Warehouse extends Model
 {
-    use HasFactory, LogsActivity, Sluggable, SoftDeletes;
+    use BelongsToTenant, HasFactory, LogsActivity, Sluggable, SoftDeletes;
 
     protected $fillable = [
         'slug',
@@ -32,6 +33,7 @@ class Warehouse extends Model
     {
         return [
             'is_active' => 'boolean',
+            'company_id' => 'integer',
         ];
     }
 

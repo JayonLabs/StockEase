@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Sale extends Model
 {
-    use HasFactory, LogsActivity, SoftDeletes;
+    use BelongsToTenant, HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'user_id',
@@ -41,6 +42,7 @@ class Sale extends Model
             'paid' => 'decimal:4',
             'change' => 'decimal:4',
             'total_cost' => 'decimal:4',
+            'company_id' => 'integer',
         ];
     }
 
@@ -82,6 +84,14 @@ class Sale extends Model
     public function paymentTransaction(): HasOne
     {
         return $this->hasOne(PaymentTransaction::class);
+    }
+
+    /**
+     * Get the sale returns for the sale.
+     */
+    public function saleReturns(): HasMany
+    {
+        return $this->hasMany(SaleReturn::class);
     }
 
     /**

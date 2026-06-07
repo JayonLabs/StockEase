@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PurchaseItem extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     protected $fillable = [
         'purchase_id',
@@ -31,6 +32,7 @@ class PurchaseItem extends Model
         return [
             'price' => 'decimal:4',
             'expiry_date' => 'date',
+            'company_id' => 'integer',
         ];
     }
 

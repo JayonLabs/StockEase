@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\EmailStatus;
+use App\Tenancy\Concerns\BelongsToTenant;
 use Database\Factories\SaleEmailFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,7 +13,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class SaleEmail extends Model
 {
     /** @use HasFactory<SaleEmailFactory> */
-    use HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -37,6 +38,7 @@ class SaleEmail extends Model
         return [
             'sent_at' => 'datetime',
             'status' => EmailStatus::class,
+            'company_id' => 'integer',
         ];
     }
 

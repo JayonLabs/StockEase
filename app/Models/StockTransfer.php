@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class StockTransfer extends Model
 {
-    use HasFactory, LogsActivity, SoftDeletes;
+    use BelongsToTenant, HasFactory, LogsActivity, SoftDeletes;
 
     protected $fillable = [
         'from_warehouse_id',
@@ -33,6 +34,7 @@ class StockTransfer extends Model
     {
         return [
             'date' => 'date',
+            'company_id' => 'integer',
         ];
     }
 

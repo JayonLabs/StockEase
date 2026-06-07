@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Promotion extends Model
 {
-    use HasFactory, LogsActivity, SoftDeletes;
+    use BelongsToTenant, HasFactory, LogsActivity, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -43,6 +44,7 @@ class Promotion extends Model
             'start_date' => 'datetime',
             'end_date' => 'datetime',
             'is_active' => 'boolean',
+            'company_id' => 'integer',
         ];
     }
 
