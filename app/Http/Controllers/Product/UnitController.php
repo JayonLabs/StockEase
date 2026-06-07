@@ -12,6 +12,9 @@ use Inertia\Inertia;
 
 class UnitController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     */
     public function __construct(
         protected UnitService $unitService
     ) {}

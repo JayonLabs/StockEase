@@ -10,6 +10,10 @@ use Spatie\Permission\Models\Permission;
 
 class UserSeeder extends Seeder
 {
+    public const DEMO_EMAIL = 'superadmin@dewajayon.my.id';
+
+    public const DEMO_PASSWORD = 'password';
+
     /**
      * Run the database seeds.
      */
@@ -17,11 +21,15 @@ class UserSeeder extends Seeder
     {
         User::factory(10)->create();
 
-        $superAdmin = User::create([
-            'name' => 'Dewa Jayon',
-            'email' => 'dewajayon3@gmail.com',
-            'password' => Hash::make('password'),
-        ]);
+        // Best practice: Use firstOrCreate for idempotent seeding
+        // — safe to run multiple times without duplicate errors.
+        $superAdmin = User::firstOrCreate(
+            ['email' => self::DEMO_EMAIL],
+            [
+                'name' => 'Dewa Jayon',
+                'password' => Hash::make(self::DEMO_PASSWORD),
+            ]
+        );
 
         $superAdmin->assignRole(Role::SuperAdmin->value);
 

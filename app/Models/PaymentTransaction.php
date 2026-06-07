@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PaymentStatus;
+use App\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PaymentTransaction extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -36,6 +37,7 @@ class PaymentTransaction extends Model
     {
         return [
             'amount' => 'decimal:4',
+            'company_id' => 'integer',
         ];
     }
 
@@ -47,6 +49,9 @@ class PaymentTransaction extends Model
         return in_array($this->status, [PaymentStatus::Settlement->value, PaymentStatus::Success->value, PaymentStatus::Capture->value]);
     }
 
+    /**
+     * Get the sale that the payment transaction belongs to.
+     */
     public function sale(): BelongsTo
     {
         return $this->belongsTo(Sale::class);

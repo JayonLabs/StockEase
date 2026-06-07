@@ -95,7 +95,12 @@ const submit = () => {
 <template>
     <Dialog v-model:open="isDialogOpen">
         <DialogTrigger as-child>
-            <Button variant="ghost" size="icon" class="group">
+            <Button
+                aria-label="Kelola permission"
+                variant="ghost"
+                size="icon"
+                class="group"
+            >
                 <Pencil
                     class="w-4 h-4 text-blue-500 dark:group-hover:text-white"
                 />

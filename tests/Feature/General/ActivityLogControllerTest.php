@@ -4,8 +4,10 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Unit;
 use App\Models\User;
+use Database\Factories\CompanyFactory;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Permission\Models\Permission;
@@ -77,6 +79,15 @@ describe('Access Control', function () {
         actingAs($this->superAdmin)
             ->get(route('activity-logs.index'))
             ->assertSuccessful();
+    });
+
+    it('forbids access to show page without view_activity_logs permission', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        $activity = activity()->causedBy($this->superAdmin)->log('no permission');
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.show', $activity))
+            ->assertForbidden();
     });
 });
 
@@ -467,6 +478,123 @@ describe('Query Performance', function () {
     });
 });
 
+describe('Caching', function () {
+    beforeEach(function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        $this->superAdmin->givePermissionTo($this->viewPermission);
+        Activity::query()->delete();
+    });
+
+    it('caches events and logNames via Cache::remember', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        actingAs($this->superAdmin);
+
+        Category::factory()->create(['name' => 'Cache Test']);
+
+        $firstResponse = actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'));
+        $firstResponse->assertSuccessful();
+
+        expect(Cache::has('activity_log_events_'))->toBeTrue();
+        expect(Cache::has('activity_log_names_'))->toBeTrue();
+
+        $cachedEvents = Cache::get('activity_log_events_');
+        expect($cachedEvents)->toBeObject();
+        expect($cachedEvents->contains('created'))->toBeTrue();
+    });
+
+    it('skips distinct queries on subsequent requests when cache is warm', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        actingAs($this->superAdmin);
+
+        Category::factory()->create(['name' => 'Warm Cache Test']);
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'))
+            ->assertSuccessful();
+
+        DB::enableQueryLog();
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'));
+
+        $distinctQueries = collect(DB::getQueryLog())
+            ->filter(fn ($q) => str_contains(strtolower($q['query']), 'distinct'))
+            ->count();
+
+        DB::disableQueryLog();
+
+        expect($distinctQueries)->toBe(0);
+    });
+
+    it('returns correct distinct events', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        actingAs($this->superAdmin);
+
+        Category::factory()->create(['name' => 'Cat 1']);
+        $cat = Category::factory()->create(['name' => 'Cat 2']);
+        $cat->update(['name' => 'Cat 2 Updated']);
+        Category::factory()->create(['name' => 'Cat 3'])->delete();
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->has('events')
+                    ->where('events', fn ($events) => $events->contains('created')
+                        && $events->contains('updated')
+                        && $events->contains('deleted'))
+            );
+    });
+
+    it('returns correct distinct logNames', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        actingAs($this->superAdmin);
+
+        Category::factory()->create();
+        activity()->log('manual log event');
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->has('logNames')
+                    ->where('logNames', fn ($names) => $names->contains('default'))
+            );
+    });
+
+    it('returns empty arrays when no activities exist', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        actingAs($this->superAdmin);
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->where('events', [])
+                    ->where('logNames', [])
+            );
+    });
+
+    it('filters work correctly with cached values', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        actingAs($this->superAdmin);
+
+        Category::factory()->create(['name' => 'Test Filter']);
+        Activity::query()->delete();
+        Category::factory()->create(['name' => 'Filter Me']);
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index', ['event' => 'created', 'log_name' => 'default']))
+            ->assertSuccessful()
+            ->assertInertia(
+                fn ($page) => $page
+                    ->where('filters.event', 'created')
+                    ->where('filters.log_name', 'default')
+                    ->has('activities.data')
+            );
+    });
+});
+
 describe('Edge Cases', function () {
     beforeEach(function () {
         /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
@@ -525,5 +653,146 @@ describe('Edge Cases', function () {
                     ->where('activities.data.0.subject_id', $category2->id)
                     ->where('activities.data.1.subject_id', $category1->id)
             );
+    });
+});
+
+describe('Causer Data', function () {
+    beforeEach(function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        $this->superAdmin->givePermissionTo($this->viewPermission);
+        Activity::query()->delete();
+    });
+
+    it('includes causer name and email in index response', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        activity()->causedBy($this->superAdmin)->log('test activity');
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->has('activities.data.0.causer')
+                    ->where('activities.data.0.causer.name', $this->superAdmin->name)
+                    ->where('activities.data.0.causer.email', $this->superAdmin->email)
+            );
+    });
+
+    it('does not include role attribute in causer data', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        activity()->causedBy($this->superAdmin)->log('test activity');
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->missing('activities.data.0.causer.role')
+            );
+    });
+
+    it('handles system activities with null causer', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        activity()->log('system generated activity');
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->where('activities.data.0.causer', null)
+            );
+    });
+});
+
+describe('Show Page', function () {
+    beforeEach(function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        $this->superAdmin->givePermissionTo($this->viewPermission);
+        Activity::query()->delete();
+    });
+
+    it('renders the correct Inertia component', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        $activity = activity()->causedBy($this->superAdmin)->log('show page test');
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.show', $activity))
+            ->assertInertia(fn ($page) => $page->component('ActivityLog/Show'));
+    });
+
+    it('provides activity data structure on show page', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        $activity = activity()->causedBy($this->superAdmin)->log('show data test');
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.show', $activity))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->has('activity')
+                    ->where('activity.id', $activity->id)
+                    ->where('activity.description', 'show data test')
+                    ->where('activity.causer.name', $this->superAdmin->name)
+                    ->where('activity.causer.email', $this->superAdmin->email)
+            );
+    });
+
+    it('returns 403 for activity from another company', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        $company = CompanyFactory::new()->create();
+        $otherUser = User::factory()->create(['company_id' => $company->id]);
+        $activity = activity()->causedBy($otherUser)->log('other company activity');
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.show', $activity))
+            ->assertForbidden();
+    });
+
+    it('handles system activity with null causer on show page', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        $activity = activity()->log('system activity show');
+
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.show', $activity))
+            ->assertInertia(
+                fn ($page) => $page
+                    ->where('activity.causer', null)
+            );
+    });
+});
+
+describe('No Duplicate Role Queries', function () {
+    beforeEach(function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        $this->superAdmin->givePermissionTo($this->viewPermission);
+        Activity::query()->delete();
+    });
+
+    it('runs only one role query (from middleware) on index page with auth user as causer', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        activity()->causedBy($this->superAdmin)->log('activity by auth user');
+        activity()->causedBy($this->superAdmin)->log('another activity');
+
+        DB::enableQueryLog();
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.index'));
+        $queries = DB::getQueryLog();
+
+        $roleQueries = collect($queries)
+            ->filter(fn ($query) => str_contains($query['query'], 'model_has_roles'));
+
+        expect($roleQueries)->toHaveCount(1);
+    });
+
+    it('runs only one role query (from middleware) on show page', function () {
+        /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
+        $activity = activity()->causedBy($this->superAdmin)->log('show no role query');
+
+        DB::enableQueryLog();
+        actingAs($this->superAdmin)
+            ->get(route('activity-logs.show', $activity));
+        $queries = DB::getQueryLog();
+
+        $roleQueries = collect($queries)
+            ->filter(fn ($query) => str_contains($query['query'], 'model_has_roles'));
+
+        expect($roleQueries)->toHaveCount(1);
     });
 });

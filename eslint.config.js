@@ -14,9 +14,10 @@ export default [
     ...pluginVue.configs["flat/recommended"],
     {
         rules: {
+            "no-console": ["warn", { allow: ["error"] }],
             "vue/multi-word-component-names": "off",
-            "vue/no-use-v-if-with-v-for": "warn", // Downgrade to warn for now to allow progress
-            "vue/require-default-prop": "off", // Disable for Inertia props
+            "vue/no-use-v-if-with-v-for": "warn",
+            "vue/require-default-prop": "off",
         },
     },
 ];

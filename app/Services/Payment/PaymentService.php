@@ -6,6 +6,8 @@ use App\Actions\Product\ReduceProductStock;
 use App\Enums\PaymentStatus;
 use App\Enums\SaleStatus;
 use App\Models\PaymentTransaction;
+use App\Models\SubscriptionInvoice;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -87,11 +89,17 @@ class PaymentService
             throw new \Exception('Nominal pembayaran tidak sesuai', 400);
         }
 
-        if ($paymentTransaction->isPaid()) {
-            return ['message' => 'Orderan sudah dibayar', 'status' => 200];
-        }
-
         return DB::transaction(function () use ($notificationData, $rawBody, $paymentTransaction) {
+            // Re-lock the payment transaction row and re-check paid status inside the transaction
+            // to prevent race conditions from concurrent webhook notifications.
+            $lockedTransaction = PaymentTransaction::where('id', $paymentTransaction->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $lockedTransaction || $lockedTransaction->isPaid()) {
+                return ['message' => 'Orderan sudah dibayar', 'status' => 200];
+            }
+
             $transactionStatus = $notificationData['transaction_status'];
             $type = $notificationData['payment_type'] ?? 'unknown';
             $fraud = $notificationData['fraud_status'] ?? null;
@@ -108,14 +116,14 @@ class PaymentService
                 default => PaymentStatus::Unknown,
             };
 
-            $paymentTransaction->update([
+            $lockedTransaction->update([
                 'payment_type' => $type,
                 'status' => $paymentStatus->value,
                 'raw_response' => $rawBody,
             ]);
 
             if ($paymentStatus->isPaid()) {
-                $sale = $paymentTransaction->sale;
+                $sale = $lockedTransaction->sale;
                 if ($sale && $sale->status !== SaleStatus::Completed->value) {
                     $sale->update(['status' => SaleStatus::Completed->value]);
                     $this->reduceProductStock->execute($sale->saleItems, $sale->warehouse_id);
@@ -153,5 +161,33 @@ class PaymentService
             ->latest()
             ->paginate($perPage)
             ->withQueryString();
+    }
+
+    /**
+     * Create a Midtrans Snap Token for a subscription payment.
+     */
+    public function createSnapTokenForSubscription(
+        SubscriptionInvoice $invoice,
+        string $orderId,
+        User $user
+    ): string {
+        $params = [
+            'transaction_details' => [
+                'order_id' => $orderId,
+                'gross_amount' => (int) ($invoice->amount),
+            ],
+            'customer_details' => [
+                'first_name' => $user->name,
+                'email' => $user->email,
+            ],
+            'item_details' => [[
+                'id' => 'SUBSCRIPTION-'.$invoice->subscription_id,
+                'price' => (int) ($invoice->amount),
+                'quantity' => 1,
+                'name' => 'Langganan StockEase',
+            ]],
+        ];
+
+        return Snap::getSnapToken($params);
     }
 }

@@ -11,8 +11,5 @@
             "enabled": true,
             "command": ["npx", "shadcn-vue@latest", "mcp"]
         }
-    },
-    "permission": {
-        "edit": "ask"
     }
 }

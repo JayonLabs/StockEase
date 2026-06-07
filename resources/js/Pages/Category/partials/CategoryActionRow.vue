@@ -55,6 +55,7 @@ const destroy = (slug) => {
         <AlertDialog v-model:open="isDialogOpen">
             <AlertDialogTrigger>
                 <Button
+                    aria-label="Hapus"
                     variant="ghost"
                     size="icon"
                     class="dark:hover:bg-red-900 hover:bg-red-500 group"

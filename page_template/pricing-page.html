@@ -1,0 +1,435 @@
+<!DOCTYPE html><html class="light" lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#55615f",
+                        "inverse-primary": "#4edea3",
+                        "tertiary-fixed": "#d8e5e2",
+                        "surface-container-high": "#dce9ff",
+                        "surface-container-low": "#eff4ff",
+                        "on-primary-container": "#00422b",
+                        "on-surface": "#0b1c30",
+                        "on-secondary-fixed-variant": "#0b513d",
+                        "on-secondary-container": "#306d58",
+                        "surface-variant": "#d3e4fe",
+                        "secondary-fixed-dim": "#95d3ba",
+                        "primary": "#006c49",
+                        "secondary-fixed": "#b0f0d6",
+                        "outline-variant": "#bbcabf",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed": "#002113",
+                        "inverse-on-surface": "#eaf1ff",
+                        "secondary-container": "#adedd3",
+                        "on-tertiary": "#ffffff",
+                        "surface": "#f8f9ff",
+                        "on-primary-fixed-variant": "#005236",
+                        "surface-container-highest": "#d3e4fe",
+                        "tertiary-fixed-dim": "#bcc9c6",
+                        "secondary": "#2b6954",
+                        "on-secondary": "#ffffff",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "on-surface-variant": "#3c4a42",
+                        "tertiary-container": "#98a5a3",
+                        "surface-dim": "#cbdbf5",
+                        "on-primary": "#ffffff",
+                        "outline": "#6c7a71",
+                        "error-container": "#ffdad6",
+                        "primary-fixed": "#6ffbbe",
+                        "on-tertiary-fixed": "#121e1c",
+                        "surface-container": "#e5eeff",
+                        "on-secondary-fixed": "#002117",
+                        "background": "#f8f9ff",
+                        "on-background": "#0b1c30",
+                        "inverse-surface": "#213145",
+                        "surface-tint": "#006c49",
+                        "primary-fixed-dim": "#4edea3",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#3d4947",
+                        "primary-container": "#10b981",
+                        "on-tertiary-container": "#2f3b39",
+                        "error": "#ba1a1a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter": "24px",
+                        "container-max": "1440px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "40px",
+                        "unit": "8px"
+                    },
+                    "fontFamily": {
+                        "label-md": ["Inter"],
+                        "display-lg": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-sm": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "headline-lg-mobile": ["Inter"],
+                        "headline-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "600"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "headline-lg-mobile": ["28px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top Navigation Bar -->
+<header class="bg-surface/80 backdrop-blur-md fixed top-0 w-full z-50 shadow-sm border-b border-outline-variant/30">
+<div class="flex justify-between items-center h-20 px-margin-desktop max-w-container-max mx-auto">
+<div class="text-headline-md font-bold text-primary tracking-tight">StockEase</div>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Features</a>
+<a class="text-primary font-bold border-b-2 border-primary font-label-md text-label-md py-1" href="#">Pricing</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Why Us</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Testimonials</a>
+<a class="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Contact</a>
+</nav>
+<button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-xl font-bold transition-all hover:scale-105 active:scale-95 shadow-sm">
+                Get Started
+            </button>
+</div>
+</header>
+<main class="pt-32 pb-20">
+<!-- Hero Section -->
+<section class="px-margin-desktop max-w-container-max mx-auto text-center mb-16">
+<h1 class="font-headline-lg text-headline-lg md:text-display-lg md:font-display-lg text-on-surface mb-6">
+                Simple, Transparent <span class="text-primary">Pricing</span>
+</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-2xl mx-auto mb-12">
+                Empower your retail business with precision tools. Choose a plan that scales with your ambition, from local boutiques to global enterprises.
+            </p>
+<!-- Billing Toggle -->
+<div class="flex items-center justify-center gap-4 mb-8">
+<span class="text-label-md font-label-md text-on-surface-variant">Monthly</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" id="billing-toggle" type="checkbox">
+<div class="w-14 h-8 bg-surface-container-high peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-primary"></div>
+</label>
+<span class="text-label-md font-label-md text-on-surface-variant">Annual <span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded-full text-xs font-bold ml-1">Save 20%</span></span>
+</div>
+</section>
+<!-- Pricing Tiers (Bento Layout) -->
+<section class="px-margin-desktop max-w-container-max mx-auto mb-24">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+<!-- Starter Tier -->
+<div class="glass-card border border-outline-variant/30 rounded-3xl p-8 flex flex-col hover:shadow-xl transition-shadow duration-300 group">
+<div class="mb-8">
+<span class="text-primary font-bold text-label-sm uppercase tracking-widest">Starter</span>
+<div class="flex items-baseline mt-4">
+<span class="text-display-lg font-display-lg text-on-surface">$0</span>
+<span class="text-on-surface-variant ml-2">/month</span>
+</div>
+<p class="text-on-surface-variant mt-4">Perfect for individual sellers and small market stalls.</p>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface">Up to 50 Products</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface">Single Register</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant/50">
+<span class="material-symbols-outlined" data-icon="cancel">cancel</span>
+<span class="">Advanced Analytics</span>
+</li>
+<li class="flex items-center gap-3 text-on-surface-variant/50">
+<span class="material-symbols-outlined" data-icon="cancel">cancel</span>
+<span class="">Inventory Alerts</span>
+</li>
+</ul>
+<button class="w-full py-4 rounded-xl border-1.5 border-outline font-bold text-on-surface hover:bg-surface-container-low transition-colors">Start Free Trial</button>
+</div>
+<!-- Professional Tier (Most Popular) -->
+<div class="relative bg-primary text-on-primary rounded-3xl p-10 flex flex-col shadow-2xl scale-105 z-10 overflow-hidden group">
+<div class="absolute top-6 right-6">
+<span class="bg-primary-fixed text-on-primary-fixed px-4 py-1 rounded-full text-label-sm font-bold shadow-lg">MOST POPULAR</span>
+</div>
+<!-- Aesthetic backdrop glow -->
+<div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-fixed/20 blur-[80px] rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+<div class="mb-8 relative z-10">
+<span class="text-primary-fixed font-bold text-label-sm uppercase tracking-widest">Professional</span>
+<div class="flex items-baseline mt-4">
+<span class="text-display-lg font-display-lg text-white" id="prof-price">$49</span>
+<span class="text-primary-fixed-dim ml-2" id="prof-period">/month</span>
+</div>
+<p class="text-primary-fixed-dim mt-4">Scaling boutiques and growing retail businesses.</p>
+</div>
+<ul class="space-y-4 mb-10 flex-grow relative z-10">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-white">Unlimited Products</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-white">Multi-Location Sync</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-white">Real-time Analytics</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-fixed" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-white">Low Stock Alerts</span>
+</li>
+</ul>
+<button class="w-full py-4 rounded-xl bg-white text-primary font-bold transition-all hover:shadow-lg hover:scale-[1.02] active:scale-95 relative z-10">Get Started Now</button>
+</div>
+<!-- Enterprise Tier -->
+<div class="glass-card border border-outline-variant/30 rounded-3xl p-8 flex flex-col hover:shadow-xl transition-shadow duration-300" style="--mouse-x: 187.671875px; --mouse-y: 8px;">
+<div class="mb-8">
+<span class="text-primary font-bold text-label-sm uppercase tracking-widest">Enterprise</span>
+<div class="flex items-baseline mt-4">
+<span class="text-display-lg font-display-lg text-on-surface">$149</span>
+<span class="text-on-surface-variant ml-2">/month</span>
+</div>
+<p class="text-on-surface-variant mt-4">Global chains requiring maximum reliability and API access.</p>
+</div>
+<ul class="space-y-4 mb-10 flex-grow">
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface">Everything in Pro</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface">Dedicated Account Manager</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface">API &amp; Webhooks</span>
+</li>
+<li class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface">SSO Authentication</span>
+</li>
+</ul>
+<button class="w-full py-4 rounded-xl border-1.5 border-outline font-bold text-on-surface hover:bg-surface-container-low transition-colors">Contact Sales</button>
+</div>
+</div>
+</section>
+<!-- Detailed Feature Comparison -->
+<section class="px-margin-desktop max-w-container-max mx-auto mb-24 overflow-hidden">
+<h2 class="text-center font-headline-lg text-headline-lg text-on-surface mb-12">Compare our features</h2>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="border-b border-outline-variant">
+<th class="py-6 px-4 font-bold text-label-md">Features</th>
+<th class="py-6 px-4 font-bold text-label-md text-center">Starter</th>
+<th class="py-6 px-4 font-bold text-label-md text-center bg-primary/5">Professional</th>
+<th class="py-6 px-4 font-bold text-label-md text-center">Enterprise</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/30">
+<tr>
+<td class="py-6 px-4 text-on-surface font-medium">Inventory Management</td>
+<td class="py-6 px-4 text-center"><span class="material-symbols-outlined text-primary" data-icon="check">check</span></td>
+<td class="py-6 px-4 text-center bg-primary/5"><span class="material-symbols-outlined text-primary" data-icon="check">check</span></td>
+<td class="py-6 px-4 text-center"><span class="material-symbols-outlined text-primary" data-icon="check">check</span></td>
+</tr>
+<tr>
+<td class="py-6 px-4 text-on-surface font-medium">Sales Reporting</td>
+<td class="py-6 px-4 text-center"><span class="material-symbols-outlined text-primary" data-icon="check">check</span></td>
+<td class="py-6 px-4 text-center bg-primary/5"><span class="material-symbols-outlined text-primary" data-icon="check">check</span></td>
+<td class="py-6 px-4 text-center"><span class="material-symbols-outlined text-primary" data-icon="check">check</span></td>
+</tr>
+<tr>
+<td class="py-6 px-4 text-on-surface font-medium">Customer Profiles</td>
+<td class="py-6 px-4 text-center text-on-surface-variant/30">—</td>
+<td class="py-6 px-4 text-center bg-primary/5"><span class="material-symbols-outlined text-primary" data-icon="check">check</span></td>
+<td class="py-6 px-4 text-center"><span class="material-symbols-outlined text-primary" data-icon="check">check</span></td>
+</tr>
+<tr>
+<td class="py-6 px-4 text-on-surface font-medium">Multi-Warehouse support</td>
+<td class="py-6 px-4 text-center text-on-surface-variant/30">—</td>
+<td class="py-6 px-4 text-center bg-primary/5 text-on-surface-variant/30">—</td>
+<td class="py-6 px-4 text-center"><span class="material-symbols-outlined text-primary" data-icon="check">check</span></td>
+</tr>
+<tr>
+<td class="py-6 px-4 text-on-surface font-medium">24/7 Priority Support</td>
+<td class="py-6 px-4 text-center text-on-surface-variant/30">—</td>
+<td class="py-6 px-4 text-center bg-primary/5 text-on-surface-variant/30">—</td>
+<td class="py-6 px-4 text-center"><span class="material-symbols-outlined text-primary" data-icon="check">check</span></td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- FAQs Section -->
+<section class="px-margin-desktop max-w-3xl mx-auto mb-24">
+<h2 class="text-center font-headline-lg text-headline-lg text-on-surface mb-12">Billing FAQ</h2>
+<div class="space-y-4">
+<details class="group glass-card border border-outline-variant/30 rounded-2xl p-6 transition-all duration-300 open:shadow-md">
+<summary class="flex justify-between items-center cursor-pointer list-none">
+<span class="font-bold text-on-surface">Can I change my plan later?</span>
+<span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="mt-4 text-on-surface-variant">
+                        Absolutely! You can upgrade or downgrade your plan at any time. When upgrading, the price difference will be prorated for your current billing cycle.
+                    </div>
+</details>
+<details class="group glass-card border border-outline-variant/30 rounded-2xl p-6 transition-all duration-300 open:shadow-md">
+<summary class="flex justify-between items-center cursor-pointer list-none">
+<span class="font-bold text-on-surface">What payment methods do you accept?</span>
+<span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="mt-4 text-on-surface-variant">
+                        We accept all major credit cards (Visa, Mastercard, American Express), PayPal, and for Enterprise customers, we also support bank transfers and ACH payments.
+                    </div>
+</details>
+<details class="group glass-card border border-outline-variant/30 rounded-2xl p-6 transition-all duration-300 open:shadow-md">
+<summary class="flex justify-between items-center cursor-pointer list-none">
+<span class="font-bold text-on-surface">Is there a discount for non-profits?</span>
+<span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="mt-4 text-on-surface-variant">
+                        Yes, we offer a 15% discount for verified 501(c)(3) non-profit organizations. Please contact our support team with your documentation to apply.
+                    </div>
+</details>
+<details class="group glass-card border border-outline-variant/30 rounded-2xl p-6 transition-all duration-300 open:shadow-md">
+<summary class="flex justify-between items-center cursor-pointer list-none">
+<span class="font-bold text-on-surface">What happens if I exceed my product limit on the Starter plan?</span>
+<span class="material-symbols-outlined transition-transform duration-300 group-open:rotate-180" data-icon="expand_more">expand_more</span>
+</summary>
+<div class="mt-4 text-on-surface-variant">
+                        You'll receive a notification when you're approaching your limit. If you need to add more products, you'll simply need to upgrade to the Professional plan to continue adding new items.
+                    </div>
+</details>
+</div>
+</section>
+<!-- Final CTA Section -->
+<section class="px-margin-desktop max-w-container-max mx-auto">
+<div class="bg-inverse-surface text-inverse-on-surface rounded-[40px] p-12 md:p-20 text-center relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+<img alt="Abstract texture" class="w-full h-full object-cover" data-alt="A sophisticated abstract background featuring soft waves and flowing organic lines in deep charcoal and emerald green. The lighting is low and moody, creating a professional corporate SaaS aesthetic with high contrast and smooth gradients. The texture is reminiscent of premium brushed metal or silk." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBm92rUaHHIBHQ3UYHNzw-ZDCG8S4LaikUaxGXUMj6d2aT2TLYL3WFluyCaj1CzEJPtLizz6jse4mbMzq3JQ81iofjIdDba4lLbOf1_pn4_D7xZAOfWQBWma1-Lzyav0PI_uHktjCO-UdqsfFs9lNslbziBogNCjiyylURlBPj_2XzTYa6OV_eR4wYVmLxE29x0paBBXCFTKu7ni2I26gN1sP5YWIOhMjnRor5y1JdeqxQztfizu2JfnueKPSyIHZZuh7oEPgXhOt0">
+</div>
+<div class="relative z-10">
+<h2 class="text-headline-lg font-headline-lg mb-6">Ready to streamline your sales?</h2>
+<p class="text-body-lg mb-12 max-w-xl mx-auto opacity-80">Join 5,000+ businesses using StockEase to optimize their inventory and maximize their profits.</p>
+<div class="flex flex-col sm:flex-row gap-4 justify-center">
+<button class="bg-primary text-white px-10 py-4 rounded-xl font-bold hover:scale-105 transition-transform">Get Started Free</button>
+<button class="bg-white/10 backdrop-blur-md text-white border border-white/20 px-10 py-4 rounded-xl font-bold hover:bg-white/20 transition-all">Schedule Demo</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-inverse-surface dark:bg-surface-container-lowest border-t border-outline/10 w-full py-16">
+<div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-gutter px-margin-desktop max-w-container-max mx-auto">
+<div class="col-span-2 lg:col-span-2">
+<div class="text-headline-md font-black text-white dark:text-primary mb-4">StockEase</div>
+<p class="text-surface-variant/70 dark:text-on-surface-variant/70 text-body-md max-w-xs mb-8">
+                    Precision in every transaction. The ERP solution built for modern retail.
+                </p>
+</div>
+<div>
+<h4 class="text-white dark:text-on-surface font-bold mb-6">Product</h4>
+<ul class="space-y-4 text-surface-variant/70 dark:text-on-surface-variant/70">
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">Features</a></li>
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">Pricing</a></li>
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">Security</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-white dark:text-on-surface font-bold mb-6">Resources</h4>
+<ul class="space-y-4 text-surface-variant/70 dark:text-on-surface-variant/70">
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">Documentation</a></li>
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">Help Center</a></li>
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">API</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-white dark:text-on-surface font-bold mb-6">Company</h4>
+<ul class="space-y-4 text-surface-variant/70 dark:text-on-surface-variant/70">
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">About Us</a></li>
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">Careers</a></li>
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">Contact</a></li>
+</ul>
+</div>
+<div>
+<h4 class="text-white dark:text-on-surface font-bold mb-6">Legal</h4>
+<ul class="space-y-4 text-surface-variant/70 dark:text-on-surface-variant/70">
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">Privacy Policy</a></li>
+<li class=""><a class="hover:text-primary-fixed dark:hover:text-primary transition-all underline underline-offset-4" href="#">Terms of Service</a></li>
+</ul>
+</div>
+</div>
+<div class="mt-16 pt-8 border-t border-outline/10 px-margin-desktop max-w-container-max mx-auto">
+<p class="text-surface-variant/70 dark:text-on-surface-variant/70 text-label-sm">
+                © 2024 StockEase ERP. All rights reserved. Precision in every transaction.
+            </p>
+</div>
+</footer>
+<script>
+        const toggle = document.getElementById('billing-toggle');
+        const profPrice = document.getElementById('prof-price');
+        const profPeriod = document.getElementById('prof-period');
+
+        toggle.addEventListener('change', function() {
+            if (this.checked) {
+                // Annual
+                profPrice.innerText = '$39';
+                profPeriod.innerText = '/month, billed annually';
+                // Add staggered animation effect
+                profPrice.classList.add('scale-110');
+                setTimeout(() => profPrice.classList.remove('scale-110'), 200);
+            } else {
+                // Monthly
+                profPrice.innerText = '$49';
+                profPeriod.innerText = '/month';
+                profPrice.classList.add('scale-110');
+                setTimeout(() => profPrice.classList.remove('scale-110'), 200);
+            }
+        });
+
+        // Add subtle hover tracking for glass cards
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--mouse-x', `${x}px`);
+                card.style.setProperty('--mouse-y', `${y}px`);
+            });
+        });
+    </script>
+
+
+</body></html>

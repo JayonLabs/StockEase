@@ -21,7 +21,11 @@ const props = defineProps({
             <Tooltip>
                 <TooltipTrigger>
                     <Link :href="route('sale-return.detail', props.row.id)">
-                        <Button variant="ghost" size="icon">
+                        <Button
+                            aria-label="Lihat detail"
+                            variant="ghost"
+                            size="icon"
+                        >
                             <Eye
                                 class="w-4 h-4 text-blue-500 dark:group-hover:text-white"
                             />
@@ -35,7 +39,11 @@ const props = defineProps({
             <Tooltip>
                 <TooltipTrigger>
                     <Link :href="route('sale-return.show', props.row.sale_id)">
-                        <Button variant="ghost" size="icon">
+                        <Button
+                            aria-label="Buat retur"
+                            variant="ghost"
+                            size="icon"
+                        >
                             <RotateCcw
                                 class="w-4 h-4 text-orange-500 dark:group-hover:text-white"
                             />

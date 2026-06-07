@@ -39,6 +39,7 @@ onMounted(() => {
     <DropdownMenu>
         <DropdownMenuTrigger as-child class="cursor-pointer border">
             <Button
+                aria-label="Notifikasi"
                 variant="ghost"
                 size="icon"
                 class="relative hover:bg-accent rounded-full transition-all"

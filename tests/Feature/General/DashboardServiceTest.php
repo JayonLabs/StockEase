@@ -14,6 +14,8 @@ use App\Models\User;
 use App\Services\General\DashboardService;
 use Carbon\Carbon;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 uses(LazilyRefreshDatabase::class);
@@ -139,7 +141,7 @@ it('excludes sales from previous month even if created_at is this month', functi
         'user_id' => $this->admin->id,
         'status' => SaleStatus::Completed->value,
         'total' => 99999,
-        'date' => Carbon::now()->subMonth()->toDateString(), // last month
+        'date' => Carbon::now()->subMonthNoOverflow()->toDateString(), // last month
         'created_at' => Carbon::now(), // this month
     ]);
 
@@ -213,7 +215,7 @@ it('excludes purchases from previous month even if created_at is this month', fu
         'supplier_id' => $this->supplier->id,
         'user_id' => $this->admin->id,
         'total' => 99999,
-        'date' => Carbon::now()->subMonth()->toDateString(),
+        'date' => Carbon::now()->subMonthNoOverflow()->toDateString(),
         'created_at' => Carbon::now(),
     ]);
 
@@ -873,4 +875,228 @@ it('cashierData excludes other users sales from weekly transaction count', funct
     $data = $this->service->getDashboardData($cashierA);
 
     expect($data['cashierSalesSummary']['totalTransactionPerWeek'])->toBe(3);
+});
+
+// ─── Activity History Caching ────────────────────────────────────────────────
+
+describe('Activity History Caching', function () {
+    beforeEach(function () {
+        /** @var TestCase&object{service:DashboardService, admin:User, cashier:User, supplier:Supplier} $this */
+    });
+
+    it('caches activity history results', function () {
+        /** @var TestCase&object{service:DashboardService, admin:User, supplier:Supplier} $this */
+        $product = Product::factory()->create(['name' => 'Test Product']);
+
+        $sale = Sale::factory()->create([
+            'user_id' => $this->admin->id,
+            'status' => SaleStatus::Completed->value,
+            'total' => 50000,
+            'created_at' => Carbon::now()->subHour(),
+        ]);
+
+        SaleItem::factory()->create([
+            'sale_id' => $sale->id,
+            'product_id' => $product->id,
+            'qty' => 2,
+            'price' => 10000,
+        ]);
+
+        Cache::flush();
+
+        $result1 = $this->service->getActivityHistory();
+
+        $cached = Cache::get('dashboard_activity_history');
+        expect($cached)->not->toBeNull();
+        expect($cached)->toBe($result1);
+
+        $result2 = $this->service->getActivityHistory();
+        expect($result2)->toBe($result1);
+    });
+
+    it('skips queries on subsequent calls when cache is warm', function () {
+        /** @var TestCase&object{service:DashboardService, admin:User, supplier:Supplier} $this */
+        $product = Product::factory()->create(['name' => 'Test Product']);
+
+        $sale = Sale::factory()->create([
+            'user_id' => $this->admin->id,
+            'status' => SaleStatus::Completed->value,
+            'total' => 50000,
+            'created_at' => Carbon::now()->subHour(),
+        ]);
+
+        SaleItem::factory()->create([
+            'sale_id' => $sale->id,
+            'product_id' => $product->id,
+            'qty' => 2,
+            'price' => 10000,
+        ]);
+
+        Cache::flush();
+        $this->service->getActivityHistory();
+
+        DB::enableQueryLog();
+        $result = $this->service->getActivityHistory();
+        $queries = DB::getQueryLog();
+        DB::disableQueryLog();
+
+        expect($result)->not->toBeEmpty();
+
+        $dataQueries = collect($queries)->filter(
+            fn ($q) => ! str_contains(strtolower($q['query']), 'cache')
+                && ! str_contains($q['query'], 'sqlite_master')
+        );
+
+        expect($dataQueries)->toHaveCount(0);
+    });
+
+    it('returns activities sorted by newest first', function () {
+        /** @var TestCase&object{service:DashboardService, admin:User, supplier:Supplier} $this */
+        Cache::flush();
+
+        $product = Product::factory()->create(['name' => 'Sort Product']);
+
+        $older = Sale::factory()->create([
+            'user_id' => $this->admin->id,
+            'status' => SaleStatus::Completed->value,
+            'total' => 10000,
+            'created_at' => Carbon::now()->subDays(2),
+        ]);
+
+        SaleItem::factory()->create([
+            'sale_id' => $older->id,
+            'product_id' => $product->id,
+            'qty' => 1,
+            'price' => 10000,
+        ]);
+
+        $newer = Sale::factory()->create([
+            'user_id' => $this->admin->id,
+            'status' => SaleStatus::Completed->value,
+            'total' => 20000,
+            'created_at' => Carbon::now()->subHour(),
+        ]);
+
+        SaleItem::factory()->create([
+            'sale_id' => $newer->id,
+            'product_id' => $product->id,
+            'qty' => 2,
+            'price' => 10000,
+        ]);
+
+        $activities = $this->service->getActivityHistory();
+
+        expect($activities)->toHaveCount(2);
+        expect($activities[0]['id'])->toBe('sale_'.$newer->id);
+        expect($activities[1]['id'])->toBe('sale_'.$older->id);
+    });
+
+    it('limits activity history to 10 items', function () {
+        /** @var TestCase&object{service:DashboardService, admin:User, supplier:Supplier} $this */
+        Cache::flush();
+
+        $product = Product::factory()->create(['name' => 'Limit Product']);
+
+        for ($i = 0; $i < 15; $i++) {
+            $sale = Sale::factory()->create([
+                'user_id' => $this->admin->id,
+                'status' => SaleStatus::Completed->value,
+                'total' => 10000 + $i,
+                'created_at' => Carbon::now()->subMinutes($i),
+            ]);
+
+            SaleItem::factory()->create([
+                'sale_id' => $sale->id,
+                'product_id' => $product->id,
+                'qty' => 1,
+                'price' => 10000,
+            ]);
+        }
+
+        $activities = $this->service->getActivityHistory();
+        expect($activities)->toHaveCount(10);
+    });
+
+    it('includes all activity types in result', function () {
+        /** @var TestCase&object{service:DashboardService, admin:User, supplier:Supplier} $this */
+        Cache::flush();
+
+        $product = Product::factory()->create(['name' => 'Type Test Product']);
+
+        $sale = Sale::factory()->create([
+            'user_id' => $this->admin->id,
+            'status' => SaleStatus::Completed->value,
+            'total' => 10000,
+            'created_at' => Carbon::now()->subHour(),
+        ]);
+        SaleItem::factory()->create([
+            'sale_id' => $sale->id,
+            'product_id' => $product->id,
+            'qty' => 1,
+            'price' => 10000,
+        ]);
+
+        Purchase::factory()->create([
+            'supplier_id' => $this->supplier->id,
+            'user_id' => $this->admin->id,
+            'total' => 50000,
+            'created_at' => Carbon::now()->subHours(2),
+        ]);
+
+        StockLog::factory()->create([
+            'product_id' => $product->id,
+            'type' => 'in',
+            'qty' => 10,
+            'created_at' => Carbon::now()->subHours(3),
+        ]);
+
+        PriceHistory::factory()->create([
+            'product_id' => $product->id,
+            'user_id' => $this->admin->id,
+            'created_at' => Carbon::now()->subHours(4),
+        ]);
+
+        $activities = $this->service->getActivityHistory();
+
+        $types = collect($activities)->pluck('type')->toArray();
+        expect($types)->toContain('sale');
+        expect($types)->toContain('purchase');
+        expect($types)->toContain('stock');
+        expect($types)->toContain('price');
+    });
+
+    it('includes activity history in admin dashboard data', function () {
+        /** @var TestCase&object{service:DashboardService, admin:User, supplier:Supplier} $this */
+        Cache::flush();
+
+        $data = $this->service->getDashboardData($this->admin);
+
+        expect($data)->toHaveKey('activities');
+        expect($data['activities'])->toBeArray();
+    });
+
+    it('cache isolates dashboard data correctly', function () {
+        /** @var TestCase&object{service:DashboardService, admin:User, supplier:Supplier} $this */
+        Cache::flush();
+
+        $product = Product::factory()->create(['name' => 'Cache Isolation']);
+
+        $sale = Sale::factory()->create([
+            'user_id' => $this->admin->id,
+            'status' => SaleStatus::Completed->value,
+            'total' => 50000,
+            'created_at' => Carbon::now(),
+        ]);
+
+        SaleItem::factory()->create([
+            'sale_id' => $sale->id,
+            'product_id' => $product->id,
+            'qty' => 1,
+            'price' => 10000,
+        ]);
+
+        $adminData = $this->service->getDashboardData($this->admin);
+        expect($adminData['activities'])->not->toBeEmpty();
+        expect(Cache::has('dashboard_activity_history'))->toBeTrue();
+    });
 });

@@ -476,3 +476,50 @@ it('validates stock transfer creation', function ($data, $errors) {
     'qty less than 1' => [['from_warehouse_id' => 1, 'to_warehouse_id' => 2, 'product_id' => 1, 'qty' => 0, 'date' => now()->toDateString()], ['qty']],
     'same from and to warehouse' => [['from_warehouse_id' => 1, 'to_warehouse_id' => 1, 'product_id' => 1, 'qty' => 5, 'date' => now()->toDateString()], ['to_warehouse_id']],
 ]);
+
+// ============================================================
+// N+1 Regression — PERF-02 (storeTransfer single pivot query)
+// ============================================================
+
+it('issues a single warehouse_product query (not two) when storing a transfer', function () {
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    $fromWarehouse = Warehouse::factory()->create(['is_active' => true]);
+    $toWarehouse = Warehouse::factory()->create(['is_active' => true]);
+    $product = Product::factory()->create(['stock' => 10]);
+
+    DB::table('warehouse_product')->insert([
+        ['warehouse_id' => $fromWarehouse->id, 'product_id' => $product->id, 'stock' => 10, 'created_at' => now(), 'updated_at' => now()],
+        ['warehouse_id' => $toWarehouse->id, 'product_id' => $product->id, 'stock' => 0, 'created_at' => now(), 'updated_at' => now()],
+    ]);
+    $product->syncStockFromWarehouses();
+
+    DB::enableQueryLog();
+
+    actingAs($admin)->post(route('stock-transfer.store'), [
+        'from_warehouse_id' => $fromWarehouse->id,
+        'to_warehouse_id' => $toWarehouse->id,
+        'product_id' => $product->id,
+        'qty' => 5,
+        'date' => now()->toDateString(),
+        'note' => null,
+    ])->assertRedirect();
+
+    $queries = DB::getQueryLog();
+    DB::disableQueryLog();
+
+    // The old code did 2 separate pivot queries via Eloquent BelongsToMany.
+    // The fix uses one whereIn query on warehouse_product directly.
+    $pivotLookupQueries = collect($queries)->filter(
+        fn ($q) => str_contains($q['query'], 'pivot_product_id')
+    );
+
+    expect($pivotLookupQueries)->toHaveCount(0);
+
+    expect(
+        DB::table('warehouse_product')->where('warehouse_id', $fromWarehouse->id)->where('product_id', $product->id)->value('stock')
+    )->toBe(5);
+    expect(
+        DB::table('warehouse_product')->where('warehouse_id', $toWarehouse->id)->where('product_id', $product->id)->value('stock')
+    )->toBe(5);
+});

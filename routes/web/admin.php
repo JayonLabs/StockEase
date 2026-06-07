@@ -1,15 +1,20 @@
 <?php
 
+use App\Http\Controllers\Admin\AdminSubscriptionController;
 use App\Http\Controllers\Permission\PermissionController;
 use App\Http\Controllers\Permission\RolePermissionController;
 use App\Http\Controllers\Permission\UserPermissionController;
+use App\Http\Controllers\Plan\PlanController;
 use App\Http\Controllers\Product\CategoryController;
 use App\Http\Controllers\Product\PromotionController;
 use App\Http\Controllers\User\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:admin'])->group(function () {
-    Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('/users', [UserController::class, 'store'])
+        ->middleware('subscription.limit:user')
+        ->name('users.store');
+    Route::resource('users', UserController::class)->only(['index', 'update', 'destroy']);
     Route::put('users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.reset-password');
 
     Route::resource('category', CategoryController::class)->only(['index', 'store', 'update', 'destroy']);
@@ -22,4 +27,10 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
     Route::get('user-permissions', [UserPermissionController::class, 'index'])->name('user-permissions.index');
     Route::get('user-permissions/{user}/edit', [UserPermissionController::class, 'edit'])->name('user-permissions.edit');
     Route::put('user-permissions/{user}', [UserPermissionController::class, 'update'])->name('user-permissions.update');
+
+    Route::resource('plans', PlanController::class)->only(['index', 'update']);
+    Route::resource('subscriptions', AdminSubscriptionController::class)
+        ->names(['index' => 'admin.subscriptions.index', 'show' => 'admin.subscriptions.show', 'update' => 'admin.subscriptions.update'])
+        ->only(['index', 'show', 'update']);
+    Route::post('subscriptions/assign', [AdminSubscriptionController::class, 'assign'])->name('admin.subscriptions.assign');
 });

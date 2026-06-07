@@ -68,6 +68,7 @@ const handleDelete = () => {
     <div class="flex items-center justify-center gap-1">
         <Link :href="route('product.show', row.slug)">
             <Button
+                aria-label="Lihat detail"
                 variant="ghost"
                 size="icon"
                 class="h-8 w-8 text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
@@ -79,6 +80,7 @@ const handleDelete = () => {
 
         <Link :href="route('product.edit', row.slug)">
             <Button
+                aria-label="Ubah"
                 variant="ghost"
                 size="icon"
                 class="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
@@ -90,7 +92,12 @@ const handleDelete = () => {
 
         <DropdownMenu>
             <DropdownMenuTrigger as-child>
-                <Button variant="ghost" size="icon" class="h-8 w-8">
+                <Button
+                    aria-label="Opsi lanjutan"
+                    variant="ghost"
+                    size="icon"
+                    class="h-8 w-8"
+                >
                     <MoreHorizontal class="h-4 w-4" />
                 </Button>
             </DropdownMenuTrigger>

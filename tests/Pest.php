@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Company;
+use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Tests\TestCase;
 
@@ -44,7 +46,13 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function initTenancyFromUser(User $user): void
 {
-    // ..
+    if (tenancy()->initialized) {
+        tenancy()->end();
+    }
+
+    if ($user->company_id) {
+        tenancy()->initialize(Company::find($user->company_id));
+    }
 }

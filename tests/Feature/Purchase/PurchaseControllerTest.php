@@ -6,6 +6,7 @@ use App\Models\Supplier;
 use App\Models\User;
 use App\Models\Warehouse;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
@@ -657,6 +658,93 @@ describe('Update', function () {
         'missing date' => [['date' => ''],          ['date']],
         'empty product_items' => [['product_items' => []], ['product_items']],
     ]);
+
+    it('removes deleted item and rolls back warehouse stock', function () {
+        /** @var TestCase&object{admin:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $productToKeep = $this->product;
+        $productToRemove = Product::factory()->create();
+        $this->warehouseModel->products()->syncWithoutDetaching([$productToRemove->id => ['stock' => 8]]);
+        $productToRemove->syncStockFromWarehouses();
+
+        $purchase = Purchase::factory()->create([
+            'user_id' => $this->admin->id,
+            'supplier_id' => $this->supplier->id,
+            'warehouse_id' => $this->warehouseModel->id,
+            'date' => Carbon::today()->toDateString(),
+            'total' => 13000,
+        ]);
+        $purchase->purchaseItems()->createMany([
+            ['warehouse_id' => $this->warehouseModel->id, 'product_id' => $productToKeep->id, 'qty' => 5, 'remaining_qty' => 5, 'price' => 1000],
+            ['warehouse_id' => $this->warehouseModel->id, 'product_id' => $productToRemove->id, 'qty' => 8, 'remaining_qty' => 8, 'price' => 1000],
+        ]);
+
+        // Update: only keep productToKeep, remove productToRemove
+        actingAs($this->admin)
+            ->put(route('purchase.update', $purchase), purchasePayload($this->supplier, $productToKeep, $this->warehouseModel))
+            ->assertRedirect(route('purchase.index'));
+
+        // Deleted item's stock should be rolled back
+        expect($productToRemove->fresh()->stock)->toBe(0); // 8 - 8
+        expect($purchase->purchaseItems()->where('product_id', $productToRemove->id)->exists())->toBeFalse();
+        expect($purchase->purchaseItems()->where('product_id', $productToKeep->id)->exists())->toBeTrue();
+    });
+
+    it('does not issue per-item queries when deleting multiple items on update (no N+1)', function () {
+        /** @var TestCase&object{admin:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $productA = Product::factory()->create();
+        $productB = Product::factory()->create();
+        $productC = Product::factory()->create(); // will be kept
+        $this->warehouseModel->products()->syncWithoutDetaching([
+            $productA->id => ['stock' => 3],
+            $productB->id => ['stock' => 5],
+            $productC->id => ['stock' => 2],
+        ]);
+        $productA->syncStockFromWarehouses();
+        $productB->syncStockFromWarehouses();
+        $productC->syncStockFromWarehouses();
+
+        $purchase = Purchase::factory()->create([
+            'user_id' => $this->admin->id,
+            'supplier_id' => $this->supplier->id,
+            'warehouse_id' => $this->warehouseModel->id,
+            'date' => Carbon::today()->toDateString(),
+            'total' => 10000,
+        ]);
+        $purchase->purchaseItems()->createMany([
+            ['warehouse_id' => $this->warehouseModel->id, 'product_id' => $productA->id, 'qty' => 3, 'remaining_qty' => 3, 'price' => 1000],
+            ['warehouse_id' => $this->warehouseModel->id, 'product_id' => $productB->id, 'qty' => 5, 'remaining_qty' => 5, 'price' => 1000],
+            ['warehouse_id' => $this->warehouseModel->id, 'product_id' => $productC->id, 'qty' => 2, 'remaining_qty' => 2, 'price' => 1000],
+        ]);
+
+        DB::enableQueryLog();
+
+        // Keep only productC; delete productA and productB
+        actingAs($this->admin)->put(route('purchase.update', $purchase), [
+            'supplier_id' => $this->supplier->id,
+            'warehouse_id' => $this->warehouseModel->id,
+            'date' => Carbon::today()->toDateString(),
+            'product_items' => [[
+                'product_id' => $productC->id,
+                'qty' => 2,
+                'price' => 1000,
+                'selling_price' => 2000,
+                'expiry_date' => null,
+            ]],
+        ]);
+
+        $queries = DB::getQueryLog();
+        DB::disableQueryLog();
+
+        // There must be no individual Product::find() calls — only one batch whereIn.
+        // Product::find($id) generates: select * from `products` where `products`.`id` = ? … limit 1
+        $individualProductFinds = collect($queries)->filter(
+            fn ($q) => preg_match('/select \* from `products` where `products`\.`id` = \?/i', $q['query'])
+        );
+
+        expect($individualProductFinds)->toHaveCount(0);
+        expect($productA->fresh()->stock)->toBe(0); // 3 - 3
+        expect($productB->fresh()->stock)->toBe(0); // 5 - 5
+    });
 });
 
 // ============================================================
@@ -728,5 +816,87 @@ describe('Destroy', function () {
         actingAs($this->warehouse)
             ->delete(route('purchase.destroy', $purchase))
             ->assertRedirect(route('purchase.index'));
+    });
+});
+
+// ============================================================
+// N+1 Regression — PERF-02 (stockInWarehouse)
+// ============================================================
+
+describe('N+1 Regression — storePurchase', function () {
+    it('issues no per-product stockInWarehouse queries during storePurchase', function () {
+        /** @var TestCase&object{admin:User, warehouseModel:Warehouse, supplier:Supplier} $this */
+        $productA = Product::factory()->create();
+        $productB = Product::factory()->create();
+        $this->warehouseModel->products()->syncWithoutDetaching([
+            $productA->id => ['stock' => 10],
+            $productB->id => ['stock' => 5],
+        ]);
+
+        DB::enableQueryLog();
+
+        actingAs($this->admin)->post(route('purchase.store'), [
+            'supplier_id' => $this->supplier->id,
+            'warehouse_id' => $this->warehouseModel->id,
+            'date' => Carbon::today()->toDateString(),
+            'product_items' => [
+                ['product_id' => $productA->id, 'qty' => 3, 'price' => 1000, 'selling_price' => 2000, 'expiry_date' => null],
+                ['product_id' => $productB->id, 'qty' => 2, 'price' => 500, 'selling_price' => 1000, 'expiry_date' => null],
+            ],
+        ]);
+
+        $queries = DB::getQueryLog();
+        DB::disableQueryLog();
+
+        $stockInWarehouseQueries = collect($queries)->filter(
+            fn ($q) => str_contains($q['query'], 'pivot_product_id')
+        );
+
+        expect($stockInWarehouseQueries)->toHaveCount(0);
+    });
+});
+
+describe('N+1 Regression — updatePurchase', function () {
+    it('issues no per-product stockInWarehouse queries during updatePurchase', function () {
+        /** @var TestCase&object{admin:User, warehouseModel:Warehouse, supplier:Supplier, product:Product} $this */
+        $productA = Product::factory()->create();
+        $productB = Product::factory()->create();
+        $this->warehouseModel->products()->syncWithoutDetaching([
+            $productA->id => ['stock' => 10],
+            $productB->id => ['stock' => 5],
+        ]);
+
+        $purchase = Purchase::factory()->create([
+            'user_id' => $this->admin->id,
+            'supplier_id' => $this->supplier->id,
+            'warehouse_id' => $this->warehouseModel->id,
+            'date' => Carbon::today()->toDateString(),
+            'total' => 15000,
+        ]);
+        $purchase->purchaseItems()->createMany([
+            ['warehouse_id' => $this->warehouseModel->id, 'product_id' => $productA->id, 'qty' => 10, 'remaining_qty' => 10, 'price' => 1000],
+            ['warehouse_id' => $this->warehouseModel->id, 'product_id' => $productB->id, 'qty' => 5, 'remaining_qty' => 5, 'price' => 1000],
+        ]);
+
+        DB::enableQueryLog();
+
+        // Update: keep productA with new qty, remove productB
+        actingAs($this->admin)->put(route('purchase.update', $purchase), [
+            'supplier_id' => $this->supplier->id,
+            'warehouse_id' => $this->warehouseModel->id,
+            'date' => Carbon::today()->toDateString(),
+            'product_items' => [
+                ['product_id' => $productA->id, 'qty' => 8, 'price' => 1000, 'selling_price' => 2000, 'expiry_date' => null],
+            ],
+        ]);
+
+        $queries = DB::getQueryLog();
+        DB::disableQueryLog();
+
+        $stockInWarehouseQueries = collect($queries)->filter(
+            fn ($q) => str_contains($q['query'], 'pivot_product_id')
+        );
+
+        expect($stockInWarehouseQueries)->toHaveCount(0);
     });
 });

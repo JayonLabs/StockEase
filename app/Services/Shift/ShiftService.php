@@ -12,6 +12,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ShiftService
 {
@@ -20,20 +21,23 @@ class ShiftService
      */
     public function openShift(User $user, float $startingCash): Shift
     {
-        $existing = Shift::where('user_id', $user->id)
-            ->where('status', ShiftStatus::Open->value)
-            ->exists();
+        return DB::transaction(function () use ($user, $startingCash) {
+            $existing = Shift::where('user_id', $user->id)
+                ->where('status', ShiftStatus::Open->value)
+                ->lockForUpdate()
+                ->exists();
 
-        if ($existing) {
-            throw new \Exception('Anda masih memiliki shift yang terbuka. Tutup shift terlebih dahulu.');
-        }
+            if ($existing) {
+                throw new \Exception('Anda masih memiliki shift yang terbuka. Tutup shift terlebih dahulu.');
+            }
 
-        return Shift::create([
-            'user_id' => $user->id,
-            'opened_at' => now(),
-            'starting_cash' => $startingCash,
-            'status' => ShiftStatus::Open->value,
-        ]);
+            return Shift::create([
+                'user_id' => $user->id,
+                'opened_at' => now(),
+                'starting_cash' => $startingCash,
+                'status' => ShiftStatus::Open->value,
+            ]);
+        });
     }
 
     /**
@@ -41,22 +45,28 @@ class ShiftService
      */
     public function closeShift(Shift $shift, float $actualCash, ?string $notes = null): Shift
     {
-        if ($shift->status !== ShiftStatus::Open->value) {
-            throw new \Exception('Shift ini sudah ditutup sebelumnya.');
-        }
+        return DB::transaction(function () use ($shift, $actualCash, $notes) {
+            $lockedShift = Shift::where('id', $shift->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $expectedCash = $this->calculateExpectedCash($shift);
+            if ($lockedShift->status !== ShiftStatus::Open->value) {
+                throw new \Exception('Shift ini sudah ditutup sebelumnya.');
+            }
 
-        $shift->update([
-            'closed_at' => now(),
-            'expected_cash' => $expectedCash,
-            'actual_cash' => $actualCash,
-            'cash_difference' => $actualCash - $expectedCash,
-            'notes' => $notes,
-            'status' => ShiftStatus::Closed->value,
-        ]);
+            $expectedCash = $this->calculateExpectedCash($lockedShift);
 
-        return $shift->fresh();
+            $lockedShift->update([
+                'closed_at' => now(),
+                'expected_cash' => $expectedCash,
+                'actual_cash' => $actualCash,
+                'cash_difference' => $actualCash - $expectedCash,
+                'notes' => $notes,
+                'status' => ShiftStatus::Closed->value,
+            ]);
+
+            return $lockedShift->fresh();
+        });
     }
 
     /**

@@ -21,7 +21,11 @@ const props = defineProps({
             <Tooltip>
                 <TooltipTrigger>
                     <Link :href="route('sale.show', props.row.id)">
-                        <Button variant="ghost" size="icon">
+                        <Button
+                            aria-label="Lihat detail"
+                            variant="ghost"
+                            size="icon"
+                        >
                             <Eye
                                 class="w-4 h-4 text-blue-500 dark:group-hover:text-white"
                             />
@@ -35,7 +39,7 @@ const props = defineProps({
             <Tooltip v-if="props.row.status === 'completed'">
                 <TooltipTrigger>
                     <Link :href="route('sale-return.show', props.row.id)">
-                        <Button variant="ghost" size="icon">
+                        <Button aria-label="Retur" variant="ghost" size="icon">
                             <RotateCcw
                                 class="w-4 h-4 text-orange-500 dark:group-hover:text-white"
                             />

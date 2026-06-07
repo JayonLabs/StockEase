@@ -10,6 +10,7 @@ use Mockery;
 use Tests\TestCase;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\postJson;
 
 uses(LazilyRefreshDatabase::class);
 
@@ -34,6 +35,7 @@ it('allows admin and cashier to create midtrans transactions using cart total', 
     $mock = Mockery::mock('alias:Midtrans\Snap');
     $mock->shouldReceive('getSnapToken')->once()->andReturn('mock-snap-token');
 
+    /** @var User $user */
     $response = actingAs($user)
         ->postJson(route('pos.qris-token'), [
             'amount' => 999999,
@@ -156,7 +158,7 @@ it('passes validated customer_name to snap token', function () {
 });
 
 it('rejects unauthenticated requests', function () {
-    $response = $this->postJson(route('pos.qris-token'), [
+    $response = postJson(route('pos.qris-token'), [
         'amount' => 50000,
         'customer_name' => 'John Doe',
     ]);

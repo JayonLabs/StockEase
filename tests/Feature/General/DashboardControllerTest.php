@@ -26,7 +26,7 @@ it('renders admin dashboard with correct data', function () {
     Sale::factory()->create([
         'user_id' => $admin->id,
         'total' => 2000,
-        'date' => Carbon::now()->subMonth()->startOfMonth()->toDateString(),
+        'date' => Carbon::now()->subMonthNoOverflow()->startOfMonth()->toDateString(),
     ]); // Should not be in this month's total
 
     // Create low stock products

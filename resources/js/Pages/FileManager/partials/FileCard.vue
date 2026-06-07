@@ -62,8 +62,7 @@ const handleDelete = async (filePath) => {
             toast.success(response.data.message);
             isDialogOpen.value = false;
         })
-        .catch((error) => {
-            console.log(error);
+        .catch((_error) => {
             toast.error('File gagal dihapus');
         })
         .finally(() => {
@@ -81,6 +80,7 @@ const handleDelete = async (filePath) => {
             <DropdownMenu>
                 <DropdownMenuTrigger as-child>
                     <Button
+                        aria-label="Menu file"
                         variant="ghost"
                         size="icon"
                         class="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/80 focus-visible:ring-0 focus-visible:ring-offset-0"

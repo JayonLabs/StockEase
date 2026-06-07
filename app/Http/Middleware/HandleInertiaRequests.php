@@ -57,8 +57,46 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $userData,
+                'subscription' => $user
+                    ? fn () => $this->getSubscription($user)
+                    : null,
             ],
             'notifications' => fn () => $this->getNotifications($request),
+        ];
+    }
+
+    /**
+     * Get the subscription data for the authenticated user.
+     */
+    private function getSubscription($user): ?array
+    {
+        $company = $user->company;
+
+        if (! $company) {
+            return null;
+        }
+
+        $subscription = $company->activeSubscription();
+
+        if (! $subscription) {
+            return null;
+        }
+
+        return [
+            'id' => $subscription->id,
+            'status' => $subscription->status,
+            'billing_cycle' => $subscription->billing_cycle,
+            'starts_at' => $subscription->starts_at,
+            'ends_at' => $subscription->ends_at,
+            'trial_ends_at' => $subscription->trial_ends_at,
+            'plan' => [
+                'id' => $subscription->plan->id,
+                'name' => $subscription->plan->name,
+                'slug' => $subscription->plan->slug,
+                'max_products' => $subscription->plan->max_products,
+                'max_users' => $subscription->plan->max_users,
+                'max_warehouses' => $subscription->plan->max_warehouses,
+            ],
         ];
     }
 

@@ -4,7 +4,7 @@ use App\Http\Controllers\Payment\PaymentController;
 use App\Http\Controllers\Sale\PosController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('pos')->middleware('auth', 'role:admin, cashier')->group(function () {
+Route::prefix('pos')->middleware('auth', 'role:super_admin, admin, cashier')->group(function () {
     Route::get('/', [PosController::class, 'index'])->name('pos.index');
     Route::post('/set-warehouse', [PosController::class, 'setWarehouse'])->name('pos.set-warehouse');
     Route::patch('/change-qty', [PosController::class, 'changeQty'])->name('pos.change-qty');

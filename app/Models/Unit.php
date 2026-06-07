@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\Concerns\BelongsToTenant;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Database\Factories\UnitFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,7 +15,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Unit extends Model
 {
     /** @use HasFactory<UnitFactory> */
-    use HasFactory, LogsActivity, Sluggable, SoftDeletes;
+    use BelongsToTenant, HasFactory, LogsActivity, Sluggable, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -64,5 +65,17 @@ class Unit extends Model
             ->logAll()
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
+    }
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'company_id' => 'integer',
+        ];
     }
 }

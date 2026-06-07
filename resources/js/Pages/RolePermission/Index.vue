@@ -114,6 +114,7 @@ const props = defineProps({
                                             "
                                         >
                                             <Button
+                                                aria-label="Kelola permission"
                                                 variant="ghost"
                                                 size="icon"
                                                 class="group"

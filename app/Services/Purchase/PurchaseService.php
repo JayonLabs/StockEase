@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\DB;
 
 class PurchaseService
 {
+    /**
+     * Create a new service instance.
+     */
     public function __construct(
         private readonly UpdateProductExpiryDate $updateProductExpiryDate,
     ) {}
@@ -100,9 +103,14 @@ class PurchaseService
             ]);
 
             $totalPurchase = 0;
-            $products = Product::whereIn('id', collect($data['product_items'])->pluck('product_id'))
-                ->get()
-                ->keyBy('id');
+            $productIds = collect($data['product_items'])->pluck('product_id');
+            $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+
+            $warehouseStocks = DB::table('warehouse_product')
+                ->where('warehouse_id', $warehouse->id)
+                ->whereIn('product_id', $productIds)
+                ->lockForUpdate()
+                ->pluck('stock', 'product_id');
 
             foreach ($data['product_items'] as $item) {
                 $subtotal = $item['qty'] * $item['price'];
@@ -124,7 +132,7 @@ class PurchaseService
                 // Add received stock to the destination warehouse
                 $warehouse->products()->syncWithoutDetaching([
                     $product->id => [
-                        'stock' => $product->stockInWarehouse($warehouse->id) + $item['qty'],
+                        'stock' => (int) ($warehouseStocks[$product->id] ?? 0) + $item['qty'],
                     ],
                 ]);
 
@@ -173,16 +181,26 @@ class PurchaseService
 
             $totalPurchase = 0;
             $productIds = collect($data['product_items'])->pluck('product_id');
-            $products = Product::whereIn('id', $productIds)->get()->keyBy('id');
+
+            // Load existing items first so we can batch-load all product IDs in one query
+            $existingItems = PurchaseItem::where('purchase_id', $purchase->id)->get()->keyBy('product_id');
+
+            $allProductIds = $existingItems->keys()->merge($productIds)->unique();
+            $products = Product::whereIn('id', $allProductIds)->get()->keyBy('id');
+
+            $warehouseStocks = DB::table('warehouse_product')
+                ->where('warehouse_id', $warehouse->id)
+                ->whereIn('product_id', $allProductIds)
+                ->lockForUpdate()
+                ->pluck('stock', 'product_id');
 
             // Rollback deleted items from the warehouse
-            $existingItems = PurchaseItem::where('purchase_id', $purchase->id)->get()->keyBy('product_id');
             foreach ($existingItems as $existingItem) {
                 if (! $productIds->contains($existingItem->product_id)) {
                     /** @var Product|null $product */
-                    $product = Product::find($existingItem->product_id);
+                    $product = $products->get($existingItem->product_id);
                     if ($product) {
-                        $currentStock = $product->stockInWarehouse($warehouse->id);
+                        $currentStock = (int) ($warehouseStocks[$product->id] ?? 0);
                         if ($currentStock < $existingItem->qty) {
                             throw new \Exception("Tidak dapat menghapus item pembelian {$product->name} karena stok di {$warehouse->name} tidak mencukupi.");
                         }
@@ -221,7 +239,7 @@ class PurchaseService
                         'expiry_date' => $item['expiry_date'] ?? null,
                     ]);
 
-                    $currentStock = $product->stockInWarehouse($warehouse->id);
+                    $currentStock = (int) ($warehouseStocks[$product->id] ?? 0);
                     $newWarehouseStock = $currentStock + $diffQty;
                     if ($newWarehouseStock < 0) {
                         throw new \Exception("Tidak dapat mengurangi qty pembelian {$product->name} karena stok di {$warehouse->name} tidak mencukupi.");
@@ -241,7 +259,7 @@ class PurchaseService
                     ]);
                     $warehouse->products()->syncWithoutDetaching([
                         $product->id => [
-                            'stock' => $product->stockInWarehouse($warehouse->id) + $item['qty'],
+                            'stock' => (int) ($warehouseStocks[$product->id] ?? 0) + $item['qty'],
                         ],
                     ]);
                     $diffQty = $item['qty'];
@@ -281,8 +299,15 @@ class PurchaseService
             /** @var Warehouse $warehouse */
             $warehouse = Warehouse::findOrFail($purchase->warehouse_id);
 
-            $purchaseItems = PurchaseItem::where('purchase_id', $purchase->id)->get();
-            $products = Product::whereIn('id', $purchaseItems->pluck('product_id'))->get();
+            $purchaseItems = PurchaseItem::where('purchase_id', $purchase->id)->lockForUpdate()->get();
+            $productIds = $purchaseItems->pluck('product_id');
+            $products = Product::whereIn('id', $productIds)->lockForUpdate()->get();
+
+            DB::table('warehouse_product')
+                ->where('warehouse_id', $warehouse->id)
+                ->whereIn('product_id', $productIds)
+                ->lockForUpdate()
+                ->get();
 
             foreach ($purchaseItems as $purchaseItem) {
                 /** @var Product|null $product */

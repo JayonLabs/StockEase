@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PriceHistory extends Model
 {
-    use HasFactory, SoftDeletes;
+    use BelongsToTenant, HasFactory, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -38,6 +39,7 @@ class PriceHistory extends Model
             'new_purchase_price' => 'decimal:4',
             'old_selling_price' => 'decimal:4',
             'new_selling_price' => 'decimal:4',
+            'company_id' => 'integer',
         ];
     }
 

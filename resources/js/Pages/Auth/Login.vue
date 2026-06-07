@@ -1,7 +1,7 @@
 <script setup>
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
-import { Head, useForm } from '@inertiajs/vue3';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
@@ -63,7 +63,7 @@ const showPassword = () => {
                 <AlertDescription>
                     Aplikasi ini hanya untuk keperluan demo.
                     <br class="mt-2" />
-                    Gunakan email: dewajayon3@gmail.com
+                    Gunakan email: superadmin@dewajayon.my.id
                     <br />
                     dan password: password
                 </AlertDescription>
@@ -142,6 +142,12 @@ const showPassword = () => {
                     </form>
                 </CardContent>
             </Card>
+            <div class="text-center text-sm text-muted-foreground">
+                Belum punya akun?
+                <Link :href="route('register')" class="underline hover:text-foreground">
+                    Daftar
+                </Link>
+            </div>
         </div>
     </GuestLayout>
 </template>

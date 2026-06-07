@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Enums\Role;
 use App\Models\User;
 use Database\Seeders\PermissionSeeder;
+use Database\Seeders\UserSeeder;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Permission;
@@ -108,10 +109,10 @@ class SeedProduction extends Command
         $this->line('👤 Menyiapkan admin user...');
 
         $user = User::firstOrCreate(
-            ['email' => 'dewajayon3@gmail.com'],
+            ['email' => UserSeeder::DEMO_EMAIL],
             [
                 'name' => 'Dewa Jayon',
-                'password' => Hash::make('password'),
+                'password' => Hash::make(UserSeeder::DEMO_PASSWORD),
             ]
         );
 

@@ -7,6 +7,7 @@ use App\Enums\Role;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Purchase;
+use App\Models\Sale;
 use App\Models\Shift;
 use App\Models\Supplier;
 use App\Models\User;
@@ -14,6 +15,7 @@ use App\Policies\CategoryPolicy;
 use App\Policies\PermissionPolicy;
 use App\Policies\ProductPolicy;
 use App\Policies\PurchasePolicy;
+use App\Policies\SalePolicy;
 use App\Policies\ShiftPolicy;
 use App\Policies\SupplierPolicy;
 use App\Policies\UserPolicy;
@@ -23,6 +25,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Activitylog\Models\Activity;
 use Spatie\Permission\Models\Permission;
 
 class AppServiceProvider extends ServiceProvider
@@ -46,13 +49,14 @@ class AppServiceProvider extends ServiceProvider
 
         Password::defaults(fn () => Password::min(8)->letters()->mixedCase()->numbers()->symbols());
 
-        // Force HTTPS in local
+        // Force HTTPS in local development in production alerdy force HTTPS
         if (app()->isLocal()) {
             URL::forceScheme('https');
         }
 
         $this->registerPolicies();
         $this->registerSuperAdminGate();
+        $this->registerActivityLogTenantScope();
     }
 
     /**
@@ -67,6 +71,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Category::class, CategoryPolicy::class);
         Gate::policy(Supplier::class, SupplierPolicy::class);
         Gate::policy(Purchase::class, PurchasePolicy::class);
+        Gate::policy(Sale::class, SalePolicy::class);
         Gate::policy(Shift::class, ShiftPolicy::class);
         Gate::policy(Permission::class, PermissionPolicy::class);
     }
@@ -90,6 +95,30 @@ class AppServiceProvider extends ServiceProvider
             }
 
             return null;
+        });
+    }
+
+    /**
+     * Auto-set company_id on activity log entries.
+     */
+    private function registerActivityLogTenantScope(): void
+    {
+        Activity::creating(function (Activity $activity) {
+            if ($activity->company_id) {
+                return;
+            }
+
+            if ($activity->subject && $activity->subject->company_id) {
+                $activity->company_id = $activity->subject->company_id;
+
+                return;
+            }
+
+            if ($causer = $activity->causer) {
+                if ($causer->company_id) {
+                    $activity->company_id = $causer->company_id;
+                }
+            }
         });
     }
 }

@@ -1,4 +1,4 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import { usePage } from '@inertiajs/vue3';
 import { formatRelative } from '@/lib/utils';
@@ -8,11 +8,26 @@ const notifications = ref([]);
 const initialized = ref(false);
 let echoSubscribed = false;
 
+export function resetNotifications() {
+    notifications.value = [];
+    initialized.value = false;
+    echoSubscribed = false;
+}
+
 export function useNotifications() {
     const page = usePage();
 
     const unreadCount = computed(
         () => notifications.value.filter((n) => !n.read_at).length,
+    );
+
+    watch(
+        () => page.props.auth?.user,
+        (newUser) => {
+            if (!newUser) {
+                resetNotifications();
+            }
+        },
     );
 
     const fetchNotifications = async () => {
@@ -30,8 +45,8 @@ export function useNotifications() {
                 created_at: notif.created_at,
                 time_ago: formatRelative(notif.created_at),
             }));
-        } catch (error) {
-            console.error('Failed to fetch notifications:', error);
+        } catch (_error) {
+            console.error('Failed to fetch notifications');
         }
     };
 
@@ -81,8 +96,8 @@ export function useNotifications() {
                     ? { ...n, read_at: new Date().toISOString() }
                     : n,
             );
-        } catch (error) {
-            console.error('Failed to mark notification as read:', error);
+        } catch (_error) {
+            console.error('Failed to mark notification as read');
         }
     };
 
@@ -93,8 +108,8 @@ export function useNotifications() {
                 ...n,
                 read_at: new Date().toISOString(),
             }));
-        } catch (error) {
-            console.error('Failed to mark all notifications as read:', error);
+        } catch (_error) {
+            console.error('Failed to mark all notifications as read');
         }
     };
 
@@ -106,8 +121,8 @@ export function useNotifications() {
             notifications.value = notifications.value.filter(
                 (n) => n.id !== notificationId,
             );
-        } catch (error) {
-            console.error('Failed to delete notification:', error);
+        } catch (_error) {
+            console.error('Failed to delete notification');
         }
     };
 
@@ -118,5 +133,6 @@ export function useNotifications() {
         markAsRead,
         markAllAsRead,
         deleteNotification,
+        resetNotifications,
     };
 }

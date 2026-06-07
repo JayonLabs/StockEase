@@ -6,7 +6,9 @@ use App\Enums\SaleStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Payment\CreateMidtransTransactionRequest;
 use App\Models\Sale;
+use App\Models\SubscriptionInvoice;
 use App\Services\Payment\PaymentService;
+use App\Services\Subscription\SubscriptionService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -50,6 +52,14 @@ class PaymentController extends Controller
             $rawBody = $request->getContent();
             $notificationData = json_decode($rawBody, true);
 
+            $orderId = $notificationData['order_id'];
+
+            if (str_starts_with($orderId, 'SUB-')) {
+                $this->handleSubscriptionNotification((object) $notificationData);
+
+                return;
+            }
+
             $result = $this->paymentService->handleNotification($notificationData, $rawBody);
 
             return response()->json(['message' => $result['message']], $result['status']);
@@ -57,6 +67,37 @@ class PaymentController extends Controller
             $code = $th->getCode() ?: 500;
 
             return response()->json(['message' => $th->getMessage()], is_numeric($code) && $code >= 100 && $code < 600 ? $code : 500);
+        }
+    }
+
+    /**
+     * Handle a Midtrans subscription notification.
+     */
+    private function handleSubscriptionNotification(object $notification): void
+    {
+        $invoice = SubscriptionInvoice::where(
+            'midtrans_order_id',
+            $notification->order_id
+        )->firstOrFail();
+
+        $transactionStatus = $notification->transaction_status;
+
+        if (in_array($transactionStatus, ['settlement', 'capture'])) {
+            $invoice->update([
+                'status' => 'paid',
+                'midtrans_transaction_id' => $notification->transaction_id,
+                'midtrans_payment_type' => $notification->payment_type,
+                'midtrans_raw_response' => (array) $notification,
+                'paid_at' => now(),
+            ]);
+
+            app(SubscriptionService::class)->activateSubscription(
+                $invoice->subscription
+            );
+        }
+
+        if (in_array($transactionStatus, ['deny', 'cancel', 'expire'])) {
+            $invoice->update(['status' => 'failed']);
         }
     }
 }

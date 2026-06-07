@@ -110,6 +110,7 @@ function handleApply() {
                     Pilih tanggal
                 </SheetTitle>
                 <Button
+                    aria-label="Tutup"
                     variant="ghost"
                     size="icon"
                     class="rounded-full h-9 w-9"

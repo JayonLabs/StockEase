@@ -6,6 +6,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+import LandingLayout from '@/Layouts/LandingLayout.vue';
 import MainLayout from '@/Layouts/MainLayout.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
@@ -21,6 +22,8 @@ createInertiaApp({
         page.then((module) => {
             if (name.startsWith('Auth/')) {
                 module.default.layout = undefined;
+            } else if (name.startsWith('Landing/')) {
+                module.default.layout = LandingLayout;
             } else if (!module.default.layout) {
                 module.default.layout = MainLayout;
             }

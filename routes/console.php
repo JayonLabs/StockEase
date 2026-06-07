@@ -14,3 +14,5 @@ Schedule::command('queue:work --stop-when-empty --sleep=10 --timeout=30 --max-ti
     ->environments(['production'])
     ->sendOutputTo(storage_path('logs/queue-worker.log'))
     ->description('Process queued jobs safely on shared hosting with CPU limits');
+
+Schedule::command('subscription:downgrade-expired')->daily();

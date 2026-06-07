@@ -1,0 +1,1039 @@
+<!doctype html>
+<html class="scroll-smooth" lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <title>
+            StockEase - Simplify Sales, Inventory &amp; Payments Effortlessly
+        </title>
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+            rel="stylesheet"
+        />
+        <style>
+            .material-symbols-outlined {
+                font-variation-settings:
+                    'FILL' 0,
+                    'wght' 400,
+                    'GRAD' 0,
+                    'opsz' 24;
+            }
+
+            .glass-card {
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+            }
+
+            .dark .glass-card {
+                background: rgba(30, 41, 59, 0.7);
+            }
+
+            @keyframes float {
+                0% {
+                    transform: translateY(0px);
+                }
+
+                50% {
+                    transform: translateY(-10px);
+                }
+
+                100% {
+                    transform: translateY(0px);
+                }
+            }
+
+            .floating {
+                animation: float 6s ease-in-out infinite;
+            }
+        </style>
+        <script id="tailwind-config">
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            'on-secondary-fixed-variant': '#0b513d',
+                            'inverse-primary': '#4edea3',
+                            surface: '#f8f9ff',
+                            tertiary: '#55615f',
+                            'on-surface-variant': '#3c4a42',
+                            'surface-container-lowest': '#ffffff',
+                            'inverse-surface': '#213145',
+                            'secondary-container': '#adedd3',
+                            'surface-variant': '#d3e4fe',
+                            'on-error': '#ffffff',
+                            'primary-fixed': '#6ffbbe',
+                            'on-surface': '#0b1c30',
+                            'error-container': '#ffdad6',
+                            'on-primary': '#ffffff',
+                            'outline-variant': '#bbcabf',
+                            'surface-tint': '#006c49',
+                            'on-error-container': '#93000a',
+                            'on-primary-fixed-variant': '#005236',
+                            primary: '#006c49',
+                            'surface-bright': '#f8f9ff',
+                            'on-tertiary-container': '#2f3b39',
+                            'tertiary-container': '#98a5a3',
+                            'primary-container': '#10b981',
+                            'surface-dim': '#cbdbf5',
+                            'primary-fixed-dim': '#4edea3',
+                            'on-tertiary': '#ffffff',
+                            'surface-container': '#e5eeff',
+                            'surface-container-highest': '#d3e4fe',
+                            'on-secondary': '#ffffff',
+                            secondary: '#2b6954',
+                            'on-primary-container': '#00422b',
+                            'surface-container-high': '#dce9ff',
+                            'on-background': '#0b1c30',
+                            'on-secondary-fixed': '#002117',
+                            outline: '#6c7a71',
+                            'surface-container-low': '#eff4ff',
+                            'tertiary-fixed-dim': '#bcc9c6',
+                            'on-tertiary-fixed-variant': '#3d4947',
+                            'on-tertiary-fixed': '#121e1c',
+                            'on-primary-fixed': '#002113',
+                            'secondary-fixed': '#b0f0d6',
+                            error: '#ba1a1a',
+                            background: '#f8f9ff',
+                            'inverse-on-surface': '#eaf1ff',
+                            'tertiary-fixed': '#d8e5e2',
+                            'on-secondary-container': '#306d58',
+                            'secondary-fixed-dim': '#95d3ba',
+                        },
+                        borderRadius: {
+                            DEFAULT: '0.25rem',
+                            lg: '0.5rem',
+                            xl: '0.75rem',
+                            full: '9999px',
+                        },
+                        spacing: {
+                            'margin-mobile': '16px',
+                            unit: '8px',
+                            'container-max': '1440px',
+                            'margin-desktop': '40px',
+                            gutter: '24px',
+                        },
+                        fontFamily: {
+                            'label-sm': ['Inter'],
+                            'headline-lg-mobile': ['Inter'],
+                            'body-lg': ['Inter'],
+                            'body-md': ['Inter'],
+                            'headline-md': ['Inter'],
+                            'display-lg': ['Inter'],
+                            'label-md': ['Inter'],
+                            'headline-lg': ['Inter'],
+                        },
+                        fontSize: {
+                            'label-sm': [
+                                '12px',
+                                { lineHeight: '16px', fontWeight: '600' },
+                            ],
+                            'headline-lg-mobile': [
+                                '28px',
+                                { lineHeight: '36px', fontWeight: '600' },
+                            ],
+                            'body-lg': [
+                                '18px',
+                                { lineHeight: '28px', fontWeight: '400' },
+                            ],
+                            'body-md': [
+                                '16px',
+                                { lineHeight: '24px', fontWeight: '400' },
+                            ],
+                            'headline-md': [
+                                '24px',
+                                { lineHeight: '32px', fontWeight: '600' },
+                            ],
+                            'display-lg': [
+                                '48px',
+                                {
+                                    lineHeight: '56px',
+                                    letterSpacing: '-0.02em',
+                                    fontWeight: '700',
+                                },
+                            ],
+                            'label-md': [
+                                '14px',
+                                { lineHeight: '20px', fontWeight: '500' },
+                            ],
+                            'headline-lg': [
+                                '32px',
+                                {
+                                    lineHeight: '40px',
+                                    letterSpacing: '-0.01em',
+                                    fontWeight: '600',
+                                },
+                            ],
+                        },
+                    },
+                },
+            };
+        </script>
+    </head>
+
+    <body
+        class="bg-background dark:bg-inverse-surface text-on-surface transition-colors duration-300"
+    >
+        <!-- TopNavBar Component -->
+        <header
+            class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-md border-b border-outline-variant/30 dark:border-outline/20 shadow-sm"
+        >
+            <div
+                class="flex justify-between items-center h-20 px-margin-desktop max-w-container-max mx-auto"
+            >
+                <a
+                    class="text-headline-md font-bold text-primary dark:text-inverse-primary tracking-tight"
+                    href="#"
+                    >StockEase</a
+                >
+                <nav class="hidden md:flex items-center space-x-8">
+                    <a
+                        class="text-label-md font-label-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors hover:bg-primary/5 dark:hover:bg-primary-fixed-dim/10 rounded-lg px-3 py-2"
+                        href="#features"
+                        >Features</a
+                    >
+                    <a
+                        class="text-label-md font-label-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors hover:bg-primary/5 dark:hover:bg-primary-fixed-dim/10 rounded-lg px-3 py-2"
+                        href="#pricing"
+                        >Pricing</a
+                    >
+                    <a
+                        class="text-label-md font-label-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors hover:bg-primary/5 dark:hover:bg-primary-fixed-dim/10 rounded-lg px-3 py-2"
+                        href="#why-us"
+                        >Why Us</a
+                    >
+                    <a
+                        class="text-label-md font-label-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors hover:bg-primary/5 dark:hover:bg-primary-fixed-dim/10 rounded-lg px-3 py-2"
+                        href="#testimonials"
+                        >Testimonials</a
+                    >
+                    <a
+                        class="text-label-md font-label-md text-on-surface-variant dark:text-surface-variant hover:text-primary dark:hover:text-inverse-primary transition-colors hover:bg-primary/5 dark:hover:bg-primary-fixed-dim/10 rounded-lg px-3 py-2"
+                        href="#contact"
+                        >Contact</a
+                    >
+                </nav>
+                <div class="flex items-center gap-4">
+                    <button
+                        class="p-2 rounded-full hover:bg-surface-variant dark:hover:bg-surface-container-high transition-colors"
+                        onclick="
+                            document.documentElement.classList.toggle('dark')
+                        "
+                    >
+                        <span class="material-symbols-outlined">dark_mode</span>
+                    </button>
+                    <button
+                        class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full font-label-md text-label-md hover:scale-95 transition-transform duration-150 active:scale-90"
+                    >
+                        Get Started
+                    </button>
+                </div>
+            </div>
+        </header>
+        <!-- Hero Section -->
+        <section
+            class="relative pt-32 pb-20 overflow-hidden bg-gradient-to-b from-primary/5 to-transparent dark:from-primary/10"
+        >
+            <div
+                class="max-w-container-max mx-auto px-margin-desktop text-center transition-all duration-700 opacity-100 translate-y-0"
+            >
+                <div
+                    class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary-container/50 border border-secondary/20 mb-8"
+                >
+                    <span
+                        class="material-symbols-outlined text-[18px] text-secondary"
+                        >verified</span
+                    >
+                    <span
+                        class="text-label-md font-label-md text-on-secondary-container"
+                        >Your smart POS software solution</span
+                    >
+                </div>
+                <h1
+                    class="font-display-lg text-display-lg md:text-[64px] leading-tight mb-6 max-w-4xl mx-auto text-on-surface"
+                >
+                    Simplify Sales, Inventory &amp;
+                    <span class="text-primary italic">Payments</span>
+                    Effortlessly
+                </h1>
+                <p
+                    class="font-body-lg text-body-lg text-on-surface-variant dark:text-surface-variant/80 max-w-2xl mx-auto mb-10"
+                >
+                    Everything you need to run your store smoothly, in one smart
+                    platform. Real-time tracking, automated reporting, and
+                    seamless transactions.
+                </p>
+                <div
+                    class="flex flex-col sm:flex-row gap-4 justify-center mb-20"
+                >
+                    <button
+                        class="bg-primary text-on-primary px-8 py-4 rounded-full font-label-md text-label-md flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all"
+                    >
+                        Get free Demo
+                        <span class="material-symbols-outlined"
+                            >trending_flat</span
+                        >
+                    </button>
+                    <button
+                        class="border-2 border-outline-variant text-on-surface px-8 py-4 rounded-full font-label-md text-label-md hover:bg-surface-variant transition-all"
+                    >
+                        View Pricing
+                    </button>
+                </div>
+                <!-- Product Mockup -->
+                <div class="relative max-w-5xl mx-auto mt-12 group">
+                    <div
+                        class="absolute -inset-4 bg-gradient-to-r from-primary/20 to-secondary/20 blur-3xl rounded-[2rem] opacity-30 group-hover:opacity-50 transition-opacity"
+                    ></div>
+                    <div
+                        class="relative bg-white dark:bg-inverse-surface rounded-2xl shadow-2xl border border-outline-variant/30 overflow-hidden floating"
+                    >
+                        <img
+                            alt="StockEase Dashboard"
+                            class="w-full h-auto"
+                            src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6-MaFCkpApRfcHVYNXmvT_JSPt1VToll1AZMKpBHEMy0kSzmvNS-H0pkIBydFOs6WGovdKnS1uKp9zROWKkdvdG1QRlFFzpU2hKP9OiGKCeV38nod0I5S-L1Zl2nRDDrO5WZsyNAidwsEJKQDclwS9JumyVPJU90X97lmtdqybaUYV4kCdEtO5PgtL-1CiOCBcJKa2y03VmBqF_KmYChxEg9c_Q_RBWc426vvlBz44PUZdR3qTgjfq7_LoMxc1sFJQXi4fFGGFZw"
+                        />
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Trusted By -->
+        <section class="py-12 border-y border-outline-variant/10">
+            <div
+                class="max-w-container-max mx-auto px-margin-desktop text-center transition-all duration-700 opacity-100 translate-y-0"
+            >
+                <p
+                    class="text-label-sm font-label-sm text-outline mb-10 uppercase tracking-widest"
+                >
+                    Trusted by over 120+ companies around the world
+                </p>
+                <div
+                    class="flex flex-wrap justify-center items-center gap-x-16 gap-y-8 grayscale opacity-50 dark:invert"
+                >
+                    <img
+                        alt="Foursquare"
+                        class="h-6"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtjobjmwno3z8sJY2nhe4IkYF_aNZRI2S7Hc7fjk5ky6Xy7WEyN7GxFsPMjGE4P69xkzkvOr85Sn7Y-MVh3YKb5rWn2SgqVAWBZL51jrvB99jYcujpuxh0ZLS7bVJI7BX-2ihRKEx_iVNCO2_5wipmWhOxRR44yIHiX1iravmk7kNxSYq_zP2SemfiTp34sO__x0sosZv7IhXJL6Ta0MmQWtVSNPQ9xuJ2wsXgH0NGJEQnoPS1J6lkQugMbOPjUlODhfAsWRmZ0OQ"
+                    />
+                    <img
+                        alt="Tumblr"
+                        class="h-6"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuDBb5MRoMTwgIt0YtxIpO6OoxdWpKzEpADWQS331BHtnt3TbMsEcdSf1WfEZ3WTtdYU9mTZGbgbOC9VvC6q1J5iXTEehc31XT2PBNjC9455MNRQqJpqEEoV2e_dC8cOxSKn_SooZgKuEsw4C6MaOrKS920Lnx8wRXrTV70Hzt7McTQtTRJ7iXMLei6ry8t0qD1fnbzvRbOwx7SsBoDdNx6Va8H3BzB9dKN-QEs7VpMHBNwAO95tV_XeYRdRykraLTg8JRt_pmdYJ9M"
+                    />
+                    <img
+                        alt="Pinterest"
+                        class="h-6"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtSpG0m2yst03T_jLu6GVp5s-UaHHjG_zfciHD_--YgsEgvjBnHtxSHDuItDGwXZSadme25xxXpDJcpTZCGDXl949phS8DtaNd6-CDZS4Nr5HPqZ3JkZT2zcBr5JLnEhtCAa4gkTbWoAmt-EYKaDJtxpxdE9vELiflgh2Rm5NOBiY4CpuQa58V_N2TYlXMYnxOh2q68vKD1mgjiXtkSg06Rx82QDwvxOUmm3CRGUnm5xXNNxyrEcDvHO3HVAv2-r__fvjApyUtpc8"
+                    />
+                    <img
+                        alt="Twitch"
+                        class="h-6"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuLeaixJT5Qcq-_-cNPJU0CG4tUO9ciZ2MpEjn47dqWIsPryi8Ndn_Ud8p4p2-k5XFsCh7WYxnqsV0zEQLcCJk6FqWsulCX2GBgeEeWp3MfsKg1MeuSEOHFcuXKE2TPOMKEPc8ICYEnPVciZjlSxgWPDmPIwBgNhXQBjmvNsFVHQlVNcMFJI6d9mXf7APjnPRfUuBd4KPrmVet0BvGlkO9ya0_Xmor3pCYTW2oFrR2efU7PPNaBeRWYgBm7rLIfzrdXfNJWTLO7i4"
+                    />
+                    <img
+                        alt="BeReal"
+                        class="h-6"
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrm43A2dflNOB5Io2EeAUURpe4AY95NzBTwuqWSxrzeyMWpLJTfUxieaTTpNwbtW6KfDXVSM8K5Z7gSuOU8S5sbmdZddgqUKr3cWumwAY336_ZFSXyKyK3f8DGnaHc1ybfoujCbUbtDw-uVCdzQIGN_Y7pd83lBYsv9YmL8NAPTF_GEZnhQwhjiMyBShF7SRgUhs6KJiXzLtVmOwGHrsgdCTB9wZ5J_b5vHG7rGCVo1vhc5TigqQRr8tdaiBx9PxgKZE2SAlOm8Is"
+                    />
+                </div>
+            </div>
+        </section>
+        <!-- Features Section -->
+        <section class="py-24 bg-surface dark:bg-inverse-surface" id="features">
+            <div
+                class="max-w-container-max mx-auto px-margin-desktop transition-all duration-700 opacity-100 translate-y-0"
+            >
+                <div class="text-center mb-16">
+                    <h2 class="font-headline-lg text-headline-lg mb-4">
+                        Unlock Premium Benefit with Out Advanced Features
+                    </h2>
+                    <p
+                        class="text-body-md text-on-surface-variant dark:text-surface-variant max-w-xl mx-auto"
+                    >
+                        Our features are designed to scale with your business
+                        growth, ensuring efficiency at every step.
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+                    <!-- Feature Card 1 -->
+                    <div
+                        class="p-8 rounded-3xl bg-surface-container-lowest dark:bg-surface-container border border-outline-variant/20 hover:border-primary/30 transition-all group"
+                    >
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"
+                        >
+                            <span
+                                class="material-symbols-outlined text-primary text-[32px]"
+                                >inventory_2</span
+                            >
+                        </div>
+                        <h3 class="font-headline-md text-headline-md mb-3">
+                            Inventory Management
+                        </h3>
+                        <p
+                            class="text-body-md text-on-surface-variant dark:text-surface-variant"
+                        >
+                            Real-time tracking of stock levels across all
+                            locations. Automated low-stock alerts and reorder
+                            suggestions.
+                        </p>
+                    </div>
+                    <!-- Feature Card 2 -->
+                    <div
+                        class="p-8 rounded-3xl bg-surface-container-lowest dark:bg-surface-container border border-outline-variant/20 hover:border-primary/30 transition-all group"
+                    >
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-secondary/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"
+                        >
+                            <span
+                                class="material-symbols-outlined text-secondary text-[32px]"
+                                >analytics</span
+                            >
+                        </div>
+                        <h3 class="font-headline-md text-headline-md mb-3">
+                            Sales Tracking
+                        </h3>
+                        <p
+                            class="text-body-md text-on-surface-variant dark:text-surface-variant"
+                        >
+                            Comprehensive dashboard for monitoring daily sales,
+                            revenue, and trends. Detailed reports for better
+                            decision-making.
+                        </p>
+                    </div>
+                    <!-- Feature Card 3 -->
+                    <div
+                        class="p-8 rounded-3xl bg-surface-container-lowest dark:bg-surface-container border border-outline-variant/20 hover:border-primary/30 transition-all group"
+                    >
+                        <div
+                            class="w-14 h-14 rounded-2xl bg-primary-container/20 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"
+                        >
+                            <span
+                                class="material-symbols-outlined text-primary text-[32px]"
+                                >account_balance_wallet</span
+                            >
+                        </div>
+                        <h3 class="font-headline-md text-headline-md mb-3">
+                            Seamless Payments
+                        </h3>
+                        <p
+                            class="text-body-md text-on-surface-variant dark:text-surface-variant"
+                        >
+                            Support for all major payment methods. Integrated
+                            terminal support and instant digital receipts for
+                            customers.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Testimonials Section -->
+        <section
+            class="py-24 bg-surface-container-low dark:bg-inverse-surface/50 overflow-hidden"
+            id="testimonials"
+        >
+            <div
+                class="max-w-container-max mx-auto px-margin-desktop transition-all duration-700 opacity-100 translate-y-0"
+            >
+                <div
+                    class="flex flex-col md:flex-row md:items-end justify-between mb-12"
+                >
+                    <div>
+                        <h2 class="font-headline-lg text-headline-lg mb-4">
+                            Trusted by businesses of all shapes and sizes.
+                        </h2>
+                        <div class="flex items-center gap-3">
+                            <div class="flex -space-x-3">
+                                <img
+                                    alt="User"
+                                    class="w-10 h-10 rounded-full border-2 border-white"
+                                    data-alt="A close-up portrait of a young professional woman with a warm, friendly smile, set against a blurred corporate office background. The lighting is soft and natural, emphasizing a high-end SaaS user aesthetic. Her features are clear and professional, radiating confidence and success within a modern business environment."
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBs7O3wm4b_wpf6T5wqAcMZHAPPTIJTqbVa3S0Ue-PAkcm-C_0sxvfxZ-d-SKxNcSCTuyOsjkqvZLobcrrc6n4coCy9-aGsskOk88u7ufEUIWwRrFSQdjLJ4U8_Wvh5_YtmnuyT3NCLDydprsBaP_e9HuxFrEVKkYcB7YtIzdWXctfJFnSqx2x0fPlvlguSjRvy0AwpzQp4Yr7k4oSxZOfAiBfCacYIWfCe2Ek9htaH-Xq3KRrbz6u-6KaiWeDkWG5GLTj6CbmUwbM"
+                                />
+                                <img
+                                    alt="User"
+                                    class="w-10 h-10 rounded-full border-2 border-white"
+                                    data-alt="A portrait of a male business executive with a short beard and professional attire, looking directly at the camera with a look of expertise. The setting is a minimalist, modern office space with subtle emerald accents that align with the brand identity. The shot is polished and clean, conveying trust and professional reliability."
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDvZVZGtsvaHxO9M7pMfO5Fkfz_AkTKlEw_cO-6wAlv3Aaemn6iVA5uxzFSxH0AIdoDH5ppQJZ6aKqeFjX1lb_tGbB4Z7_rC_fTH5jBK9jtY3sr6CEM3D84BRwPoBBWOdqlplnJqwqKeMC8eGV2hokwqLNORFV-6iPNtyQ5vuIyc3-VHMesNVukc8WJtdnz07fNuvJZFzsdWW9gZSN2MYYVIJ-zyxD14HqlTcR6oT73qfPiIFM7iJA3kN-7CayswcYfcTmXwcgfR6Q"
+                                />
+                                <img
+                                    alt="User"
+                                    class="w-10 h-10 rounded-full border-2 border-white"
+                                    data-alt="A smiling young male entrepreneur wearing a clean white shirt, posing in a bright, modern studio. The lighting is crisp and high-key, creating a professional and approachable mood. The image maintains the sleek, minimalist aesthetic of the StockEase platform, representing a satisfied small business owner."
+                                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuBurGNf9bHmXm40xn8IK5WZNyYShvloV7EtJQoXgYchgTc7W5_XsEukYSWF0ykhmmbZU2-08iWc-ObUujK_YUPqKZQbRmgmJINinKoS1zZZ1YqHmznucr_YOr1ynwWSt7qifScbYaC99G-g4RhoyvfJsshqdi07AdSWp2IXMPAwU5eXY6ZW1wEdGQca6nYJ7OrmUx8OZrAsvWz9-Ys2h2ufVGyjSapxnqYzr7ioDvYgVF9FvQ1y30tWloOF1XjMGbGLwku6DIL-q7Q"
+                                />
+                            </div>
+                            <span
+                                class="text-label-md font-label-md text-on-surface"
+                                >+120</span
+                            >
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-6 md:mt-0">
+                        <button
+                            class="bg-primary text-on-primary px-6 py-2.5 rounded-full text-label-md font-label-md"
+                        >
+                            Video Testimonial
+                        </button>
+                        <button
+                            class="bg-primary/10 text-primary px-6 py-2.5 rounded-full text-label-md font-label-md"
+                        >
+                            Testimonial
+                        </button>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+                    <!-- Testimonial Card 1 -->
+                    <div
+                        class="glass-card p-8 rounded-[32px] shadow-sm hover:shadow-md transition-all border border-outline-variant/10"
+                    >
+                        <div class="flex items-center gap-4 mb-6">
+                            <img
+                                alt="Robin Ahmed"
+                                class="w-12 h-12 rounded-full object-cover"
+                                data-alt="A headshot of Robin Ahmed, a professional UI/UX designer, looking confident with a slight smile. He is in a clean, modern studio with soft overhead lighting that emphasizes a high-end professional appearance. The background is a neutral grey that makes the green emerald accents of the UI stand out when placed nearby."
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHSiYvEf_rtgAwRepSZHGuEWXSufA_vt0v2qjQHJF18f9fJEXrLHZlWjiSN-69cj1zLPnO1yTDxpWU_ErATHknGPbSR831xY83Lz13klGr170BZAIOeeXVAL0YudJPndoYi2B2t9neD55WMUVl9g_LfKJz8R7rUP29A1hsqCFluRY5gnT_Dh85hXocFs4-q-VVTKRUQ4wakyeeI8ntFgI7firXYS6uF0dh9LMrSq4cSt9-f8IqxnXugjdHGbDWfSpTmeugTg8Hrlg"
+                            />
+                            <div>
+                                <p
+                                    class="font-label-md text-label-md text-on-surface"
+                                >
+                                    Robin Ahmed
+                                </p>
+                                <p
+                                    class="text-label-sm font-label-sm text-outline"
+                                >
+                                    Retail Manager
+                                </p>
+                            </div>
+                        </div>
+                        <h4 class="font-headline-md text-headline-md mb-3">
+                            Flexible Rewards
+                        </h4>
+                        <p class="text-body-md text-on-surface-variant mb-6">
+                            "StockEase has completely transformed how we manage
+                            our floor sales. The inventory syncing is flawless
+                            and saved us hours of manual work every week."
+                        </p>
+                        <div class="flex text-primary">
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                        </div>
+                    </div>
+                    <!-- Testimonial Card 2 -->
+                    <div
+                        class="glass-card p-8 rounded-[32px] shadow-sm hover:shadow-md transition-all border border-outline-variant/10"
+                    >
+                        <div class="flex items-center gap-4 mb-6">
+                            <img
+                                alt="Khadija"
+                                class="w-12 h-12 rounded-full object-cover"
+                                data-alt="A portrait of Khadija, a business analyst, with a cheerful and professional expression. The photo is taken in a brightly lit, modern environment with soft pastel tones that complement a clean SaaS design. The lighting is bright and airy, giving a sense of openness and professional transparency."
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuALzndLgTAZZDd5-6ErJ4fSdG1sDueeJVB7jbAxhqAT0ZnckPyaGDTEredJOPsxjHfniwm5GzX7kIIm_oRaZRboRylODOEMH3O9B2eNjB7WkQrGLd3uOW7FU4QkVjpJ1V-Nx3sncbGn3gd4hlNAmPk8UccpTazHIR8Dhf0tb7S3UsA67cquqndSe5V-DyOr2MEEhUSYOHoVA_sigaB-Hy31bolDyhhq01t-bQoMotPsFBWpu_94woPEaSDMkrNrlQ6YUZQFx71YVIY"
+                            />
+                            <div>
+                                <p
+                                    class="font-label-md text-label-md text-on-surface"
+                                >
+                                    Khadija
+                                </p>
+                                <p
+                                    class="text-label-sm font-label-sm text-outline"
+                                >
+                                    Boutique Owner
+                                </p>
+                            </div>
+                        </div>
+                        <h4 class="font-headline-md text-headline-md mb-3">
+                            Seamless Experience
+                        </h4>
+                        <p class="text-body-md text-on-surface-variant mb-6">
+                            "The interface is so intuitive my team didn't even
+                            need a training manual. Our checkout process is 40%
+                            faster than before."
+                        </p>
+                        <div class="flex text-primary">
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                        </div>
+                    </div>
+                    <!-- Testimonial Card 3 -->
+                    <div
+                        class="glass-card p-8 rounded-[32px] shadow-sm hover:shadow-md transition-all border border-outline-variant/10"
+                    >
+                        <div class="flex items-center gap-4 mb-6">
+                            <img
+                                alt="Arpita"
+                                class="w-12 h-12 rounded-full object-cover"
+                                data-alt="A headshot of Arpita, an operations lead, showcasing a serious yet friendly professional demeanor. The lighting is dramatic yet controlled, suggesting a high-level corporate atmosphere. The focus is sharp on her expression, symbolizing the precision and reliability that StockEase brings to business operations."
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbvFkugA7-eWJZ5sB64dXwtjqlW4oMK05cfVdGlSM3V1o7UzdtH3CnLWI9zTe2DuwS3hKsREx1w7wy3aLpjmAv_Xu9VBvf6pYcuEYwIveCRlEOwSh9Z3zuBA_tcw4KffGnTw0EP6sosUoMa-5FykfykdxhjlkqGk8yfh74_9jGIXRkNDVFaCAfb_ufFyD8WOQnCecGZ1c8StAbrxAUVg4X44aDNOYAW-r-FzvumldhPfUauy78N_pXMtwN-3Zrc10-PzpAFC18uqE"
+                            />
+                            <div>
+                                <p
+                                    class="font-label-md text-label-md text-on-surface"
+                                >
+                                    Arpita
+                                </p>
+                                <p
+                                    class="text-label-sm font-label-sm text-outline"
+                                >
+                                    Warehouse Lead
+                                </p>
+                            </div>
+                        </div>
+                        <h4 class="font-headline-md text-headline-md mb-3">
+                            Excellent Analytics
+                        </h4>
+                        <p class="text-body-md text-on-surface-variant mb-6">
+                            "The reporting tools are a game-changer. We can see
+                            exactly which items are moving and where we need to
+                            adjust our purchasing."
+                        </p>
+                        <div class="flex text-primary">
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                            <span
+                                class="material-symbols-outlined"
+                                style="font-variation-settings: 'FILL' 1"
+                                >star</span
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- FAQ Section -->
+        <section class="py-24 bg-surface dark:bg-inverse-surface" id="faqs">
+            <div
+                class="max-w-3xl mx-auto px-margin-desktop transition-all duration-700 opacity-100 translate-y-0"
+            >
+                <div class="text-center mb-16">
+                    <h2 class="font-headline-lg text-headline-lg mb-4">
+                        Frequently asked questions
+                    </h2>
+                    <p
+                        class="text-body-md text-on-surface-variant dark:text-surface-variant"
+                    >
+                        Find quick answers to common queries from our growing
+                        community.
+                    </p>
+                </div>
+                <div class="space-y-4">
+                    <!-- FAQ Item 1 -->
+                    <details
+                        class="group bg-surface-container-lowest dark:bg-surface-container rounded-2xl border border-outline-variant/20 overflow-hidden"
+                        open=""
+                    >
+                        <summary
+                            class="flex items-center justify-between p-6 cursor-pointer list-none font-label-md text-label-md text-on-surface"
+                        >
+                            How do I manage multiple businesses with one login?
+                            <span
+                                class="material-symbols-outlined transition-transform group-open:rotate-180"
+                                >expand_more</span
+                            >
+                        </summary>
+                        <div
+                            class="p-6 pt-0 text-body-md text-on-surface-variant"
+                        >
+                            You can manage multiple business locations or
+                            entities from one secure login. Easily switch
+                            between stores, track consolidated sales, and manage
+                            staff activities through a unified dashboard.
+                        </div>
+                    </details>
+                    <!-- FAQ Item 2 -->
+                    <details
+                        class="group bg-surface-container-lowest dark:bg-surface-container rounded-2xl border border-outline-variant/20 overflow-hidden"
+                    >
+                        <summary
+                            class="flex items-center justify-between p-6 cursor-pointer list-none font-label-md text-label-md text-on-surface"
+                        >
+                            How much does StockEase cost?
+                            <span
+                                class="material-symbols-outlined transition-transform group-open:rotate-180"
+                                >expand_more</span
+                            >
+                        </summary>
+                        <div
+                            class="p-6 pt-0 text-body-md text-on-surface-variant"
+                        >
+                            We offer flexible pricing plans starting from basic
+                            tiers for small shops to enterprise solutions.
+                            Please visit our pricing page for detailed
+                            comparisons.
+                        </div>
+                    </details>
+                    <!-- FAQ Item 3 -->
+                    <details
+                        class="group bg-surface-container-lowest dark:bg-surface-container rounded-2xl border border-outline-variant/20 overflow-hidden"
+                    >
+                        <summary
+                            class="flex items-center justify-between p-6 cursor-pointer list-none font-label-md text-label-md text-on-surface"
+                        >
+                            Is there a free version of StockEase?
+                            <span
+                                class="material-symbols-outlined transition-transform group-open:rotate-180"
+                                >expand_more</span
+                            >
+                        </summary>
+                        <div
+                            class="p-6 pt-0 text-body-md text-on-surface-variant"
+                        >
+                            Yes, we offer a 14-day free trial with full access
+                            to all premium features so you can experience the
+                            value firsthand.
+                        </div>
+                    </details>
+                    <!-- FAQ Item 4 -->
+                    <details
+                        class="group bg-surface-container-lowest dark:bg-surface-container rounded-2xl border border-outline-variant/20 overflow-hidden"
+                    >
+                        <summary
+                            class="flex items-center justify-between p-6 cursor-pointer list-none font-label-md text-label-md text-on-surface"
+                        >
+                            Does StockEase have a monthly fee?
+                            <span
+                                class="material-symbols-outlined transition-transform group-open:rotate-180"
+                                >expand_more</span
+                            >
+                        </summary>
+                        <div
+                            class="p-6 pt-0 text-body-md text-on-surface-variant"
+                        >
+                            Yes, StockEase follows a SaaS subscription model
+                            billed monthly or annually at a discounted rate.
+                        </div>
+                    </details>
+                </div>
+            </div>
+        </section>
+        <!-- CTA Section -->
+        <section class="py-24 px-margin-desktop">
+            <div
+                class="max-w-container-max mx-auto bg-primary dark:bg-surface-container rounded-[3rem] p-12 md:p-20 text-center text-on-primary dark:text-on-surface relative overflow-hidden transition-all duration-700 opacity-100 translate-y-0"
+            >
+                <div
+                    class="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-3xl"
+                ></div>
+                <div
+                    class="absolute bottom-0 left-0 w-64 h-64 bg-black/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-3xl"
+                ></div>
+                <h2 class="font-display-lg text-display-lg mb-6 relative z-10">
+                    Ready to Scale Your Business?
+                </h2>
+                <p
+                    class="text-body-lg mb-10 max-w-xl mx-auto opacity-90 relative z-10"
+                >
+                    Join 5,000+ business owners who trust StockEase for their
+                    daily operations.
+                </p>
+                <div
+                    class="flex flex-col sm:flex-row gap-4 justify-center relative z-10"
+                >
+                    <button
+                        class="bg-white text-primary px-8 py-4 rounded-full font-label-md text-label-md hover:scale-105 transition-transform"
+                    >
+                        Get Started for Free
+                    </button>
+                    <button
+                        class="border border-white/30 text-white px-8 py-4 rounded-full font-label-md text-label-md hover:bg-white/10 transition-colors"
+                    >
+                        Book a Demo
+                    </button>
+                </div>
+            </div>
+        </section>
+        <!-- Footer Component -->
+        <footer
+            class="bg-inverse-surface dark:bg-surface-container-lowest text-inverse-primary dark:text-primary w-full py-16 border-t border-outline/10"
+        >
+            <div
+                class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-gutter px-margin-desktop max-w-container-max mx-auto"
+            >
+                <div class="col-span-2">
+                    <div
+                        class="text-headline-md font-black text-white dark:text-primary mb-4"
+                    >
+                        StockEase
+                    </div>
+                    <p
+                        class="text-surface-variant/70 dark:text-on-surface-variant/70 text-body-md font-body-md mb-6 max-w-xs"
+                    >
+                        © 2024 StockEase ERP. All rights reserved. Precision in
+                        every transaction.
+                    </p>
+                    <div class="flex gap-4">
+                        <a
+                            class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors text-white"
+                            href="#"
+                        >
+                            <span class="material-symbols-outlined text-[20px]"
+                                >public</span
+                            >
+                        </a>
+                        <a
+                            class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors text-white"
+                            href="#"
+                        >
+                            <span class="material-symbols-outlined text-[20px]"
+                                >chat</span
+                            >
+                        </a>
+                        <a
+                            class="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-primary transition-colors text-white"
+                            href="#"
+                        >
+                            <span class="material-symbols-outlined text-[20px]"
+                                >campaign</span
+                            >
+                        </a>
+                    </div>
+                </div>
+                <div>
+                    <h5 class="text-white dark:text-on-surface font-bold mb-6">
+                        Product
+                    </h5>
+                    <ul class="space-y-4 text-label-sm font-label-sm">
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >Features</a
+                            >
+                        </li>
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >Pricing</a
+                            >
+                        </li>
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >Security</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-white dark:text-on-surface font-bold mb-6">
+                        Resources
+                    </h5>
+                    <ul class="space-y-4 text-label-sm font-label-sm">
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >Documentation</a
+                            >
+                        </li>
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >Help Center</a
+                            >
+                        </li>
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >API</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-white dark:text-on-surface font-bold mb-6">
+                        Company
+                    </h5>
+                    <ul class="space-y-4 text-label-sm font-label-sm">
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >About Us</a
+                            >
+                        </li>
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >Careers</a
+                            >
+                        </li>
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >Contact</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h5 class="text-white dark:text-on-surface font-bold mb-6">
+                        Legal
+                    </h5>
+                    <ul class="space-y-4 text-label-sm font-label-sm">
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >Privacy Policy</a
+                            >
+                        </li>
+                        <li class="">
+                            <a
+                                class="text-surface-variant/70 dark:text-on-surface-variant/70 hover:text-primary-fixed dark:hover:text-primary transition-all underline-offset-4 hover:underline"
+                                href="#"
+                                >Terms of Service</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+        <script>
+            // Simple scroll spy for active navigation state
+            window.addEventListener('scroll', () => {
+                const sections = document.querySelectorAll('section');
+                const navLinks = document.querySelectorAll('nav a');
+
+                let current = '';
+                sections.forEach((section) => {
+                    const sectionTop = section.offsetTop;
+                    if (pageYOffset >= sectionTop - 120) {
+                        current = section.getAttribute('id');
+                    }
+                });
+
+                navLinks.forEach((link) => {
+                    link.classList.remove(
+                        'text-primary',
+                        'dark:text-inverse-primary',
+                        'font-bold',
+                        'border-b-2',
+                        'border-primary',
+                    );
+                    if (link.getAttribute('href') === `#${current}`) {
+                        link.classList.add(
+                            'text-primary',
+                            'dark:text-inverse-primary',
+                            'font-bold',
+                            'border-b-2',
+                            'border-primary',
+                        );
+                    }
+                });
+            });
+
+            // Intersection Observer for scroll animations
+            const observerOptions = {
+                threshold: 0.1,
+            };
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add(
+                            'opacity-100',
+                            'translate-y-0',
+                        );
+                        entry.target.classList.remove(
+                            'opacity-0',
+                            'translate-y-10',
+                        );
+                    }
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('section > div').forEach((el) => {
+                el.classList.add(
+                    'transition-all',
+                    'duration-700',
+                    'opacity-0',
+                    'translate-y-10',
+                );
+                observer.observe(el);
+            });
+        </script>
+    </body>
+</html>

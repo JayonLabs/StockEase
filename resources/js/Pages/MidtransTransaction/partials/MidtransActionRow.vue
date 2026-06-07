@@ -41,7 +41,7 @@ const formattedJson = computed(() => {
     <div class="flex items-center justify-start">
         <Dialog>
             <DialogTrigger>
-                <Button variant="ghost" size="icon">
+                <Button aria-label="Lihat detail" variant="ghost" size="icon">
                     <Eye
                         class="w-4 h-4 text-blue-500 dark:group-hover:text-white"
                     />

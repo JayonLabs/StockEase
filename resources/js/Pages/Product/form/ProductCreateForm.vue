@@ -3,7 +3,7 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Button } from '@/Components/ui/button';
 import { Label } from '@/Components/ui/label';
 import { Input } from '@/Components/ui/input';
-import { nextTick, ref, watch } from 'vue';
+import { nextTick, onUnmounted, ref, watch } from 'vue';
 import { cn } from '@/lib/utils';
 import { Head, Link, useForm, usePage } from '@inertiajs/vue3';
 import { Separator } from '@/Components/ui/separator';
@@ -186,6 +186,13 @@ watch(showScannerModal, (newVal) => {
                     console.error('Failed to clear scanner', err);
                 });
         }
+    }
+});
+
+onUnmounted(() => {
+    if (html5QrcodeScanner) {
+        html5QrcodeScanner.clear().catch(() => {});
+        html5QrcodeScanner = null;
     }
 });
 
@@ -461,6 +468,7 @@ const parseInput = (val) => {
                                                 class="flex-1"
                                             />
                                             <Button
+                                                aria-label="Scan barcode"
                                                 type="button"
                                                 variant="secondary"
                                                 size="icon"

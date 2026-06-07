@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\DB;
 
 class StockAdjustmentService
 {
+    /**
+     * Create a new service instance.
+     */
     public function __construct(
         private readonly UpdateProductExpiryDate $updateProductExpiryDate,
         private readonly NotifyStockAlert $notifyStockAlert,
@@ -56,7 +59,13 @@ class StockAdjustmentService
             /** @var Product $product */
             $product = Product::findOrFail($data['product_id']);
 
-            $oldStock = $product->stockInWarehouse($warehouse->id);
+            $lockedStock = DB::table('warehouse_product')
+                ->where('product_id', $product->id)
+                ->where('warehouse_id', $warehouse->id)
+                ->lockForUpdate()
+                ->value('stock');
+
+            $oldStock = (int) ($lockedStock ?? $product->stockInWarehouse($warehouse->id));
             $newStock = (int) $data['new_stock'];
             $diff = $newStock - $oldStock;
 

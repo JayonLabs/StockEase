@@ -3,8 +3,10 @@
 use App\Actions\Sale\RecalculateSaleTotal;
 use App\Enums\SaleStatus;
 use App\Enums\ShiftStatus;
+use App\Mail\SendSaleInvoice;
 use App\Models\PaymentTransaction;
 use App\Models\Product;
+use App\Models\Promotion;
 use App\Models\Sale;
 use App\Models\SaleItem;
 use App\Models\Shift;
@@ -13,6 +15,7 @@ use App\Models\Warehouse;
 use App\Services\Sale\PosService;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\assertDatabaseHas;
@@ -72,6 +75,60 @@ it('denies warehouse role from accessing POS', function () {
     $user = User::factory()->create(['role' => 'warehouse']);
     $response = actingAs($user)->get(route('pos.index'));
     $response->assertForbidden();
+});
+
+it('denies warehouse role from add-to-cart', function () {
+    /** @var User $user */
+    $user = User::factory()->create(['role' => 'warehouse']);
+    $product = Product::factory()->create(['stock' => 10]);
+    actingAs($user)->postJson(route('pos.add-to-cart'), ['product_id' => $product->id])
+        ->assertForbidden();
+});
+
+it('denies warehouse role from add-to-cart-barcode', function () {
+    /** @var User $user */
+    $user = User::factory()->create(['role' => 'warehouse']);
+    $product = Product::factory()->create(['stock' => 10, 'barcode' => '12345678']);
+    actingAs($user)->postJson(route('pos.add-to-cart-barcode'), ['barcode' => '12345678'])
+        ->assertForbidden();
+});
+
+it('denies warehouse role from change-qty', function () {
+    /** @var User $user */
+    $user = User::factory()->create(['role' => 'warehouse']);
+    $product = Product::factory()->create(['stock' => 10]);
+    actingAs($user)->patchJson(route('pos.change-qty'), ['product_id' => $product->id, 'qty' => 2])
+        ->assertForbidden();
+});
+
+it('denies warehouse role from remove-from-cart', function () {
+    /** @var User $user */
+    $user = User::factory()->create(['role' => 'warehouse']);
+    $product = Product::factory()->create(['stock' => 10]);
+    actingAs($user)->deleteJson(route('pos.remove-from-cart'), ['product_id' => $product->id])
+        ->assertForbidden();
+});
+
+it('denies warehouse role from empty-cart', function () {
+    /** @var User $user */
+    $user = User::factory()->create(['role' => 'warehouse']);
+    actingAs($user)->deleteJson(route('pos.empty-cart'))
+        ->assertForbidden();
+});
+
+it('denies warehouse role from checkout', function () {
+    /** @var User $user */
+    $user = User::factory()->create(['role' => 'warehouse']);
+    actingAs($user)->putJson(route('pos.checkout'), ['payment_method' => 'cash', 'paid' => 1000])
+        ->assertForbidden();
+});
+
+it('denies warehouse role from send-invoice', function () {
+    /** @var User $user */
+    $user = User::factory()->create(['role' => 'warehouse']);
+    $sale = Sale::factory()->create(['user_id' => $user->id, 'status' => 'completed']);
+    actingAs($user)->postJson(route('pos.send-invoice'), ['sale_id' => $sale->id, 'email' => 'x@example.com'])
+        ->assertForbidden();
 });
 
 it('shows hasActiveShift false when no open shift', function () {
@@ -640,6 +697,114 @@ it('sets QRIS checkout to pending and does not reduce stock immediately', functi
     expect($transaction->status)->toBe('pending');
 });
 
+/*
+|--------------------------------------------------------------------------
+| Send Invoice Tests (SEC-03 — IDOR fix)
+|--------------------------------------------------------------------------
+*/
+
+it('rejects unauthenticated request to send invoice', function () {
+    $sale = Sale::factory()->create(['status' => 'completed']);
+
+    postJson(route('pos.send-invoice'), [
+        'sale_id' => $sale->id,
+        'email' => 'test@example.com',
+    ])->assertUnauthorized();
+});
+
+it('allows cashier to send invoice for their own sale', function () {
+    Mail::fake();
+
+    /** @var User $cashier */
+    $cashier = User::factory()->create(['role' => 'cashier']);
+    $sale = Sale::factory()->create(['user_id' => $cashier->id, 'status' => 'completed']);
+
+    actingAs($cashier)->postJson(route('pos.send-invoice'), [
+        'sale_id' => $sale->id,
+        'email' => 'customer@example.com',
+    ])->assertOk()->assertJsonPath('message', 'Invoice berhasil dikirim ke email.');
+
+    Mail::assertQueued(SendSaleInvoice::class);
+});
+
+it('denies cashier from sending invoice for another cashier sale', function () {
+    /** @var User $cashierA */
+    $cashierA = User::factory()->create(['role' => 'cashier']);
+    /** @var User $cashierB */
+    $cashierB = User::factory()->create(['role' => 'cashier']);
+    $sale = Sale::factory()->create(['user_id' => $cashierB->id, 'status' => 'completed']);
+
+    actingAs($cashierA)->postJson(route('pos.send-invoice'), [
+        'sale_id' => $sale->id,
+        'email' => 'attacker@example.com',
+    ])->assertForbidden();
+});
+
+it('allows admin to send invoice for any sale', function () {
+    Mail::fake();
+
+    /** @var User $admin */
+    $admin = User::factory()->create(['role' => 'admin']);
+    /** @var User $cashier */
+    $cashier = User::factory()->create(['role' => 'cashier']);
+    $sale = Sale::factory()->create(['user_id' => $cashier->id, 'status' => 'completed']);
+
+    actingAs($admin)->postJson(route('pos.send-invoice'), [
+        'sale_id' => $sale->id,
+        'email' => 'support@example.com',
+    ])->assertOk();
+
+    Mail::assertQueued(SendSaleInvoice::class);
+});
+
+it('returns 422 when sale_id does not exist', function () {
+    /** @var User $cashier */
+    $cashier = User::factory()->create(['role' => 'cashier']);
+
+    actingAs($cashier)->postJson(route('pos.send-invoice'), [
+        'sale_id' => 999999,
+        'email' => 'test@example.com',
+    ])->assertUnprocessable()->assertJsonValidationErrors(['sale_id']);
+});
+
+it('returns 422 when email is missing', function () {
+    /** @var User $cashier */
+    $cashier = User::factory()->create(['role' => 'cashier']);
+    $sale = Sale::factory()->create(['user_id' => $cashier->id, 'status' => 'completed']);
+
+    actingAs($cashier)->postJson(route('pos.send-invoice'), [
+        'sale_id' => $sale->id,
+    ])->assertUnprocessable()->assertJsonValidationErrors(['email']);
+});
+
+it('returns 422 when email is invalid', function () {
+    /** @var User $cashier */
+    $cashier = User::factory()->create(['role' => 'cashier']);
+    $sale = Sale::factory()->create(['user_id' => $cashier->id, 'status' => 'completed']);
+
+    actingAs($cashier)->postJson(route('pos.send-invoice'), [
+        'sale_id' => $sale->id,
+        'email' => 'not-an-email',
+    ])->assertUnprocessable()->assertJsonValidationErrors(['email']);
+});
+
+it('denies cashier IDOR attempt to access a high-value sale of another user', function () {
+    /** @var User $cashierA */
+    $cashierA = User::factory()->create(['role' => 'cashier']);
+    /** @var User $cashierB */
+    $cashierB = User::factory()->create(['role' => 'cashier']);
+    $highValueSale = Sale::factory()->create([
+        'user_id' => $cashierB->id,
+        'status' => 'completed',
+        'total' => 9999999,
+    ]);
+
+    actingAs($cashierA)->postJson(route('pos.send-invoice'), [
+        'sale_id' => $highValueSale->id,
+        'email' => 'attacker@example.com',
+    ])->assertForbidden();
+});
+
 it('completes sale via midtrans webhook with warehouse', function () {
     /** @var User $user */
     $user = User::factory()->create(['role' => 'cashier']);
@@ -661,4 +826,211 @@ it('completes sale via midtrans webhook with warehouse', function () {
     expect($product->refresh()->stock)->toBe(9);
     expect(DB::table('warehouse_product')->where('warehouse_id', $warehouse->id)->where('product_id', $product->id)->value('stock'))->toBe(9);
     expect($paymentTransaction->refresh()->status)->toBe('settlement');
+});
+
+/*
+|--------------------------------------------------------------------------
+| N+1 Regression — PERF-02 (checkout stockInWarehouse)
+|--------------------------------------------------------------------------
+*/
+
+it('issues no per-product stockInWarehouse queries during checkout', function () {
+    /** @var User $cashier */
+    $cashier = User::factory()->create(['role' => 'cashier']);
+    $productA = Product::factory()->create(['stock' => 10, 'selling_price' => 1000]);
+    $productB = Product::factory()->create(['stock' => 10, 'selling_price' => 2000]);
+    ['warehouse' => $warehouse] = setupPosPrerequisites([$productA->id => 10, $productB->id => 10], $cashier);
+
+    $sale = Sale::factory()->create(['user_id' => $cashier->id, 'status' => 'draft', 'total' => 3000]);
+    $sale->saleItems()->createMany([
+        ['product_id' => $productA->id, 'qty' => 1, 'price' => 1000],
+        ['product_id' => $productB->id, 'qty' => 1, 'price' => 2000],
+    ]);
+
+    actingAs($cashier);
+    DB::enableQueryLog();
+
+    putJson(route('pos.checkout'), ['payment_method' => 'cash', 'paid' => 3000]);
+
+    $queries = DB::getQueryLog();
+    DB::disableQueryLog();
+
+    $stockInWarehouseQueries = collect($queries)->filter(
+        fn ($q) => str_contains($q['query'], 'pivot_product_id')
+    );
+
+    expect($stockInWarehouseQueries)->toHaveCount(0);
+});
+
+// ─── Promotion Column Selection ─────────────────────────────────────────────
+
+describe('Promotion Data Selection', function () {
+    it('includes activePromotions in POS index response', function () {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        setupPosPrerequisites([], $cashier);
+
+        $response = actingAs($cashier)->get(route('pos.index'));
+
+        $response->assertInertia(fn ($page) => $page->has('activePromotions'));
+    });
+
+    it('only selects required columns from promotions table', function () {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+
+        Promotion::factory()->create([
+            'name' => 'Test Promo',
+            'type' => 'percentage',
+            'discount_value' => 10,
+            'is_active' => true,
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
+        ]);
+
+        setupPosPrerequisites([], $cashier);
+
+        DB::enableQueryLog();
+
+        actingAs($cashier)->get(route('pos.index'));
+
+        $queries = collect(DB::getQueryLog());
+
+        DB::disableQueryLog();
+
+        $promoQuery = $queries
+            ->filter(fn ($q) => str_contains($q['query'], 'from `promotions`'))
+            ->sortBy(fn ($q) => strlen($q['query']))
+            ->last();
+
+        expect($promoQuery)->not->toBeNull();
+
+        $prefixToCheck = 'select ';
+        $selectPart = str($promoQuery['query'])->between('select ', ' from ')->toString();
+
+        expect($selectPart)->not->toContain('`start_date`');
+        expect($selectPart)->not->toContain('`end_date`');
+        expect($selectPart)->not->toContain('`is_active`');
+        expect($selectPart)->not->toContain('`created_at`');
+        expect($selectPart)->not->toContain('`updated_at`');
+
+        $requiredColumns = ['`id`', '`name`', '`type`', '`discount_value`', '`category_id`', '`product_id`'];
+        foreach ($requiredColumns as $col) {
+            expect($selectPart)->toContain($col);
+        }
+    });
+
+    it('returns active promotions only', function () {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        setupPosPrerequisites([], $cashier);
+
+        $active = Promotion::factory()->create([
+            'name' => 'Active Promo',
+            'type' => 'percentage',
+            'discount_value' => 15,
+            'is_active' => true,
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
+        ]);
+
+        $inactive = Promotion::factory()->create([
+            'name' => 'Inactive Promo',
+            'type' => 'nominal',
+            'discount_value' => 5000,
+            'is_active' => false,
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
+        ]);
+
+        $dateExpired = Promotion::factory()->create([
+            'name' => 'Expired Promo',
+            'type' => 'bogo',
+            'discount_value' => 0,
+            'buy_qty' => 2,
+            'get_qty' => 1,
+            'is_active' => true,
+            'start_date' => now()->subDays(10),
+            'end_date' => now()->subDay(),
+        ]);
+
+        $response = actingAs($cashier)->get(route('pos.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('activePromotions', function ($promos) use ($active, $inactive, $dateExpired) {
+                $ids = $promos->pluck('id')->toArray();
+
+                return in_array($active->id, $ids)
+                    && ! in_array($inactive->id, $ids)
+                    && ! in_array($dateExpired->id, $ids);
+            }));
+    });
+
+    it('provides promotion type and discount_value correctly', function () {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        $product = Product::factory()->create();
+
+        setupPosPrerequisites([], $cashier);
+
+        Promotion::factory()->create([
+            'name' => 'Diskon 10%',
+            'type' => 'percentage',
+            'discount_value' => 10,
+            'product_id' => $product->id,
+            'is_active' => true,
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
+        ]);
+
+        $response = actingAs($cashier)->get(route('pos.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('activePromotions')
+            ->where('activePromotions', function ($promos) {
+                $first = $promos->first();
+
+                return $first['type'] === 'percentage'
+                    && (string) $first['discount_value'] === '10.0000';
+            }));
+    });
+
+    it('provides BOGO promotion fields correctly', function () {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        $product = Product::factory()->create();
+
+        setupPosPrerequisites([], $cashier);
+
+        Promotion::factory()->create([
+            'name' => 'Buy 2 Get 1',
+            'type' => 'bogo',
+            'discount_value' => 0,
+            'buy_qty' => 2,
+            'get_qty' => 1,
+            'product_id' => $product->id,
+            'is_active' => true,
+            'start_date' => now()->subDay(),
+            'end_date' => now()->addDay(),
+        ]);
+
+        $response = actingAs($cashier)->get(route('pos.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('activePromotions', function ($promos) {
+                $first = $promos->first();
+
+                return $first['type'] === 'bogo'
+                    && (int) $first['buy_qty'] === 2
+                    && (int) $first['get_qty'] === 1;
+            }));
+    });
+
+    it('returns empty promotions array when no active promotions', function () {
+        $cashier = User::factory()->create(['role' => 'cashier']);
+        setupPosPrerequisites([], $cashier);
+
+        $response = actingAs($cashier)->get(route('pos.index'));
+
+        $response->assertInertia(
+            fn ($page) => $page->where('activePromotions', function ($promos) {
+                return $promos->isEmpty();
+            })
+        );
+    });
 });
