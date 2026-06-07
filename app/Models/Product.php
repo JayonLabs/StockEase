@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Tenancy\Concerns\BelongsToTenant;
 use Cviebrock\EloquentSluggable\Sluggable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Spatie\Activitylog\Support\LogOptions;
 
 class Product extends Model
 {
-    use HasFactory, LogsActivity, Sluggable, SoftDeletes;
+    use BelongsToTenant, HasFactory, LogsActivity, Sluggable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -47,6 +48,7 @@ class Product extends Model
             'purchase_price' => 'decimal:4',
             'selling_price' => 'decimal:4',
             'expiry_date' => 'date',
+            'company_id' => 'integer',
         ];
     }
 

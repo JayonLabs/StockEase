@@ -29,12 +29,19 @@ class ReduceProductStock
         $productIds = $saleItems->pluck('product_id')->toArray();
         $products = Product::whereIn('id', $productIds)->lockForUpdate()->get()->keyBy('id');
 
+        $warehouseStocks = $warehouseId !== null
+            ? DB::table('warehouse_product')
+                ->where('warehouse_id', $warehouseId)
+                ->whereIn('product_id', $productIds)
+                ->pluck('stock', 'product_id')
+            : collect();
+
         foreach ($saleItems as $item) {
             /** @var Product $product */
             $product = $products[$item->product_id];
 
             if ($warehouseId !== null) {
-                $warehouseStock = $product->stockInWarehouse($warehouseId);
+                $warehouseStock = (int) ($warehouseStocks[$product->id] ?? 0);
 
                 if ($warehouseStock < $item->qty) {
                     throw new \Exception("Stok produk {$product->name} tidak cukup di gudang.");
