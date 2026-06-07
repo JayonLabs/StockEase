@@ -164,11 +164,48 @@ it('returns correct total trashed count', function () {
     /** @var TestCase&object{trashService: TrashService} $this */
     expect($this->trashService->getTotalTrashedCount())->toBe(0);
 
-    Category::factory()->create()->delete();
-    Category::factory()->create()->delete();
-    Product::factory()->create()->delete();
+    $cat1 = Category::factory()->create();
+    $cat1->delete();
+    $cat2 = Category::factory()->create();
+    $cat2->delete();
+    $product = Product::factory()->create();
+    $product->delete();
 
     expect($this->trashService->getTotalTrashedCount())->toBe(3);
+});
+
+it('uses a single query for total trashed count with multiple models', function () {
+    Category::factory()->create()->delete();
+    Product::factory()->create()->delete();
+    Supplier::factory()->create()->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    DB::enableQueryLog();
+
+    $count = $this->trashService->getTotalTrashedCount();
+
+    DB::disableQueryLog();
+    $queries = DB::getQueryLog();
+
+    expect($count)->toBe(3);
+    expect($queries)->not->toBeEmpty();
+
+    $nonConnectionQueries = collect($queries)->filter(
+        fn ($q) => ! str_contains($q['query'], 'SET')
+    )->toArray();
+
+    expect(count($nonConnectionQueries))->toBe(1);
+    expect($nonConnectionQueries[0]['query'])->toContain('UNION ALL');
+    expect($nonConnectionQueries[0]['query'])->toContain('COUNT');
+});
+
+it('getTotalTrashedCount excludes non-trashed items', function () {
+    Category::factory()->create();
+    $deleted = Category::factory()->create();
+    $deleted->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    expect($this->trashService->getTotalTrashedCount())->toBe(1);
 });
 
 it('paginates trashed items correctly', function () {
@@ -529,14 +566,59 @@ it('force deletes a trashed saleReturn', function () {
 // --- Total count with all models ---
 
 it('counts trashed items across all 20 tracked models', function () {
-    Category::factory()->create()->delete();
-    Warehouse::factory()->create()->delete();
-    Shift::factory()->create()->delete();
-    StockLog::factory()->create()->delete();
-    SaleEmail::factory()->create()->delete();
+    $models = [
+        Category::factory()->create(),
+        PaymentTransaction::factory()->create(),
+        PriceHistory::factory()->create(),
+        Product::factory()->create(),
+        Promotion::factory()->create(),
+        Purchase::factory()->create(),
+        PurchaseItem::factory()->create(),
+        Sale::factory()->create(),
+        SaleEmail::factory()->create(),
+        SaleItem::factory()->create(),
+        SaleReturn::factory()->create(),
+        SaleReturnItem::factory()->create(),
+        Shift::factory()->create(),
+        StockAdjustment::factory()->create(),
+        StockLog::factory()->create(),
+        StockTransfer::factory()->create(),
+        Supplier::factory()->create(),
+        Unit::factory()->create(),
+        User::factory()->create(),
+        Warehouse::factory()->create(),
+    ];
+
+    foreach ($models as $model) {
+        $model->delete();
+    }
 
     /** @var TestCase&object{trashService: TrashService} $this */
-    expect($this->trashService->getTotalTrashedCount())->toBe(5);
+    expect($this->trashService->getTotalTrashedCount())->toBe(20);
+
+    DB::enableQueryLog();
+    $count = $this->trashService->getTotalTrashedCount();
+    DB::disableQueryLog();
+
+    $nonConnectionQueries = collect(DB::getQueryLog())->filter(
+        fn ($q) => ! str_contains($q['query'], 'SET')
+    )->toArray();
+
+    expect($count)->toBe(20);
+    expect(count($nonConnectionQueries))->toBe(1);
+});
+
+it('getTotalTrashedCount matches paginator total', function () {
+    Category::factory()->count(3)->create()->each->delete();
+    Product::factory()->count(2)->create()->each->delete();
+    Supplier::factory()->create()->delete();
+
+    /** @var TestCase&object{trashService: TrashService} $this */
+    $paginator = $this->trashService->getPaginatedTrashedItems();
+    $count = $this->trashService->getTotalTrashedCount();
+
+    expect($count)->toBe($paginator->total());
+    expect($count)->toBe(6);
 });
 
 // --- getTrashedItem for new models ---

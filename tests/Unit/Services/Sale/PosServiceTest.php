@@ -3,6 +3,7 @@
 use App\Enums\PaymentMethod;
 use App\Enums\ShiftStatus;
 use App\Models\Category;
+use App\Models\Company;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\SaleItem;
@@ -609,4 +610,90 @@ it('returns existing draft sale instead of creating a duplicate', function () {
 
     expect($cart2->id)->toBe($cart1->id);
     expect(Sale::where('user_id', Auth::id())->where('status', 'draft')->count())->toBe(1);
+});
+
+it('handles unique constraint violation when draft exists from another tenancy context', function () {
+    $companyA = Company::create([
+        'name' => 'Toko Alpha',
+        'slug' => 'toko-alpha-'.uniqid(),
+        'is_active' => true,
+    ]);
+    $companyB = Company::create([
+        'name' => 'Toko Beta',
+        'slug' => 'toko-beta-'.uniqid(),
+        'is_active' => true,
+    ]);
+
+    // Authenticate user in company A context
+    $user = User::factory()->create(['company_id' => $companyA->id]);
+    Auth::login($user);
+    initTenancyFromUser($user);
+
+    // Create a draft sale for this user but under company B (bypassing TenantScope).
+    // Must use forceCreate because company_id is not in Sale::$fillable.
+    Sale::withoutTenancy()->forceCreate([
+        'user_id' => $user->id,
+        'company_id' => $companyB->id,
+        'status' => 'draft',
+        'total' => 0,
+        'payment_method' => PaymentMethod::Pending->value,
+        'paid' => 0,
+        'change' => 0,
+        'date' => now(),
+    ]);
+
+    // Now when getOrCreateCart runs, TenantScope filters by company_id = A
+    // so first() won't find the draft (it belongs to company B)
+    // Sale::create() will fail with UniqueConstraintViolationException
+    // (draft_user_id unique index on user_id)
+    // The catch block should find the draft via withoutTenancy() and return it
+    $posService = app(PosService::class);
+    $cart = $posService->getOrCreateCart();
+
+    expect($cart)->toBeInstanceOf(Sale::class);
+    expect($cart->status)->toBe('draft');
+    expect($cart->user_id)->toBe($user->id);
+    expect($cart->company_id)->toBe($companyB->id);
+
+    // Verify only one draft exists for this user
+    expect(Sale::withoutTenancy()
+        ->where('user_id', $user->id)
+        ->where('status', 'draft')
+        ->count()
+    )->toBe(1);
+
+    tenancy()->end();
+});
+
+it('re-throws UniqueConstraintViolationException when no draft exists in any context', function () {
+    $company = Company::create([
+        'name' => 'Toko Gamma',
+        'slug' => 'toko-gamma-'.uniqid(),
+        'is_active' => true,
+    ]);
+
+    $user = User::factory()->create(['company_id' => $company->id]);
+    Auth::login($user);
+    initTenancyFromUser($user);
+
+    // Simulate concurrent request scenario: directly create the draft
+    // outside the getOrCreateCart flow (mimics another request winning)
+    Sale::create([
+        'user_id' => $user->id,
+        'status' => 'draft',
+        'total' => 0,
+        'payment_method' => PaymentMethod::Pending->value,
+        'paid' => 0,
+        'change' => 0,
+        'date' => now(),
+    ]);
+
+    $posService = app(PosService::class);
+    $cart = $posService->getOrCreateCart();
+
+    // Should find the existing draft
+    expect($cart)->toBeInstanceOf(Sale::class);
+    expect($cart->status)->toBe('draft');
+
+    tenancy()->end();
 });

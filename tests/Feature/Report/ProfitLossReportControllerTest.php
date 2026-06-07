@@ -305,7 +305,7 @@ describe('Date range filter', function () {
         profitSale(admin(), [
             'total' => 50000,
             'total_cost' => 30000,
-            'date' => Carbon::now()->subMonth()->toDateString(),
+            'date' => Carbon::now()->subMonthNoOverflow()->toDateString(),
         ]);
 
         actingAs(admin())
