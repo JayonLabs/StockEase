@@ -17,14 +17,21 @@ use App\Services\Sale\PosService;
 use App\Services\Sale\SaleEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class PosController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     */
     public function __construct(
         protected PosService $posService
     ) {}
 
+    /**
+     * Display a listing of the resource.
+     */
     public function index(Request $request)
     {
         $categories = $this->posService->getCategories();
@@ -34,7 +41,9 @@ class PosController extends Controller
             12
         );
 
-        $promotions = Promotion::active()->get();
+        $promotions = Promotion::active()
+            ->select(['id', 'name', 'type', 'discount_value', 'buy_qty', 'get_qty', 'category_id', 'product_id'])
+            ->get();
         $warehouses = $this->posService->getWarehouses();
         $activeWarehouseId = $this->posService->getActiveWarehouseId();
 
@@ -235,11 +244,13 @@ class PosController extends Controller
      */
     public function sendInvoice(PosSendInvoiceRequest $request, SaleEmailService $saleEmailService)
     {
+        $validated = $request->validated();
+
+        $sale = Sale::with('saleItems.product')->findOrFail($validated['sale_id']);
+
+        Gate::authorize('sendInvoice', $sale);
+
         try {
-            $validated = $request->validated();
-
-            $sale = Sale::with('saleItems.product')->findOrFail($validated['sale_id']);
-
             $saleEmail = $saleEmailService->sendInvoice($sale, $validated['email']);
 
             return response()->json([
