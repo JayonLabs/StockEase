@@ -5,7 +5,11 @@
             "mcp__laravel-boost__database-schema",
             "Bash(vendor/bin/pint --dirty --format agent)",
             "mcp__laravel-boost__application-info",
-            "mcp__laravel-boost__database-query"
+            "mcp__laravel-boost__database-query",
+            "mcp__laravel-boost__search-docs",
+            "mcp__laravel-boost__read-log-entries",
+            "mcp__laravel-boost__last-error",
+            "Bash(gh issue *)"
         ]
     },
     "enableAllProjectMcpServers": true,

@@ -192,17 +192,39 @@
 - fix AppServiceProvider uses loose == comparison instead of strict === for env check (Done)
 - fix pagination di page activity log (Done)
 
+<!-- TODO: 07/06/2026 -->
+
+- fix error ci (Done)
+- fix Missing Authorization on FileManager Routes — Semua User Terauthentikasi Bisa Akses (Done)
+- fix Path Traversal — FileManager download/destroy Tidak Dibatasi ke Folder uploads/ (Done)
+- fix IDOR di PosController::sendInvoice() — Invoice Bisa Dikirim dari Sale Orang Lain (Done)
+- fix Missing authorize() di POS FormRequests — Tidak Ada Defense-in-Depth (Done)
+- fix N+1 Query di PurchaseService::updatePurchase() untuk Item yang Dihapus (Done)
+- fix Product::stockInWarehouse() Melakukan Query Individual per Pemanggilan dalam Loop (Done)
+- buatkan landing page untuk sistem ini (Done)
+- rubah untuk demo login itu pakai superadmin@dewajayon.my.id dengan password "password" (Done)
+- fix error This action is unauthorized. di pos page ini aku pakai role super_admin (Done)
+- implementasi fitur untuk langganan, fitur sesuai dengan di https://stockease.test/pricing (Done)
+- fix data bocor di route https://stockease.test/user-permissions, https://stockease.test/file-manager, dan https://stockease.test/activity-logs (Done)
+- fix query duplikat select \* company di semua route page (Done)
+- fix trait deprecated untuk Tenancy (Done)
+- buatkan test untuk race condition di semua logic yang sekiranya perlu untuk anti race condition (Done)
+
 <!-- TODO: -->
 
-- buatkan landing page
+- pertimbangkan untuk UMKM itu 50 ribu aja perbulan tidak ada diskon untuk tahunan
+- kirim email ke admin sales di contact us page
+- fix dark mode di landing page
 - tambahin lagi beberapa laporan atau fitur di laporan penjualan
 - bikin API untuk mobile app
 
 <!-- AI Prompt -->
 
+- tolong cek codebase ku ini secara menyeluruh, cek untuk issue yang ada entah itu dari security, performa, best practice laravel dan sebagainya cek juga di bagian frontend pastikan semua sesuai best practice dan sebagainya. gunakan skill yang kamu perlukan untuk cek issue yang mungkin ada di codebase ku ini dan buatkan ISSUE.md di root folder untuk issue tersebut. gunakan juga mcp laravel untuk mengecek issue lebih mendalam. pastikan jalankan dengan pararel untuk mempercepat audit
+
 - pastikan sesuai dengan best practice laravel dan gunakan skill yang kamu perlukan. buatkan testnya secara menyeluruh utamakan untuk performa dan kualitas kode yang baik
 
 cek issue ini pakai gh cli
-https://github.com/DewaJayon/StockEase/issues/102
+https://github.com/DewaJayon/StockEase/issues/128
 
 cek issue tersebut apakah valid, jika valid bisa di fix langsung sesuaikan dengan best practice laravel dan buatkan testnya secara menyeluruh untuk struktur folder testnya itu adalah cerminan struktur folder app, gunakan skill yang kamu perlukan untuk menyelesaikan masalah tersebut. utamakan untuk performa dan kualitas kode yang baik. pastikan frontend dan backendnya compatible jika ada perubahan yang perlu berubah frontendnya itu bisa di fix langsung. close issue tersebut ketika sudah selesai

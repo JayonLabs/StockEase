@@ -1,0 +1,731 @@
+<!doctype html>
+
+<html class="light" lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+        <title>Contact Us | StockEase ERP</title>
+        <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+        <link
+            href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+            rel="stylesheet"
+        />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+            rel="stylesheet"
+        />
+        <script id="tailwind-config">
+            tailwind.config = {
+                darkMode: 'class',
+                theme: {
+                    extend: {
+                        colors: {
+                            'surface-container-high': '#dce9ff',
+                            'on-secondary-fixed': '#002117',
+                            background: '#f8f9ff',
+                            'on-surface': '#0b1c30',
+                            primary: '#006c49',
+                            'on-error-container': '#93000a',
+                            'inverse-surface': '#213145',
+                            'surface-bright': '#f8f9ff',
+                            'secondary-fixed-dim': '#95d3ba',
+                            error: '#ba1a1a',
+                            'inverse-primary': '#4edea3',
+                            'on-primary-container': '#00422b',
+                            'on-error': '#ffffff',
+                            'on-tertiary-fixed-variant': '#3d4947',
+                            'surface-variant': '#d3e4fe',
+                            'primary-fixed-dim': '#4edea3',
+                            tertiary: '#55615f',
+                            'surface-container': '#e5eeff',
+                            surface: '#f8f9ff',
+                            'error-container': '#ffdad6',
+                            'outline-variant': '#bbcabf',
+                            secondary: '#2b6954',
+                            'surface-tint': '#006c49',
+                            'on-secondary': '#ffffff',
+                            'tertiary-container': '#98a5a3',
+                            'surface-container-lowest': '#ffffff',
+                            'on-surface-variant': '#3c4a42',
+                            outline: '#6c7a71',
+                            'secondary-fixed': '#b0f0d6',
+                            'on-primary-fixed': '#002113',
+                            'inverse-on-surface': '#eaf1ff',
+                            'on-secondary-fixed-variant': '#0b513d',
+                            'on-tertiary': '#ffffff',
+                            'on-background': '#0b1c30',
+                            'surface-dim': '#cbdbf5',
+                            'tertiary-fixed': '#d8e5e2',
+                            'tertiary-fixed-dim': '#bcc9c6',
+                            'on-tertiary-fixed': '#121e1c',
+                            'on-primary': '#ffffff',
+                            'secondary-container': '#adedd3',
+                            'on-tertiary-container': '#2f3b39',
+                            'surface-container-highest': '#d3e4fe',
+                            'on-secondary-container': '#306d58',
+                            'primary-fixed': '#6ffbbe',
+                            'surface-container-low': '#eff4ff',
+                            'primary-container': '#10b981',
+                            'on-primary-fixed-variant': '#005236',
+                        },
+                        borderRadius: {
+                            DEFAULT: '0.25rem',
+                            lg: '0.5rem',
+                            xl: '0.75rem',
+                            full: '9999px',
+                        },
+                        spacing: {
+                            'margin-desktop': '40px',
+                            gutter: '24px',
+                            'container-max': '1440px',
+                            unit: '8px',
+                            'margin-mobile': '16px',
+                        },
+                        fontFamily: {
+                            'headline-lg': ['Inter'],
+                            'headline-lg-mobile': ['Inter'],
+                            'display-lg': ['Inter'],
+                            'label-sm': ['Inter'],
+                            'headline-md': ['Inter'],
+                            'body-md': ['Inter'],
+                            'body-lg': ['Inter'],
+                            'label-md': ['Inter'],
+                        },
+                        fontSize: {
+                            'headline-lg': [
+                                '32px',
+                                {
+                                    lineHeight: '40px',
+                                    letterSpacing: '-0.01em',
+                                    fontWeight: '600',
+                                },
+                            ],
+                            'headline-lg-mobile': [
+                                '28px',
+                                { lineHeight: '36px', fontWeight: '600' },
+                            ],
+                            'display-lg': [
+                                '48px',
+                                {
+                                    lineHeight: '56px',
+                                    letterSpacing: '-0.02em',
+                                    fontWeight: '700',
+                                },
+                            ],
+                            'label-sm': [
+                                '12px',
+                                { lineHeight: '16px', fontWeight: '600' },
+                            ],
+                            'headline-md': [
+                                '24px',
+                                { lineHeight: '32px', fontWeight: '600' },
+                            ],
+                            'body-md': [
+                                '16px',
+                                { lineHeight: '24px', fontWeight: '400' },
+                            ],
+                            'body-lg': [
+                                '18px',
+                                { lineHeight: '28px', fontWeight: '400' },
+                            ],
+                            'label-md': [
+                                '14px',
+                                { lineHeight: '20px', fontWeight: '500' },
+                            ],
+                        },
+                    },
+                },
+            };
+        </script>
+        <style>
+            .glass-card {
+                background: rgba(255, 255, 255, 0.7);
+                backdrop-filter: blur(12px);
+                -webkit-backdrop-filter: blur(12px);
+            }
+            .material-symbols-outlined {
+                font-variation-settings:
+                    'FILL' 0,
+                    'wght' 400,
+                    'GRAD' 0,
+                    'opsz' 24;
+            }
+            .emerald-gradient-text {
+                background: linear-gradient(135deg, #006c49 0%, #10b981 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+        </style>
+    </head>
+    <body class="bg-background text-on-surface font-body-md overflow-x-hidden">
+        <!-- TopNavBar -->
+        <header
+            class="fixed top-0 w-full z-50 bg-surface/80 backdrop-blur-md shadow-sm border-b border-outline-variant/30"
+        >
+            <div
+                class="flex justify-between items-center h-20 px-margin-desktop max-w-container-max mx-auto"
+            >
+                <div
+                    class="text-headline-md font-bold text-primary tracking-tight"
+                >
+                    StockEase
+                </div>
+                <!-- Desktop Navigation -->
+                <nav class="hidden md:flex items-center gap-8">
+                    <a
+                        class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors hover:bg-primary/5 px-3 py-2 rounded-lg"
+                        href="#"
+                        >Features</a
+                    >
+                    <a
+                        class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors hover:bg-primary/5 px-3 py-2 rounded-lg"
+                        href="#"
+                        >Pricing</a
+                    >
+                    <a
+                        class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors hover:bg-primary/5 px-3 py-2 rounded-lg"
+                        href="#"
+                        >Why Us</a
+                    >
+                    <a
+                        class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors hover:bg-primary/5 px-3 py-2 rounded-lg"
+                        href="#"
+                        >Testimonials</a
+                    >
+                    <a
+                        class="text-label-md font-label-md text-primary font-bold border-b-2 border-primary px-3 py-2"
+                        href="#"
+                        >Contact</a
+                    >
+                </nav>
+                <div class="flex items-center gap-4">
+                    <button
+                        class="bg-primary text-on-primary font-label-md px-6 py-2.5 rounded-full hover:bg-primary/90 transition-all active:scale-95 duration-150 ease-in-out"
+                    >
+                        Get Started
+                    </button>
+                    <button class="md:hidden text-on-surface-variant">
+                        <span class="material-symbols-outlined">menu</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+        <main class="pt-20">
+            <!-- Hero Section -->
+            <section class="relative py-24 overflow-hidden">
+                <div class="absolute inset-0 z-0 opacity-10">
+                    <div
+                        class="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-primary-container blur-[120px]"
+                    ></div>
+                    <div
+                        class="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-secondary-container blur-[120px]"
+                    ></div>
+                </div>
+                <div
+                    class="max-w-container-max mx-auto px-margin-desktop relative z-10 text-center"
+                >
+                    <h1
+                        class="font-display-lg text-display-lg emerald-gradient-text mb-6"
+                    >
+                        Get in Touch
+                    </h1>
+                    <p
+                        class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto"
+                    >
+                        Whether you have questions about our inventory
+                        management tools or need custom ERP solutions, our team
+                        is ready to help your business scale with precision.
+                    </p>
+                </div>
+            </section>
+            <!-- Main Content (Bento Style) -->
+            <section
+                class="pb-24 px-margin-desktop max-w-container-max mx-auto"
+            >
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+                    <!-- Contact Form Card -->
+                    <div
+                        class="lg:col-span-7 glass-card rounded-xl border border-outline-variant/30 p-8 shadow-sm"
+                    >
+                        <h2
+                            class="font-headline-md text-headline-md mb-8 text-on-surface"
+                        >
+                            Send us a Message
+                        </h2>
+                        <form class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="space-y-2">
+                                    <label
+                                        class="text-label-md font-label-md text-on-surface-variant ml-1"
+                                        >Full Name</label
+                                    >
+                                    <input
+                                        class="w-full h-12 px-4 rounded-xl border border-outline-variant bg-white/50 focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                                        placeholder="John Doe"
+                                        type="text"
+                                    />
+                                </div>
+                                <div class="space-y-2">
+                                    <label
+                                        class="text-label-md font-label-md text-on-surface-variant ml-1"
+                                        >Email Address</label
+                                    >
+                                    <input
+                                        class="w-full h-12 px-4 rounded-xl border border-outline-variant bg-white/50 focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                                        placeholder="john@example.com"
+                                        type="email"
+                                    />
+                                </div>
+                            </div>
+                            <div class="space-y-2">
+                                <label
+                                    class="text-label-md font-label-md text-on-surface-variant ml-1"
+                                    >Subject</label
+                                >
+                                <input
+                                    class="w-full h-12 px-4 rounded-xl border border-outline-variant bg-white/50 focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                                    placeholder="How can we help?"
+                                    type="text"
+                                />
+                            </div>
+                            <div class="space-y-2">
+                                <label
+                                    class="text-label-md font-label-md text-on-surface-variant ml-1"
+                                    >Message</label
+                                >
+                                <textarea
+                                    class="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white/50 focus:ring-4 focus:ring-primary/20 focus:border-primary transition-all outline-none resize-none"
+                                    placeholder="Tell us more about your business needs..."
+                                    rows="5"
+                                ></textarea>
+                            </div>
+                            <button
+                                class="w-full bg-primary text-on-primary font-label-md py-4 rounded-xl hover:bg-primary/90 transition-all shadow-md active:scale-[0.98] flex items-center justify-center gap-2"
+                                type="submit"
+                            >
+                                <span
+                                    class="material-symbols-outlined text-[20px]"
+                                    >send</span
+                                >
+                                Send Message
+                            </button>
+                        </form>
+                    </div>
+                    <!-- Contact Info & Map Column -->
+                    <div class="lg:col-span-5 flex flex-col gap-gutter">
+                        <!-- Info Card -->
+                        <div
+                            class="glass-card rounded-xl border border-outline-variant/30 p-8 shadow-sm flex-1"
+                        >
+                            <h2
+                                class="font-headline-md text-headline-md mb-8 text-on-surface"
+                            >
+                                Contact Information
+                            </h2>
+                            <div class="space-y-8">
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center shrink-0"
+                                    >
+                                        <span
+                                            class="material-symbols-outlined text-primary"
+                                            >mail</span
+                                        >
+                                    </div>
+                                    <div>
+                                        <p
+                                            class="text-label-md font-bold text-on-surface"
+                                        >
+                                            Email Us
+                                        </p>
+                                        <p
+                                            class="text-body-md text-on-surface-variant"
+                                        >
+                                            support@stockease.com
+                                        </p>
+                                        <p
+                                            class="text-body-md text-on-surface-variant"
+                                        >
+                                            sales@stockease.com
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center shrink-0"
+                                    >
+                                        <span
+                                            class="material-symbols-outlined text-primary"
+                                            >phone</span
+                                        >
+                                    </div>
+                                    <div>
+                                        <p
+                                            class="text-label-md font-bold text-on-surface"
+                                        >
+                                            Call Us
+                                        </p>
+                                        <p
+                                            class="text-body-md text-on-surface-variant"
+                                        >
+                                            +1 (555) 234-5678
+                                        </p>
+                                        <p
+                                            class="text-body-md text-on-surface-variant"
+                                        >
+                                            Mon - Fri, 9am - 6pm EST
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="flex items-start gap-4">
+                                    <div
+                                        class="w-12 h-12 rounded-lg bg-primary-container/20 flex items-center justify-center shrink-0"
+                                    >
+                                        <span
+                                            class="material-symbols-outlined text-primary"
+                                            >location_on</span
+                                        >
+                                    </div>
+                                    <div>
+                                        <p
+                                            class="text-label-md font-bold text-on-surface"
+                                        >
+                                            Visit Our Office
+                                        </p>
+                                        <p
+                                            class="text-body-md text-on-surface-variant"
+                                        >
+                                            245 Emerald Plaza, Suite 400
+                                        </p>
+                                        <p
+                                            class="text-body-md text-on-surface-variant"
+                                        >
+                                            San Francisco, CA 94105
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Map Placeholder -->
+                        <div
+                            class="h-[280px] rounded-xl overflow-hidden relative border border-outline-variant/30 shadow-sm group"
+                        >
+                            <img
+                                class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                data-alt="A clean, minimalist 3D map rendering of a modern urban downtown area with highlighted green pathways and geometric white buildings. The aesthetic is professional and high-tech, using an emerald green and slate blue color scheme with soft ambient lighting to represent StockEase's corporate headquarters location."
+                                data-location="San Francisco"
+                                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCC-ZOiM9xtJmanhVJqZo3rFHnnG2fl329QxvtbQyXStkTjXnobHS3p5cINuJdF7O58SlLUq9V82i5AjOYLvhCRPTljgap5NPhaxpK5AcH8Dzu4ygB7FhTngIeYwESq8g4gMboham-dtpldtfC34W2giKpH4vKc0aYf9wh2E_5_1-mNgFjFqxSCBIAJASAKuXY3XuSKiOatvHH8okzuGNKYGSVzrEXxnscFjMJjjWLvkeHt8GvgGCG4rW3wHD6_YAuEXxbXZgaPKv0"
+                            />
+                            <div
+                                class="absolute inset-0 bg-primary/10 pointer-events-none"
+                            ></div>
+                            <div
+                                class="absolute bottom-4 left-4 right-4 glass-card p-3 rounded-lg border border-white/20 flex items-center gap-3"
+                            >
+                                <span
+                                    class="material-symbols-outlined text-primary"
+                                    >pin_drop</span
+                                >
+                                <span
+                                    class="text-label-md font-bold text-on-surface"
+                                    >View on Google Maps</span
+                                >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- FAQ Section -->
+            <section class="py-24 bg-surface-container-low">
+                <div class="max-w-4xl mx-auto px-margin-desktop">
+                    <h2
+                        class="font-headline-lg text-headline-lg text-center mb-16 text-on-surface"
+                    >
+                        Frequently Asked Questions
+                    </h2>
+                    <div class="space-y-4">
+                        <!-- FAQ Item 1 -->
+                        <div
+                            class="bg-surface rounded-xl border border-outline-variant/20 overflow-hidden group"
+                        >
+                            <button
+                                class="w-full p-6 text-left flex justify-between items-center transition-colors hover:bg-primary/5"
+                                onclick="toggleFaq(this)"
+                            >
+                                <span
+                                    class="font-headline-md text-headline-md text-on-surface"
+                                    >How quickly can I expect a response?</span
+                                >
+                                <span
+                                    class="material-symbols-outlined transition-transform duration-300 group-data-[open=true]:rotate-180"
+                                    >expand_more</span
+                                >
+                            </button>
+                            <div class="px-6 pb-6 hidden" id="faq-content-1">
+                                <p class="text-body-md text-on-surface-variant">
+                                    Our support team typically responds to all
+                                    inquiries within 2 to 4 business hours. For
+                                    enterprise customers, premium support
+                                    guarantees a response within 1 hour during
+                                    business operations.
+                                </p>
+                            </div>
+                        </div>
+                        <!-- FAQ Item 2 -->
+                        <div
+                            class="bg-surface rounded-xl border border-outline-variant/20 overflow-hidden group"
+                        >
+                            <button
+                                class="w-full p-6 text-left flex justify-between items-center transition-colors hover:bg-primary/5"
+                                onclick="toggleFaq(this)"
+                            >
+                                <span
+                                    class="font-headline-md text-headline-md text-on-surface"
+                                    >Do you offer technical integration
+                                    help?</span
+                                >
+                                <span
+                                    class="material-symbols-outlined transition-transform duration-300"
+                                    >expand_more</span
+                                >
+                            </button>
+                            <div class="px-6 pb-6 hidden">
+                                <p class="text-body-md text-on-surface-variant">
+                                    Yes! We provide dedicated integration
+                                    specialists for our Pro and Enterprise tiers
+                                    to help you migrate your data and connect
+                                    StockEase with your existing POS and
+                                    e-commerce platforms.
+                                </p>
+                            </div>
+                        </div>
+                        <!-- FAQ Item 3 -->
+                        <div
+                            class="bg-surface rounded-xl border border-outline-variant/20 overflow-hidden group"
+                        >
+                            <button
+                                class="w-full p-6 text-left flex justify-between items-center transition-colors hover:bg-primary/5"
+                                onclick="toggleFaq(this)"
+                            >
+                                <span
+                                    class="font-headline-md text-headline-md text-on-surface"
+                                    >Is there a live chat available?</span
+                                >
+                                <span
+                                    class="material-symbols-outlined transition-transform duration-300"
+                                    >expand_more</span
+                                >
+                            </button>
+                            <div class="px-6 pb-6 hidden">
+                                <p class="text-body-md text-on-surface-variant">
+                                    Live chat is available for logged-in users
+                                    directly within the StockEase dashboard from
+                                    9 AM to 6 PM EST, Monday through Friday.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            <!-- CTA Section -->
+            <section class="py-20 px-margin-desktop">
+                <div
+                    class="max-w-container-max mx-auto bg-inverse-surface rounded-[2rem] p-12 text-center relative overflow-hidden"
+                >
+                    <div
+                        class="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"
+                    ></div>
+                    <div class="relative z-10">
+                        <h2
+                            class="font-headline-lg text-headline-lg text-white mb-4"
+                        >
+                            Ready to optimize your inventory?
+                        </h2>
+                        <p
+                            class="text-surface-variant/80 text-body-lg mb-8 max-w-xl mx-auto"
+                        >
+                            Join thousands of businesses already scaling their
+                            operations with StockEase's precise ERP toolset.
+                        </p>
+                        <div
+                            class="flex flex-col sm:flex-row gap-4 justify-center"
+                        >
+                            <button
+                                class="bg-primary-fixed text-on-primary-fixed font-label-md px-8 py-4 rounded-xl hover:bg-primary-fixed-dim transition-all active:scale-95"
+                            >
+                                Start Free Trial
+                            </button>
+                            <button
+                                class="bg-transparent border border-outline text-white font-label-md px-8 py-4 rounded-xl hover:bg-white/5 transition-all active:scale-95"
+                            >
+                                Schedule a Demo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        <!-- Footer -->
+        <footer
+            class="bg-inverse-surface dark:bg-surface-container-lowest border-t border-outline/10 w-full py-16"
+        >
+            <div
+                class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-gutter px-margin-desktop max-w-container-max mx-auto"
+            >
+                <div class="col-span-2">
+                    <div class="text-headline-md font-black text-white mb-4">
+                        StockEase
+                    </div>
+                    <p
+                        class="text-surface-variant/70 text-body-md mb-6 max-w-xs"
+                    >
+                        © 2024 StockEase ERP. All rights reserved. Precision in
+                        every transaction.
+                    </p>
+                    <div class="flex gap-4">
+                        <div
+                            class="w-10 h-10 rounded-full border border-outline/30 flex items-center justify-center text-white hover:border-primary transition-colors cursor-pointer"
+                        >
+                            <span class="material-symbols-outlined text-[20px]"
+                                >public</span
+                            >
+                        </div>
+                        <div
+                            class="w-10 h-10 rounded-full border border-outline/30 flex items-center justify-center text-white hover:border-primary transition-colors cursor-pointer"
+                        >
+                            <span class="material-symbols-outlined text-[20px]"
+                                >share</span
+                            >
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-6">Product</h4>
+                    <ul class="space-y-4">
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >Features</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >Pricing</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >Security</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-6">Resources</h4>
+                    <ul class="space-y-4">
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >Documentation</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >Help Center</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >API</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-6">Company</h4>
+                    <ul class="space-y-4">
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >About Us</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >Careers</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >Contact</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="text-white font-bold mb-6">Legal</h4>
+                    <ul class="space-y-4">
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >Privacy Policy</a
+                            >
+                        </li>
+                        <li>
+                            <a
+                                class="text-surface-variant/70 text-label-sm hover:text-primary-fixed transition-all underline underline-offset-4"
+                                href="#"
+                                >Terms of Service</a
+                            >
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </footer>
+        <script>
+            function toggleFaq(button) {
+                const content = button.nextElementSibling;
+                const icon = button.querySelector('.material-symbols-outlined');
+                const isOpen = !content.classList.contains('hidden');
+
+                // Close all FAQs
+                document
+                    .querySelectorAll('[id^="faq-content-"]')
+                    .forEach((el) => {
+                        el.classList.add('hidden');
+                        el.previousElementSibling.querySelector(
+                            '.material-symbols-outlined',
+                        ).style.transform = 'rotate(0deg)';
+                    });
+
+                if (!isOpen) {
+                    content.classList.remove('hidden');
+                    icon.style.transform = 'rotate(180deg)';
+                } else {
+                    content.classList.add('hidden');
+                    icon.style.transform = 'rotate(0deg)';
+                }
+            }
+        </script>
+    </body>
+</html>
