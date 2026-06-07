@@ -4,12 +4,13 @@ namespace App\Services\User;
 
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 
 class UserService
 {
     /**
-     * Get paginated users with searching.
+     * Get paginated users with search filter.
      *
      * @param  array<string, mixed>  $filters
      */
@@ -17,9 +18,14 @@ class UserService
     {
         return User::query()
             ->with('roles')
+            ->when($companyId = Auth::user()?->company_id, function ($query) use ($companyId) {
+                $query->where('company_id', $companyId);
+            })
             ->when($filters['search'] ?? null, function ($query, $search) {
-                $query->where('name', 'like', '%'.$search.'%')
-                    ->orWhere('email', 'like', '%'.$search.'%');
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', '%'.$search.'%')
+                        ->orWhere('email', 'like', '%'.$search.'%');
+                });
             })
             ->latest()
             ->paginate($perPage)
@@ -27,7 +33,7 @@ class UserService
     }
 
     /**
-     * Store a new user.
+     * Store a newly created user.
      *
      * @param  array<string, mixed>  $data
      */
@@ -38,6 +44,7 @@ class UserService
 
         $data['email_verified_at'] = now();
         $data['password'] = Hash::make($data['password']);
+        $data['company_id'] = Auth::user()?->company_id;
 
         $user = User::create($data);
 
@@ -76,7 +83,7 @@ class UserService
     }
 
     /**
-     * Reset user password.
+     * Reset the password for a user.
      */
     public function resetPassword(User $user, string $password): bool
     {

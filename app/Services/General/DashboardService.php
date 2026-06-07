@@ -14,6 +14,7 @@ use App\Models\StockLog;
 use App\Models\Supplier;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardService
@@ -178,94 +179,99 @@ class DashboardService
 
     /**
      * Get unified activity history.
+     *
+     * Cached for 2 minutes to avoid 4+ separate queries and in-PHP merging
+     * on every dashboard page load.
      */
     public function getActivityHistory(): array
     {
-        $latestSales = Sale::where('status', SaleStatus::Completed->value)
-            ->select(['id', 'total', 'created_at'])
-            ->with([
-                'saleItems:id,sale_id,qty,product_id',
-                'saleItems.product:id,name',
-            ])
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($sale) {
-                $items = $sale->saleItems->map(fn ($item) => "{$item->qty} {$item->product?->name}")->join(', ');
+        return Cache::remember('dashboard_activity_history', now()->addMinutes(2), function () {
+            $latestSales = Sale::where('status', SaleStatus::Completed->value)
+                ->select(['id', 'total', 'created_at'])
+                ->with([
+                    'saleItems:id,sale_id,qty,product_id',
+                    'saleItems.product:id,name',
+                ])
+                ->latest()
+                ->take(10)
+                ->get()
+                ->map(function ($sale) {
+                    $items = $sale->saleItems->map(fn ($item) => "{$item->qty} {$item->product?->name}")->join(', ');
 
-                return [
-                    'id' => 'sale_'.$sale->id,
-                    'type' => 'sale',
-                    'desc' => "Penjualan {$items} sebesar Rp ".number_format($sale->total, 0, ',', '.'),
-                    'time' => $sale->created_at->diffForHumans(),
-                    'created_at' => $sale->created_at,
-                ];
-            });
+                    return [
+                        'id' => 'sale_'.$sale->id,
+                        'type' => 'sale',
+                        'desc' => "Penjualan {$items} sebesar Rp ".number_format($sale->total, 0, ',', '.'),
+                        'time' => $sale->created_at->diffForHumans(),
+                        'created_at' => $sale->created_at,
+                    ];
+                });
 
-        $latestPurchases = Purchase::latest()
-            ->select(['id', 'total', 'created_at'])
-            ->with([
-                'purchaseItems:id,purchase_id,qty,product_id',
-                'purchaseItems.product:id,name',
-            ])
-            ->take(10)
-            ->get()
-            ->map(function ($purchase) {
-                $items = $purchase->purchaseItems->map(fn ($item) => "{$item->qty} {$item->product?->name}")->join(', ');
+            $latestPurchases = Purchase::latest()
+                ->select(['id', 'total', 'created_at'])
+                ->with([
+                    'purchaseItems:id,purchase_id,qty,product_id',
+                    'purchaseItems.product:id,name',
+                ])
+                ->take(10)
+                ->get()
+                ->map(function ($purchase) {
+                    $items = $purchase->purchaseItems->map(fn ($item) => "{$item->qty} {$item->product?->name}")->join(', ');
 
-                return [
-                    'id' => 'purchase_'.$purchase->id,
-                    'type' => 'purchase',
-                    'desc' => "Pembelian menambahkan {$items} produk sebesar Rp ".number_format($purchase->total, 0, ',', '.'),
-                    'time' => $purchase->created_at->diffForHumans(),
-                    'created_at' => $purchase->created_at,
-                ];
-            });
+                    return [
+                        'id' => 'purchase_'.$purchase->id,
+                        'type' => 'purchase',
+                        'desc' => "Pembelian menambahkan {$items} produk sebesar Rp ".number_format($purchase->total, 0, ',', '.'),
+                        'time' => $purchase->created_at->diffForHumans(),
+                        'created_at' => $purchase->created_at,
+                    ];
+                });
 
-        $latestStockLogs = StockLog::select(['id', 'type', 'qty', 'created_at', 'product_id'])
-            ->with('product:id,name')
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($log) {
-                $isIncreasing = $log->type === StockLogType::In->value || ($log->type === StockLogType::Adjust->value && $log->qty > 0);
-                $action = $isIncreasing ? 'bertambah' : 'berkurang';
-                $absQty = abs($log->qty);
+            $latestStockLogs = StockLog::select(['id', 'type', 'qty', 'created_at', 'product_id'])
+                ->with('product:id,name')
+                ->latest()
+                ->take(10)
+                ->get()
+                ->map(function ($log) {
+                    $isIncreasing = $log->type === StockLogType::In->value || ($log->type === StockLogType::Adjust->value && $log->qty > 0);
+                    $action = $isIncreasing ? 'bertambah' : 'berkurang';
+                    $absQty = abs($log->qty);
 
-                return [
-                    'id' => 'stock_'.$log->id,
-                    'type' => 'stock',
-                    'desc' => "Stok {$log->product?->name} {$action} sebanyak {$absQty}",
-                    'time' => $log->created_at->diffForHumans(),
-                    'created_at' => $log->created_at,
-                ];
-            });
+                    return [
+                        'id' => 'stock_'.$log->id,
+                        'type' => 'stock',
+                        'desc' => "Stok {$log->product?->name} {$action} sebanyak {$absQty}",
+                        'time' => $log->created_at->diffForHumans(),
+                        'created_at' => $log->created_at,
+                    ];
+                });
 
-        $latestPriceUpdates = PriceHistory::select(['id', 'created_at', 'product_id', 'user_id'])
-            ->with(['product:id,name', 'user:id,name'])
-            ->latest()
-            ->take(10)
-            ->get()
-            ->map(function ($history) {
-                return [
-                    'id' => 'price_'.$history->id,
-                    'type' => 'price',
-                    'desc' => "Harga {$history->product?->name} diperbarui oleh {$history->user?->name}",
-                    'time' => $history->created_at->diffForHumans(),
-                    'created_at' => $history->created_at,
-                ];
-            });
+            $latestPriceUpdates = PriceHistory::select(['id', 'created_at', 'product_id', 'user_id'])
+                ->with(['product:id,name', 'user:id,name'])
+                ->latest()
+                ->take(10)
+                ->get()
+                ->map(function ($history) {
+                    return [
+                        'id' => 'price_'.$history->id,
+                        'type' => 'price',
+                        'desc' => "Harga {$history->product?->name} diperbarui oleh {$history->user?->name}",
+                        'time' => $history->created_at->diffForHumans(),
+                        'created_at' => $history->created_at,
+                    ];
+                });
 
-        return collect()
-            ->merge($latestSales)
-            ->merge($latestPurchases)
-            ->merge($latestStockLogs)
-            ->merge($latestPriceUpdates)
-            ->sortByDesc('created_at')
-            ->take(10)
-            ->values()
-            ->map(fn ($a) => collect($a)->except('created_at'))
-            ->toArray();
+            return collect()
+                ->merge($latestSales)
+                ->merge($latestPurchases)
+                ->merge($latestStockLogs)
+                ->merge($latestPriceUpdates)
+                ->sortByDesc('created_at')
+                ->take(10)
+                ->values()
+                ->map(fn ($a) => collect($a)->except('created_at'))
+                ->toArray();
+        });
     }
 
     /**

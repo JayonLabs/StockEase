@@ -59,6 +59,9 @@ class TrashController extends Controller
         'Warehouse' => Warehouse::class,
     ];
 
+    /**
+     * Create a new controller instance.
+     */
     public function __construct(protected TrashService $trashService) {}
 
     /**

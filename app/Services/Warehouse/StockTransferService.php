@@ -84,8 +84,14 @@ class StockTransferService
                 'date' => $data['date'],
             ]);
 
-            $fromPivot = $fromWarehouse->products()->where('product_id', $product->id)->first();
-            $currentFromStock = $fromPivot ? $fromPivot->pivot->stock : 0;
+            $pivotStocks = DB::table('warehouse_product')
+                ->where('product_id', $product->id)
+                ->whereIn('warehouse_id', [$data['from_warehouse_id'], $data['to_warehouse_id']])
+                ->lockForUpdate()
+                ->pluck('stock', 'warehouse_id');
+
+            $currentFromStock = (int) ($pivotStocks[$data['from_warehouse_id']] ?? 0);
+            $currentToStock = (int) ($pivotStocks[$data['to_warehouse_id']] ?? 0);
 
             if ($currentFromStock < $data['qty']) {
                 throw new \Exception("Stok tidak mencukupi di gudang asal ({$fromWarehouse->name}).");
@@ -96,9 +102,6 @@ class StockTransferService
                     'stock' => $currentFromStock - $data['qty'],
                 ],
             ]);
-
-            $toPivot = $toWarehouse->products()->where('product_id', $product->id)->first();
-            $currentToStock = $toPivot ? $toPivot->pivot->stock : 0;
 
             $toWarehouse->products()->syncWithoutDetaching([
                 $product->id => [

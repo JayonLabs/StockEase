@@ -226,18 +226,15 @@ class TrashService
 
     /**
      * Get the total count of trashed items across all tracked models.
+     *
+     * Uses a single COUNT(*) wrapper around the UNION ALL query instead of
+     * iterating over each model and issuing a separate COUNT query per model.
      */
     public function getTotalTrashedCount(): int
     {
-        $total = 0;
+        $unionSql = $this->buildUnionQuery();
 
-        foreach ($this->trackedModels as $entry) {
-            /** @var class-string<Model&SoftDeletes> $class */
-            $class = $entry['class'];
-            $total += $class::onlyTrashed()->count();
-        }
-
-        return $total;
+        return (int) DB::selectOne("SELECT COUNT(*) as aggregate FROM ({$unionSql}) as trash_union")->aggregate;
     }
 
     /**

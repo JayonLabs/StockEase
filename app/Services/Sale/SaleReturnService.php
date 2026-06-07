@@ -18,6 +18,9 @@ use Illuminate\Support\Facades\DB;
 
 class SaleReturnService
 {
+    /**
+     * Create a new service instance.
+     */
     public function __construct(
         private readonly RestoreProductStock $restoreProductStock,
     ) {}

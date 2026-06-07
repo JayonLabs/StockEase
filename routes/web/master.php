@@ -14,4 +14,8 @@ Route::middleware(['auth', 'role:admin, warehouse'])->group(function () {
 
     Route::resource('product', ProductController::class);
     Route::resource('unit', UnitController::class);
+
+    Route::post('/products', [ProductController::class, 'store'])
+        ->middleware('subscription.limit:product')
+        ->name('products.store');
 });

@@ -16,6 +16,9 @@ use Inertia\Response;
 
 class ShiftController extends Controller
 {
+    /**
+     * Create a new controller instance.
+     */
     public function __construct(
         protected ShiftService $shiftService
     ) {}
