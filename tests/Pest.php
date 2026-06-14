@@ -56,3 +56,12 @@ function initTenancyFromUser(User $user): void
         tenancy()->initialize(Company::find($user->company_id));
     }
 }
+
+function createPlatformOwner(): User
+{
+    $demoCompany = Company::factory()->create(['name' => 'Demo Perusahaan']);
+    $user = User::factory()->create(['company_id' => $demoCompany->id]);
+    $user->syncRoles(['super_admin', 'platform_owner']);
+
+    return $user;
+}

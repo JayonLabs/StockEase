@@ -210,11 +210,22 @@
 - fix trait deprecated untuk Tenancy (Done)
 - buatkan test untuk race condition di semua logic yang sekiranya perlu untuk anti race condition (Done)
 
+<!-- TODO: 14/06/2026 -->
+
+- untuk UMKM itu 50 ribu aja perbulan tidak ada diskon untuk tahunan (Done)
+- untuk ada dashboard lain untuk platform ku ini biar bisa lihat berapa user yang langganan gitu dan ada metrik lainnya yang mendukung bisnis (Done)
+- refactor untuk dashboard owner itu pakai sidebar biar sama seperti page tenant (Done)
+- fix harga di pricing page 17% hemat untuk tahunan (Done)
+- kirim email ke admin sales di contact us page (Done)
+- refactor untuk queue log page itu hanya bisa diakses oleh platform owner (Done)
+
 <!-- TODO: -->
 
-- pertimbangkan untuk UMKM itu 50 ribu aja perbulan tidak ada diskon untuk tahunan
-- kirim email ke admin sales di contact us page
 - fix dark mode di landing page
+- buatkan landing pagenya biar SEO friendly dan mudah di crawl dengan domain my.id dan biar bisa paling atas di google
+- kirim email terimakasih dan laporan untuk yang langganan platformnya
+- pastikan coverage test diatas 80 persen
+- isikan docblock untuk tiap method di code backendnya biar gampang nanti baca codenya
 - tambahin lagi beberapa laporan atau fitur di laporan penjualan
 - bikin API untuk mobile app
 
@@ -228,3 +239,16 @@ cek issue ini pakai gh cli
 https://github.com/DewaJayon/StockEase/issues/128
 
 cek issue tersebut apakah valid, jika valid bisa di fix langsung sesuaikan dengan best practice laravel dan buatkan testnya secara menyeluruh untuk struktur folder testnya itu adalah cerminan struktur folder app, gunakan skill yang kamu perlukan untuk menyelesaikan masalah tersebut. utamakan untuk performa dan kualitas kode yang baik. pastikan frontend dan backendnya compatible jika ada perubahan yang perlu berubah frontendnya itu bisa di fix langsung. close issue tersebut ketika sudah selesai
+
+tolong improve testku ini biar minimal 80 persen dong aku jalaninnya pakai php artisan test --compact --coverage untuk melihat coverage dari testnya, untuk struktur folder testnya itu cerminan dari struktur folder app nya, berikut hasil dari coverage testku tolong di improve lagi dan gunakan skill yang kamu butuhkan pakai bash aja jangan powershell
+
+push branch develop ini ke github dan buatkan PR nya. jangan pakai 'git add .' melainkan commit messagenya sesuai dengan code yang berubah. untuk yang aku kerjakan yaitu
+
+- untuk UMKM itu 50 ribu aja perbulan tidak ada diskon untuk tahunan (Done)
+- untuk ada dashboard lain untuk platform ku ini biar bisa lihat berapa user yang langganan gitu dan ada metrik lainnya yang mendukung bisnis (Done)
+- refactor untuk dashboard owner itu pakai sidebar biar sama seperti page tenant (Done)
+- fix harga di pricing page 17% hemat untuk tahunan (Done)
+- kirim email ke admin sales di contact us page (Done)
+- refactor untuk queue log page itu hanya bisa diakses oleh platform owner (Done)
+
+pastikan semuanya sudah di commit dan di push baru buatkan PR nya pakai gh cli. pakai conventional commit dengan bahasa inggris. jangan pakai emoji

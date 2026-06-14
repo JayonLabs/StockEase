@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -10,12 +11,27 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
 
 class Company extends BaseTenant
 {
-    use HasDomains;
+    use HasDomains, HasFactory;
 
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
     protected $table = 'companies';
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'name', 'slug', 'owner_id', 'address', 'phone', 'is_active',
+        'name',
+        'slug',
+        'owner_id',
+        'address',
+        'phone',
+        'is_active',
     ];
 
     /**
@@ -50,11 +66,17 @@ class Company extends BaseTenant
         return [];
     }
 
+    /**
+     * Encode the attributes for tenant storage.
+     */
     protected function encodeAttributes(): void
     {
         //
     }
 
+    /**
+     * Decode the virtual column for tenant storage.
+     */
     protected function decodeVirtualColumn(): void
     {
         //

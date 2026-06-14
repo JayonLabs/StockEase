@@ -173,9 +173,13 @@ it('checks subscription limit respects tenant isolation', function () {
         'starts_at' => now(),
     ]);
 
-    Warehouse::factory()->create(['company_id' => $this->companyA->id]);
+    // Create warehouse in tenant context so the middleware's count query matches
+    initTenancyFromUser($this->userA);
+    Warehouse::factory()->create();
+    tenancy()->end();
 
-    $this->userA->assignRole('admin');
+    // Ensure user is not super_admin so the subscription limit check runs
+    $this->userA->syncRoles('admin');
 
     actingAs($this->userA);
 

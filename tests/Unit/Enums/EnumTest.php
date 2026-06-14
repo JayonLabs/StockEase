@@ -21,12 +21,13 @@ uses(TestCase::class);
 // ============================================================
 
 describe('Role enum', function () {
-    it('has four cases', function () {
-        expect(Role::cases())->toHaveCount(4);
+    it('has five cases', function () {
+        expect(Role::cases())->toHaveCount(5);
     });
 
     it('has correct values', function () {
         expect(Role::SuperAdmin->value)->toBe('super_admin');
+        expect(Role::PlatformOwner->value)->toBe('platform_owner');
         expect(Role::Admin->value)->toBe('admin');
         expect(Role::Cashier->value)->toBe('cashier');
         expect(Role::Warehouse->value)->toBe('warehouse');
@@ -34,6 +35,7 @@ describe('Role enum', function () {
 
     it('has correct labels', function () {
         expect(Role::SuperAdmin->label())->toBe('Super Administrator');
+        expect(Role::PlatformOwner->label())->toBe('Platform Owner');
         expect(Role::Admin->label())->toBe('Administrator');
         expect(Role::Cashier->label())->toBe('Kasir');
         expect(Role::Warehouse->label())->toBe('Gudang');
@@ -41,6 +43,7 @@ describe('Role enum', function () {
 
     it('tryFrom returns enum for valid value', function () {
         expect(Role::tryFrom('super_admin'))->toBe(Role::SuperAdmin);
+        expect(Role::tryFrom('platform_owner'))->toBe(Role::PlatformOwner);
         expect(Role::tryFrom('admin'))->toBe(Role::Admin);
         expect(Role::tryFrom('cashier'))->toBe(Role::Cashier);
     });

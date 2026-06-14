@@ -144,7 +144,10 @@ const showPassword = () => {
             </Card>
             <div class="text-center text-sm text-muted-foreground">
                 Belum punya akun?
-                <Link :href="route('register')" class="underline hover:text-foreground">
+                <Link
+                    :href="route('register')"
+                    class="underline hover:text-foreground"
+                >
                     Daftar
                 </Link>
             </div>

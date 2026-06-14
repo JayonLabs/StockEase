@@ -235,8 +235,9 @@ describe('Date range filter', function () {
 describe('Search filter', function () {
     it('searches by customer name', function () {
         /** @var TestCase&object{admin:User} $this */
-        completedSale(['customer_name' => 'John Doe']);
-        completedSale(['customer_name' => 'Jane Smith']);
+        $cashier = User::factory()->create(['name' => 'Budi Santoso']);
+        completedSale(['customer_name' => 'John Doe', 'user_id' => $cashier->id]);
+        completedSale(['customer_name' => 'Jane Smith', 'user_id' => $cashier->id]);
 
         actingAs($this->admin)
             ->get(route('sale.index', ['search' => 'John']))

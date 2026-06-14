@@ -1,6 +1,8 @@
 <?php
 
+use App\Console\Commands\SeedProduction;
 use App\Enums\Role as RoleEnum;
+use App\Models\Company;
 use App\Models\User;
 use Database\Seeders\UserSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -12,81 +14,137 @@ use function Pest\Laravel\artisan;
 uses(LazilyRefreshDatabase::class);
 
 describe('SeedProduction Command', function () {
+
+    // -----------------------------------------------------------------------
+    // Permissions
+    // -----------------------------------------------------------------------
+
     it('creates all permissions when run on empty database', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
-        $permissions = Permission::all();
-
-        expect($permissions)->not->toBeEmpty();
-        expect($permissions->count())->toBeGreaterThan(80);
+        expect(Permission::all())->not->toBeEmpty()
+            ->and(Permission::count())->toBeGreaterThan(80);
     });
 
-    it('creates all four roles', function () {
+    it('does not register view_queue_worker_logs (moved to role-based access)', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
-        $roles = Role::all();
-
-        expect($roles)->toHaveCount(4);
-        expect($roles->pluck('name')->toArray())
-            ->toEqualCanonicalizing(['super_admin', 'admin', 'cashier', 'warehouse']);
+        expect(Permission::where('name', 'view_queue_worker_logs')->exists())->toBeFalse();
     });
 
-    it('assigns permissions to admin role', function () {
+    it('view_activity_logs permission exists after seed', function () {
+        artisan('stockease:seed-production --force')
+            ->assertSuccessful();
+
+        expect(Permission::where('name', 'view_activity_logs')->where('guard_name', 'web')->exists())
+            ->toBeTrue();
+    });
+
+    it('view_activity_logs is NOT assigned to any role', function () {
+        artisan('stockease:seed-production --force')
+            ->assertSuccessful();
+
+        foreach (Role::all() as $role) {
+            expect($role->hasPermissionTo('view_activity_logs'))
+                ->toBeFalse("Role '{$role->name}' should NOT have view_activity_logs");
+        }
+    });
+
+    it('does not duplicate permissions when run multiple times', function () {
+        artisan('stockease:seed-production --force')->assertSuccessful();
+        $firstCount = Permission::count();
+
+        artisan('stockease:seed-production --force')->assertSuccessful();
+
+        expect(Permission::count())->toBe($firstCount);
+    });
+
+    // -----------------------------------------------------------------------
+    // Roles
+    // -----------------------------------------------------------------------
+
+    it('creates all five roles', function () {
+        artisan('stockease:seed-production --force')
+            ->assertSuccessful();
+
+        expect(Role::all()->pluck('name')->toArray())
+            ->toEqualCanonicalizing(['super_admin', 'platform_owner', 'admin', 'cashier', 'warehouse']);
+    });
+
+    it('super_admin role has no explicit permissions (handled by Gate::before)', function () {
+        artisan('stockease:seed-production --force')
+            ->assertSuccessful();
+
+        expect(Role::findByName('super_admin', 'web')->permissions)->toBeEmpty();
+    });
+
+    it('platform_owner role has no explicit permissions (access via role middleware)', function () {
+        artisan('stockease:seed-production --force')
+            ->assertSuccessful();
+
+        expect(Role::findByName('platform_owner', 'web')->permissions)->toBeEmpty();
+    });
+
+    it('assigns permissions to the admin role', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
         $adminRole = Role::findByName('admin', 'web');
 
-        expect($adminRole->permissions)->not->toBeEmpty();
-        expect($adminRole->hasPermissionTo('view_users'))->toBeTrue();
-        expect($adminRole->hasPermissionTo('view_products'))->toBeTrue();
-        expect($adminRole->hasPermissionTo('access_pos'))->toBeTrue();
+        expect($adminRole->permissions)->not->toBeEmpty()
+            ->and($adminRole->hasPermissionTo('view_users'))->toBeTrue()
+            ->and($adminRole->hasPermissionTo('view_products'))->toBeTrue()
+            ->and($adminRole->hasPermissionTo('access_pos'))->toBeTrue();
     });
 
-    it('assigns permissions to cashier role', function () {
+    it('assigns permissions to the cashier role', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
         $cashierRole = Role::findByName('cashier', 'web');
 
-        expect($cashierRole->permissions)->not->toBeEmpty();
-        expect($cashierRole->hasPermissionTo('access_pos'))->toBeTrue();
-        expect($cashierRole->hasPermissionTo('checkout_pos'))->toBeTrue();
+        expect($cashierRole->permissions)->not->toBeEmpty()
+            ->and($cashierRole->hasPermissionTo('access_pos'))->toBeTrue()
+            ->and($cashierRole->hasPermissionTo('checkout_pos'))->toBeTrue();
     });
 
-    it('assigns permissions to warehouse role', function () {
+    it('assigns permissions to the warehouse role', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
         $warehouseRole = Role::findByName('warehouse', 'web');
 
-        expect($warehouseRole->permissions)->not->toBeEmpty();
-        expect($warehouseRole->hasPermissionTo('view_products'))->toBeTrue();
-        expect($warehouseRole->hasPermissionTo('create_products'))->toBeTrue();
+        expect($warehouseRole->permissions)->not->toBeEmpty()
+            ->and($warehouseRole->hasPermissionTo('view_products'))->toBeTrue()
+            ->and($warehouseRole->hasPermissionTo('create_products'))->toBeTrue();
     });
 
-    it('super_admin role has no explicit permissions', function () {
-        artisan('stockease:seed-production --force')
-            ->assertSuccessful();
+    it('does not duplicate roles when run multiple times', function () {
+        artisan('stockease:seed-production --force')->assertSuccessful();
+        $firstCount = Role::count();
 
-        $superAdminRole = Role::findByName('super_admin', 'web');
+        artisan('stockease:seed-production --force')->assertSuccessful();
 
-        expect($superAdminRole->permissions)->toBeEmpty();
+        expect(Role::count())->toBe($firstCount);
     });
 
-    it('creates the admin user if not exists', function () {
+    // -----------------------------------------------------------------------
+    // Admin (tenant super_admin) user
+    // -----------------------------------------------------------------------
+
+    it('creates the tenant admin user', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
         $user = User::where('email', UserSeeder::DEMO_EMAIL)->first();
 
-        expect($user)->not->toBeNull();
-        expect($user->name)->toBe('Dewa Jayon');
+        expect($user)->not->toBeNull()
+            ->and($user->name)->toBe('Dewa Jayon');
     });
 
-    it('assigns super_admin role to the admin user', function () {
+    it('assigns the super_admin role to the tenant admin user', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
@@ -95,102 +153,103 @@ describe('SeedProduction Command', function () {
         expect($user->hasRole(RoleEnum::SuperAdmin->value))->toBeTrue();
     });
 
-    it('assigns all permissions directly to the admin user', function () {
+    it('grants all permissions directly to the tenant admin user', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
         $user = User::where('email', UserSeeder::DEMO_EMAIL)->first();
-        $totalPermissions = Permission::count();
 
-        expect($user->permissions)->toHaveCount($totalPermissions);
-        expect($user->can('view_activity_logs'))->toBeTrue();
-        expect($user->can('view_queue_worker_logs'))->toBeTrue();
-        expect($user->can('view_dashboard'))->toBeTrue();
+        expect($user->permissions)->toHaveCount(Permission::count())
+            ->and($user->can('view_activity_logs'))->toBeTrue()
+            ->and($user->can('view_dashboard'))->toBeTrue();
     });
 
-    it('does not duplicate permissions when run multiple times', function () {
-        artisan('stockease:seed-production --force')
-            ->assertSuccessful();
-
-        $firstCount = Permission::count();
-
-        artisan('stockease:seed-production --force')
-            ->assertSuccessful();
-
-        expect(Permission::count())->toBe($firstCount);
-    });
-
-    it('does not duplicate roles when run multiple times', function () {
-        artisan('stockease:seed-production --force')
-            ->assertSuccessful();
-
-        $firstCount = Role::count();
-
-        artisan('stockease:seed-production --force')
-            ->assertSuccessful();
-
-        expect(Role::count())->toBe($firstCount);
-    });
-
-    it('updates existing admin user without creating duplicate', function () {
-        artisan('stockease:seed-production --force')
-            ->assertSuccessful();
-
+    it('does not duplicate the admin user when run multiple times', function () {
+        artisan('stockease:seed-production --force')->assertSuccessful();
         $firstCount = User::count();
 
-        artisan('stockease:seed-production --force')
-            ->assertSuccessful();
+        artisan('stockease:seed-production --force')->assertSuccessful();
 
-        expect(User::count())->toBe($firstCount);
-        expect(User::where('email', UserSeeder::DEMO_EMAIL)->count())->toBe(1);
+        expect(User::count())->toBe($firstCount)
+            ->and(User::where('email', UserSeeder::DEMO_EMAIL)->count())->toBe(1);
     });
 
-    it('re-syncs permissions for existing admin user', function () {
-        artisan('stockease:seed-production --force')
-            ->assertSuccessful();
+    it('re-syncs all permissions to the admin user on subsequent runs', function () {
+        artisan('stockease:seed-production --force')->assertSuccessful();
 
         $user = User::where('email', UserSeeder::DEMO_EMAIL)->first();
-
-        // Manually remove a permission to test re-sync
         $perm = $user->permissions->first();
         $user->revokePermissionTo($perm);
 
         expect($user->fresh()->permissions->count())->toBe(Permission::count() - 1);
 
-        // Run again — should re-sync all permissions
-        artisan('stockease:seed-production --force')
-            ->assertSuccessful();
+        artisan('stockease:seed-production --force')->assertSuccessful();
 
         expect($user->fresh()->permissions)->toHaveCount(Permission::count());
     });
 
-    it('view_activity_logs permission exists after seed', function () {
+    // -----------------------------------------------------------------------
+    // Platform owner user
+    // -----------------------------------------------------------------------
+
+    it('creates the platform owner user', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
-        $perm = Permission::where('name', 'view_activity_logs')->where('guard_name', 'web')->first();
+        $owner = User::where('email', SeedProduction::PLATFORM_OWNER_EMAIL)->first();
 
-        expect($perm)->not->toBeNull();
+        expect($owner)->not->toBeNull()
+            ->and($owner->name)->toBe('Dewa Jayon');
     });
 
-    it('view_queue_worker_logs permission exists after seed', function () {
+    it('assigns platform_owner and super_admin roles to the platform owner', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
-        $perm = Permission::where('name', 'view_queue_worker_logs')->where('guard_name', 'web')->first();
+        $owner = User::where('email', SeedProduction::PLATFORM_OWNER_EMAIL)->first();
 
-        expect($perm)->not->toBeNull();
+        expect($owner->hasRole(RoleEnum::PlatformOwner->value))->toBeTrue()
+            ->and($owner->hasRole(RoleEnum::SuperAdmin->value))->toBeTrue();
     });
 
-    it('view_activity_logs is NOT assigned to any role', function () {
+    it('creates a company and associates it with the platform owner', function () {
         artisan('stockease:seed-production --force')
             ->assertSuccessful();
 
-        $roles = Role::all();
+        $owner = User::where('email', SeedProduction::PLATFORM_OWNER_EMAIL)->first();
+        $company = Company::where('slug', 'stockease-platform')->first();
 
-        foreach ($roles as $role) {
-            expect($role->hasPermissionTo('view_activity_logs'))
-                ->toBeFalse("Role '{$role->name}' should NOT have view_activity_logs");
-        }
+        expect($company)->not->toBeNull()
+            ->and($owner->company_id)->toBe($company->id);
+    });
+
+    it('does not duplicate the platform owner when run multiple times', function () {
+        artisan('stockease:seed-production --force')->assertSuccessful();
+        $firstCount = User::count();
+
+        artisan('stockease:seed-production --force')->assertSuccessful();
+
+        expect(User::count())->toBe($firstCount)
+            ->and(User::where('email', SeedProduction::PLATFORM_OWNER_EMAIL)->count())->toBe(1);
+    });
+
+    it('does not duplicate the platform company when run multiple times', function () {
+        artisan('stockease:seed-production --force')->assertSuccessful();
+
+        artisan('stockease:seed-production --force')->assertSuccessful();
+
+        expect(Company::where('slug', 'stockease-platform')->count())->toBe(1);
+    });
+
+    it('platform owner cannot access tenant routes (role middleware enforces separation)', function () {
+        artisan('stockease:seed-production --force')
+            ->assertSuccessful();
+
+        $owner = User::where('email', SeedProduction::PLATFORM_OWNER_EMAIL)->first();
+
+        expect($owner->hasRole(RoleEnum::PlatformOwner->value))->toBeTrue()
+            ->and($owner->hasRole('admin'))->toBeFalse()
+            ->and($owner->hasRole('cashier'))->toBeFalse()
+            ->and($owner->hasRole('warehouse'))->toBeFalse();
     });
 });

@@ -203,5 +203,5 @@ it('uses performant seeding pattern', function () {
     $seeder->run();
 
     expect(Permission::count())->toBeGreaterThan(0);
-    expect(Role::count())->toBe(4);
+    expect(Role::count())->toBe(5);
 });
