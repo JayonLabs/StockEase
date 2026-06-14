@@ -33,9 +33,24 @@ class SubscriptionController extends Controller
         $company = Auth::user()?->company;
         $activeSubscription = $company?->activeSubscription();
 
+        $plans = Plan::active()->get()->map(fn (Plan $plan) => [
+            'id' => $plan->id,
+            'name' => $plan->name,
+            'slug' => $plan->slug,
+            'description' => $plan->description,
+            'price_monthly' => (int) $plan->price_monthly,
+            'price_annual' => (int) $plan->price_annual,
+            'annual_per_month' => $plan->annualPerMonth(),
+            'annual_savings_percent' => $plan->annualSavingsPercent(),
+            'max_products' => $plan->max_products,
+            'max_users' => $plan->max_users,
+            'max_warehouses' => $plan->max_warehouses,
+            'trial_days' => $plan->trial_days,
+        ]);
+
         return Inertia::render('Subscription/Index', [
             'currentSubscription' => $activeSubscription?->load('plan'),
-            'plans' => Plan::active()->get(),
+            'plans' => $plans,
         ]);
     }
 

@@ -2,7 +2,14 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { formatPrice } from '@/lib/utils';
 
 defineProps({
@@ -15,7 +22,10 @@ defineProps({
         <Head><title>Plans - Admin</title></Head>
         <template #breadcrumb>
             <div class="flex items-center gap-2">
-                <Link :href="route('dashboard')" class="text-muted-foreground hover:text-foreground">
+                <Link
+                    :href="route('dashboard')"
+                    class="text-muted-foreground hover:text-foreground"
+                >
                     Dashboard
                 </Link>
                 <span class="text-muted-foreground">/</span>
@@ -46,13 +56,25 @@ defineProps({
                             <TableCell class="font-medium">
                                 {{ plan.name }}
                             </TableCell>
-                            <TableCell>{{ formatPrice(plan.price_monthly) }}</TableCell>
-                            <TableCell>{{ formatPrice(plan.price_annual) }}</TableCell>
-                            <TableCell>{{ plan.max_products ?? 'Unlimited' }}</TableCell>
-                            <TableCell>{{ plan.max_users ?? 'Unlimited' }}</TableCell>
-                            <TableCell>{{ plan.max_warehouses ?? 'Unlimited' }}</TableCell>
+                            <TableCell>{{
+                                formatPrice(plan.price_monthly)
+                            }}</TableCell>
+                            <TableCell>{{
+                                formatPrice(plan.price_annual)
+                            }}</TableCell>
+                            <TableCell>{{
+                                plan.max_products ?? 'Unlimited'
+                            }}</TableCell>
+                            <TableCell>{{
+                                plan.max_users ?? 'Unlimited'
+                            }}</TableCell>
+                            <TableCell>{{
+                                plan.max_warehouses ?? 'Unlimited'
+                            }}</TableCell>
                             <TableCell>{{ plan.trial_days }} hari</TableCell>
-                            <TableCell>{{ plan.is_active ? 'Ya' : 'Tidak' }}</TableCell>
+                            <TableCell>{{
+                                plan.is_active ? 'Ya' : 'Tidak'
+                            }}</TableCell>
                         </TableRow>
                     </TableBody>
                 </Table>

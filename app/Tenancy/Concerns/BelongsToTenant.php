@@ -20,11 +20,20 @@ trait BelongsToTenant
 {
     public static $tenantIdColumn = 'company_id';
 
+    /**
+     * Define an inverse one-to-many relationship to the tenant model.
+     */
     public function tenant()
     {
         return $this->belongsTo(config('tenancy.tenant_model'), static::$tenantIdColumn);
     }
 
+    /**
+     * Bootstrap the BelongsToTenant trait on the model.
+     *
+     * Registers a global scope and a creating event listener
+     * to automatically set the tenant key on new models.
+     */
     public static function bootBelongsToTenant(): void
     {
         static::addGlobalScope(new TenantScope);

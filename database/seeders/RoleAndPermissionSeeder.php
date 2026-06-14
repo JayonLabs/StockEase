@@ -27,7 +27,7 @@ class RoleAndPermissionSeeder extends Seeder
         $this->call(PermissionSeeder::class);
 
         // Bulk insert roles (single query).
-        $roleNames = ['super_admin', 'admin', 'cashier', 'warehouse'];
+        $roleNames = ['super_admin', 'platform_owner', 'admin', 'cashier', 'warehouse'];
         $now = now();
         DB::table(config('permission.table_names.roles', 'roles'))
             ->insertOrIgnore(array_map(fn (string $name) => [

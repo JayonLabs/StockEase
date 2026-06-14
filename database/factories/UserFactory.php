@@ -40,6 +40,8 @@ class UserFactory extends Factory
      */
     public function configure(): static
     {
+        $tenantRoles = [Role::Admin, Role::Cashier, Role::Warehouse, Role::SuperAdmin];
+
         $roles = new \WeakMap;
 
         return $this
@@ -51,7 +53,7 @@ class UserFactory extends Factory
                     $user->offsetUnset('role');
                 }
             })
-            ->afterCreating(function (User $user) use ($roles) {
+            ->afterCreating(function (User $user) use ($roles, $tenantRoles) {
                 $intendedRole = $roles[$user] ?? null;
 
                 if ($intendedRole && in_array($intendedRole, array_map(fn (Role $r) => $r->value, Role::cases()))) {
@@ -59,7 +61,7 @@ class UserFactory extends Factory
                 }
 
                 if (! $user->hasAnyRole(array_map(fn (Role $r) => $r->value, Role::cases()))) {
-                    $user->assignRole(fake()->randomElement(Role::cases())->value);
+                    $user->assignRole(fake()->randomElement($tenantRoles)->value);
                 }
             });
     }

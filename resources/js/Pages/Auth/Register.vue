@@ -5,7 +5,13 @@ import { Head, Link, useForm } from '@inertiajs/vue3';
 import { Button } from '@/Components/ui/button';
 import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardHeader,
+    CardTitle,
+} from '@/Components/ui/card';
 import { Eye, Loader2 } from 'lucide-vue-next';
 import { ref } from 'vue';
 
@@ -104,7 +110,9 @@ const submit = () => {
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="password_confirmation">Konfirmasi Kata Sandi</Label>
+                            <Label for="password_confirmation"
+                                >Konfirmasi Kata Sandi</Label
+                            >
                             <Input
                                 id="password_confirmation"
                                 v-model="form.password_confirmation"
@@ -113,11 +121,20 @@ const submit = () => {
                                 required
                                 autocomplete="new-password"
                             />
-                            <InputError :message="form.errors.password_confirmation" />
+                            <InputError
+                                :message="form.errors.password_confirmation"
+                            />
                         </div>
 
-                        <Button type="submit" class="w-full" :disabled="form.processing">
-                            <Loader2 v-if="form.processing" class="w-4 h-4 animate-spin mr-2" />
+                        <Button
+                            type="submit"
+                            class="w-full"
+                            :disabled="form.processing"
+                        >
+                            <Loader2
+                                v-if="form.processing"
+                                class="w-4 h-4 animate-spin mr-2"
+                            />
                             Daftar
                         </Button>
                     </form>
@@ -126,7 +143,10 @@ const submit = () => {
 
             <div class="text-center text-sm text-muted-foreground">
                 Sudah punya akun?
-                <Link :href="route('login')" class="underline hover:text-foreground">
+                <Link
+                    :href="route('login')"
+                    class="underline hover:text-foreground"
+                >
                     Login
                 </Link>
             </div>

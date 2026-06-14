@@ -2,9 +2,23 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import { Head, Link } from '@inertiajs/vue3';
 import { Button } from '@/Components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/Components/ui/card';
+import {
+    Card,
+    CardContent,
+    CardDescription,
+    CardFooter,
+    CardHeader,
+    CardTitle,
+} from '@/Components/ui/card';
 import { Badge } from '@/Components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from '@/Components/ui/table';
 import { ArrowLeft, Eye } from 'lucide-vue-next';
 import { formatPrice } from '@/lib/utils';
 import { Separator } from '@/Components/ui/separator';
@@ -36,7 +50,7 @@ const statusLabel = (status) => {
     return map[status] || status;
 };
 
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID') : '-';
+const formatDate = (d) => (d ? new Date(d).toLocaleDateString('id-ID') : '-');
 </script>
 
 <template>
@@ -44,7 +58,10 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID') : '-';
         <Head><title>Subscription - Admin</title></Head>
         <template #breadcrumb>
             <div class="flex items-center gap-2">
-                <Link :href="route('dashboard')" class="text-muted-foreground hover:text-foreground">
+                <Link
+                    :href="route('dashboard')"
+                    class="text-muted-foreground hover:text-foreground"
+                >
                     Dashboard
                 </Link>
                 <span class="text-muted-foreground">/</span>
@@ -69,30 +86,54 @@ const formatDate = (d) => d ? new Date(d).toLocaleDateString('id-ID') : '-';
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        <TableRow v-for="sub in subscriptions.data" :key="sub.id">
+                        <TableRow
+                            v-for="sub in subscriptions.data"
+                            :key="sub.id"
+                        >
                             <TableCell class="font-medium">
                                 {{ sub.company?.name }}
                             </TableCell>
                             <TableCell>{{ sub.plan?.name }}</TableCell>
                             <TableCell>
-                                <Badge variant="outline" :class="statusVariant(sub.status)">
+                                <Badge
+                                    variant="outline"
+                                    :class="statusVariant(sub.status)"
+                                >
                                     {{ statusLabel(sub.status) }}
                                 </Badge>
                             </TableCell>
                             <TableCell>
-                                {{ sub.billing_cycle === 'annual' ? 'Tahunan' : 'Bulanan' }}
+                                {{
+                                    sub.billing_cycle === 'annual'
+                                        ? 'Tahunan'
+                                        : 'Bulanan'
+                                }}
                             </TableCell>
                             <TableCell>{{ formatDate(sub.ends_at) }}</TableCell>
                             <TableCell>
-                                <Link :href="route('admin.subscriptions.show', sub.id)">
-                                    <Button variant="ghost" size="icon" aria-label="Lihat detail">
+                                <Link
+                                    :href="
+                                        route(
+                                            'admin.subscriptions.show',
+                                            sub.id,
+                                        )
+                                    "
+                                >
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        aria-label="Lihat detail"
+                                    >
                                         <Eye class="w-4 h-4" />
                                     </Button>
                                 </Link>
                             </TableCell>
                         </TableRow>
                         <TableRow v-if="subscriptions.data.length === 0">
-                            <TableCell colspan="6" class="text-center text-muted-foreground py-8">
+                            <TableCell
+                                colspan="6"
+                                class="text-center text-muted-foreground py-8"
+                            >
                                 Tidak ada subscription
                             </TableCell>
                         </TableRow>

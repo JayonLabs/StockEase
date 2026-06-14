@@ -10,6 +10,12 @@ use Illuminate\Database\Eloquent\Scope;
 
 class TenantScope implements Scope
 {
+    /**
+     * Apply the tenant scope to the query.
+     *
+     * Adds a where clause filtering by the tenant key column
+     * to the current tenant's key, unless tenancy is not initialized.
+     */
     public function apply(Builder $builder, Model $model): void
     {
         if (! tenancy()->initialized) {
@@ -22,6 +28,11 @@ class TenantScope implements Scope
         );
     }
 
+    /**
+     * Extend the query builder with a `withoutTenancy` macro.
+     *
+     * Allows temporarily removing the tenant scope from a query.
+     */
     public function extend(Builder $builder): void
     {
         $builder->macro('withoutTenancy', function (Builder $builder) {

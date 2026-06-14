@@ -115,4 +115,16 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Contact Form Admin Email
+    |--------------------------------------------------------------------------
+    |
+    | The address that receives contact form submissions from the landing page.
+    | Override this per-environment via CONTACT_ADMIN_EMAIL in your .env file.
+    |
+    */
+
+    'contact_admin_email' => env('CONTACT_ADMIN_EMAIL', 'dewajayon3@gmail.com'),
+
 ];

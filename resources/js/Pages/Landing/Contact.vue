@@ -29,17 +29,17 @@ const contactInfo = [
     {
         icon: 'mail',
         title: 'Email Kami',
-        lines: ['support@stockease.com', 'sales@stockease.com'],
+        lines: ['dewajayon3@gmail.com'],
     },
     {
         icon: 'phone',
         title: 'Hubungi Kami',
-        lines: ['+1 (555) 234-5678', 'Sen – Jum, 9 pagi – 6 sore EST'],
+        lines: ['Email Kami', 'Sen – Jum, 9 pagi – 6 sore WITA'],
     },
     {
         icon: 'location_on',
         title: 'Kunjungi Kantor Kami',
-        lines: ['245 Emerald Plaza, Suite 400', 'San Francisco, CA 94105'],
+        lines: ['Email Kami', 'Sen – Jum, 9 pagi – 6 sore WITA'],
     },
 ];
 

@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\General\DashboardController;
-use App\Http\Controllers\General\QueueWorkerLogController;
 use App\Http\Controllers\Media\FileManagerController;
 use App\Http\Controllers\User\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -22,7 +21,4 @@ Route::middleware('auth')->group(function () {
         Route::post('/upload', [FileManagerController::class, 'store'])->middleware('can:upload_files')->name('store');
     });
 
-    Route::get('/queue-worker-logs', [QueueWorkerLogController::class, 'index'])
-        ->middleware('can:view_queue_worker_logs')
-        ->name('queue-worker-logs.index');
 });
