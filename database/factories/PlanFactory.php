@@ -1,21 +1,62 @@
 <?php
 
-namespace Database\Seeders;
+namespace Database\Factories;
 
 use App\Models\Plan;
-use Illuminate\Database\Seeder;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
-class PlanSeeder extends Seeder
+/**
+ * @extends Factory<Plan>
+ */
+class PlanFactory extends Factory
 {
-    /**
-     * Run the database seeds.
-     */
-    public function run(): void
+    protected $model = Plan::class;
+
+    public function definition(): array
     {
-        Plan::updateOrCreate(['slug' => 'pemula'], [
+        return [
+            'name' => fake()->words(2, true),
+            'slug' => fake()->unique()->slug(2),
+            'description' => fake()->sentence(),
+            'price_monthly' => fake()->randomElement([0, 50000, 149000, 299000]),
+            'price_annual' => fn (array $attrs) => $attrs['price_monthly'] > 0
+                ? (int) round($attrs['price_monthly'] * 10)
+                : 0,
+            'max_products' => fake()->optional()->numberBetween(50, 9999),
+            'max_users' => fake()->optional()->numberBetween(1, 50),
+            'max_warehouses' => fake()->optional()->numberBetween(1, 10),
+            'max_shifts' => fake()->optional()->numberBetween(1, 5),
+            'features' => $this->defaultFeatures(),
+            'trial_days' => 0,
+            'is_active' => true,
+            'sort_order' => fake()->numberBetween(1, 10),
+        ];
+    }
+
+    public function free(): static
+    {
+        return $this->state(fn () => [
+            'price_monthly' => 0,
+            'price_annual' => 0,
+            'trial_days' => 0,
+        ]);
+    }
+
+    public function paid(): static
+    {
+        return $this->state(fn () => [
+            'price_monthly' => 149000,
+            'price_annual' => 1490000,
+            'trial_days' => 14,
+        ]);
+    }
+
+    public function pemula(): static
+    {
+        return $this->state(fn () => [
             'name' => 'Pemula',
             'slug' => 'pemula',
-            'description' => 'Untuk UMKM yang baru memulai digitalisasi usaha. Nikmati fitur dasar dengan harga terjangkau.',
+            'description' => 'Untuk UMKM yang baru memulai digitalisasi usaha.',
             'price_monthly' => 50000,
             'price_annual' => 500000,
             'max_products' => 100,
@@ -41,14 +82,16 @@ class PlanSeeder extends Seeder
                 ['key' => 'file_manager', 'label' => 'File Manager', 'included' => false],
             ],
             'trial_days' => 0,
-            'is_active' => true,
             'sort_order' => 1,
         ]);
+    }
 
-        Plan::updateOrCreate(['slug' => 'profesional'], [
+    public function profesional(): static
+    {
+        return $this->state(fn () => [
             'name' => 'Profesional',
             'slug' => 'profesional',
-            'description' => 'Untuk usaha menengah yang berkembang pesat dengan fitur lengkap.',
+            'description' => 'Untuk usaha menengah yang berkembang pesat.',
             'price_monthly' => 149000,
             'price_annual' => 1490000,
             'max_products' => null,
@@ -74,14 +117,16 @@ class PlanSeeder extends Seeder
                 ['key' => 'file_manager', 'label' => 'File Manager', 'included' => false],
             ],
             'trial_days' => 14,
-            'is_active' => true,
             'sort_order' => 2,
         ]);
+    }
 
-        Plan::updateOrCreate(['slug' => 'enterprise'], [
+    public function enterprise(): static
+    {
+        return $this->state(fn () => [
             'name' => 'Enterprise',
             'slug' => 'enterprise',
-            'description' => 'Untuk bisnis besar dengan kebutuhan lengkap dan prioritas penuh.',
+            'description' => 'Untuk bisnis besar dengan kebutuhan lengkap.',
             'price_monthly' => 299000,
             'price_annual' => 2990000,
             'max_products' => null,
@@ -107,8 +152,36 @@ class PlanSeeder extends Seeder
                 ['key' => 'file_manager', 'label' => 'File Manager', 'included' => true, 'card_order' => 13],
             ],
             'trial_days' => 14,
-            'is_active' => true,
             'sort_order' => 3,
         ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn () => [
+            'is_active' => false,
+        ]);
+    }
+
+    private function defaultFeatures(): array
+    {
+        return [
+            ['key' => 'products', 'label' => 'Produk, Kategori & Satuan', 'included' => true, 'card_order' => 1],
+            ['key' => 'pos', 'label' => 'Point of Sale (POS)', 'included' => true, 'card_order' => 2],
+            ['key' => 'barcode', 'label' => 'Barcode Scanner', 'included' => true],
+            ['key' => 'qris', 'label' => 'Pembayaran QRIS Midtrans', 'included' => false],
+            ['key' => 'invoice', 'label' => 'Kirim Invoice (Email/WA)', 'included' => false],
+            ['key' => 'sales_report', 'label' => 'Laporan Penjualan & Ekspor', 'included' => true, 'card_order' => 3],
+            ['key' => 'purchase_report', 'label' => 'Laporan Pembelian & Ekspor', 'included' => false],
+            ['key' => 'stock_report', 'label' => 'Laporan Stok & Ekspor', 'included' => false],
+            ['key' => 'profit_loss', 'label' => 'Laporan Laba Rugi', 'included' => false],
+            ['key' => 'purchasing', 'label' => 'Manajemen Pembelian & Supplier', 'included' => false],
+            ['key' => 'multi_warehouse', 'label' => 'Multi-Gudang & Transfer Stok', 'included' => false],
+            ['key' => 'low_stock', 'label' => 'Notifikasi Stok Rendah', 'included' => false],
+            ['key' => 'cashier_shift', 'label' => 'Shift Kasir', 'included' => false],
+            ['key' => 'user_roles', 'label' => 'Manajemen Pengguna & Hak Akses', 'included' => false],
+            ['key' => 'activity_log', 'label' => 'Log Aktivitas', 'included' => false],
+            ['key' => 'file_manager', 'label' => 'File Manager', 'included' => false],
+        ];
     }
 }

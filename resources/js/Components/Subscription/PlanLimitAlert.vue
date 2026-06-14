@@ -17,20 +17,18 @@ const labels = {
 </script>
 
 <template>
-  <Alert
-    variant="destructive"
-    class="mb-4"
-  >
-    <AlertTriangle class="w-4 h-4" />
-    <AlertTitle>Limit Plan Tercapai</AlertTitle>
-    <AlertDescription>
-      Batas maksimal {{ labels[resource] ?? resource }} untuk plan {{ planName }} telah tercapai.
-      <Link
-        :href="route('subscription.index')"
-        class="underline font-medium"
-      >
-        Upgrade plan Anda
-      </Link>.
-    </AlertDescription>
-  </Alert>
+    <Alert variant="destructive" class="mb-4">
+        <AlertTriangle class="w-4 h-4" />
+        <AlertTitle>Limit Plan Tercapai</AlertTitle>
+        <AlertDescription>
+            Batas maksimal {{ labels[resource] ?? resource }} untuk plan
+            {{ planName }} telah tercapai.
+            <Link
+                :href="route('subscription.index')"
+                class="underline font-medium"
+            >
+                Upgrade plan Anda </Link
+            >.
+        </AlertDescription>
+    </Alert>
 </template>
