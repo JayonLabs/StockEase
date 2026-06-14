@@ -19,7 +19,6 @@ import {
     BarChart2,
     Clock,
     RotateCcw,
-    ScrollText,
     Trash2,
     Shield,
     ShieldCheck,
@@ -265,13 +264,6 @@ export const menuSections = [
                 routeName: 'trash.index',
                 activeRoute: 'trash.*',
                 icon: Trash2,
-                roles: ['super_admin', 'admin'],
-            },
-            {
-                title: 'Queue Worker Logs',
-                routeName: 'queue-worker-logs.index',
-                activeRoute: 'queue-worker-logs.*',
-                icon: ScrollText,
                 roles: ['super_admin', 'admin'],
             },
             {

@@ -166,7 +166,6 @@ class PermissionSeeder extends Seeder
             'view_stock_alerts',
 
             // ==================== SYSTEM TOOLS ====================
-            'view_queue_worker_logs',
             'view_activity_logs',
 
             // ==================== WAREHOUSE MANAGEMENT ====================
@@ -328,9 +327,6 @@ class PermissionSeeder extends Seeder
 
                 // Stock Alerts
                 'view_stock_alerts',
-
-                // System Tools
-                'view_queue_worker_logs',
 
                 // Warehouse Management
                 'view_warehouses',
