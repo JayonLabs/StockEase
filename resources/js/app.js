@@ -8,6 +8,7 @@ import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
 import LandingLayout from '@/Layouts/LandingLayout.vue';
 import MainLayout from '@/Layouts/MainLayout.vue';
+import PlatformOwnerLayout from '@/Layouts/PlatformOwnerLayout.vue';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -24,6 +25,8 @@ createInertiaApp({
                 module.default.layout = undefined;
             } else if (name.startsWith('Landing/')) {
                 module.default.layout = LandingLayout;
+            } else if (name.startsWith('Platform/Owner/')) {
+                module.default.layout = PlatformOwnerLayout;
             } else if (!module.default.layout) {
                 module.default.layout = MainLayout;
             }

@@ -21,3 +21,4 @@ require __DIR__.'/web/trash.php';
 require __DIR__.'/web/activity-log.php';
 require __DIR__.'/web/warehouse.php';
 require __DIR__.'/web/subscription.php';
+require __DIR__.'/web/platform.php';
