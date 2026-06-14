@@ -3,15 +3,18 @@
 namespace App\Http\Controllers\Landing;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Landing\ContactFormRequest;
+use App\Mail\ContactInquiryMail;
+use App\Models\Plan;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class LandingController extends Controller
 {
     /**
-     * Display the landing page.
+     * Display the public landing / home page.
      */
     public function index(): Response
     {
@@ -19,15 +22,17 @@ class LandingController extends Controller
     }
 
     /**
-     * Display the pricing page.
+     * Display the pricing page with plan data sourced from the database.
      */
     public function pricing(): Response
     {
-        return Inertia::render('Landing/Pricing');
+        $data = Plan::forPricingPage();
+
+        return Inertia::render('Landing/Pricing', $data);
     }
 
     /**
-     * Display the why page.
+     * Display the "Why Us" page highlighting key product differentiators.
      */
     public function why(): Response
     {
@@ -35,7 +40,7 @@ class LandingController extends Controller
     }
 
     /**
-     * Display the testimonials page.
+     * Display the testimonials page showcasing customer reviews.
      */
     public function testimonials(): Response
     {
@@ -43,7 +48,7 @@ class LandingController extends Controller
     }
 
     /**
-     * Display the contact page.
+     * Display the contact / enquiry page.
      */
     public function contact(): Response
     {
@@ -51,16 +56,24 @@ class LandingController extends Controller
     }
 
     /**
-     * Send a contact message.
+     * Handle the contact form submission.
+     *
+     * Validates the incoming payload via ContactFormRequest, then dispatches
+     * a queued ContactInquiryMail to the admin sales address configured in
+     * CONTACT_ADMIN_EMAIL. The Reply-To header is set to the sender's address
+     * so the admin can reply directly from their email client.
      */
-    public function sendContact(Request $request): RedirectResponse
+    public function sendContact(ContactFormRequest $request): RedirectResponse
     {
-        $request->validate([
-            'name' => ['required', 'string', 'max:100'],
-            'email' => ['required', 'email', 'max:200'],
-            'subject' => ['required', 'string', 'max:200'],
-            'message' => ['required', 'string', 'max:5000'],
-        ]);
+        $validated = $request->validated();
+
+        Mail::to(config('mail.contact_admin_email'))
+            ->send(new ContactInquiryMail(
+                senderName: $validated['name'],
+                senderEmail: $validated['email'],
+                inquirySubject: $validated['subject'],
+                body: $validated['message'],
+            ));
 
         return redirect()->route('landing.contact')
             ->with('success', 'Pesan Anda telah terkirim! Kami akan menghubungi Anda kembali dalam 2–4 jam kerja.');
