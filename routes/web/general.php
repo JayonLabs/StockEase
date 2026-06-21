@@ -14,7 +14,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/profile/photo-profile', [ProfileController::class, 'storePhotoProfile'])->name('profile.photo-profile');
     Route::delete('/profile/photo-profile', [ProfileController::class, 'destroyPhotoProfile'])->name('profile.destroy-photo-profile');
 
-    Route::prefix('file-manager')->name('file-manager.')->group(function () {
+    Route::prefix('file-manager')->name('file-manager.')->middleware('plan.feature:file_manager')->group(function () {
         Route::get('/', [FileManagerController::class, 'index'])->middleware('can:view_file_manager')->name('index');
         Route::get('/download', [FileManagerController::class, 'download'])->middleware('can:download_files')->name('download');
         Route::delete('/', [FileManagerController::class, 'destroy'])->middleware('can:delete_files')->name('destroy');

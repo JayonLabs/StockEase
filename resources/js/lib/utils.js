@@ -56,19 +56,32 @@ export function getCurrentUrlQuery(exclude = []) {
     return params;
 }
 
-export function filterMenuByRole(menu, role, permissions = []) {
-    return menu.filter((item) => {
-        if (
-            item.permissions &&
-            item.permissions.some((p) => permissions.includes(p))
-        ) {
-            return true;
-        }
+export function filterMenuByRole(
+    menu,
+    role,
+    permissions = [],
+    planFeatures = {},
+) {
+    return menu
+        .filter((item) => {
+            if (
+                item.permissions &&
+                item.permissions.some((p) => permissions.includes(p))
+            ) {
+                return true;
+            }
 
-        if (item.roles && item.roles.includes(role)) {
-            return true;
-        }
+            if (item.roles && item.roles.includes(role)) {
+                return true;
+            }
 
-        return false;
-    });
+            return false;
+        })
+        .map((item) => ({
+            ...item,
+            locked:
+                item.planFeature !== undefined
+                    ? planFeatures[item.planFeature] === false
+                    : false,
+        }));
 }

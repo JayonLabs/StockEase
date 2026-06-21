@@ -1,9 +1,11 @@
 <?php
 
 use App\Models\Company;
+use App\Models\Plan;
 use App\Models\User;
 use Illuminate\Filesystem\Filesystem;
 use Illuminate\Filesystem\FilesystemAdapter;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\PermissionRegistrar;
@@ -11,13 +13,27 @@ use Spatie\Permission\PermissionRegistrar;
 use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
+uses(LazilyRefreshDatabase::class);
+
 function createCompany(): Company
 {
-    return Company::create([
+    $company = Company::create([
         'name' => 'Test Company',
         'slug' => 'test-company-'.uniqid(),
         'is_active' => true,
     ]);
+
+    // File manager membutuhkan plan Enterprise; buat subscription jika plan sudah ada.
+    $enterprise = Plan::where('slug', 'enterprise')->first();
+    if ($enterprise) {
+        $company->subscription()->create([
+            'plan_id' => $enterprise->id,
+            'status' => 'active',
+            'starts_at' => now(),
+        ]);
+    }
+
+    return $company;
 }
 
 function fileManagerAdmin(): User
@@ -54,6 +70,8 @@ function fileManagerUserWithoutPermission(): User
 
 beforeEach(function () {
     Storage::fake('local');
+    Plan::factory()->pemula()->create();
+    Plan::factory()->enterprise()->create();
 });
 
 // ============================================================

@@ -121,6 +121,7 @@ export const menuSections = [
                 activeRoute: 'purchase.*',
                 icon: PackageCheck,
                 roles: ['super_admin', 'admin', 'warehouse'],
+                planFeature: 'purchasing',
             },
             {
                 title: 'Penjualan',
@@ -169,6 +170,7 @@ export const menuSections = [
                 activeRoute: 'reports.purchase.*',
                 icon: FileBox,
                 roles: ['super_admin', 'admin', 'warehouse'],
+                planFeature: 'purchase_report',
             },
             {
                 title: 'Laporan Stock',
@@ -176,6 +178,7 @@ export const menuSections = [
                 activeRoute: 'reports.stock.*',
                 icon: Warehouse,
                 roles: ['super_admin', 'admin', 'warehouse'],
+                planFeature: 'stock_report',
             },
             {
                 title: 'Laporan Kedaluwarsa',
@@ -183,6 +186,7 @@ export const menuSections = [
                 activeRoute: 'reports.expiry.*',
                 icon: CalendarClock,
                 roles: ['super_admin', 'admin', 'warehouse'],
+                planFeature: 'stock_report',
             },
             {
                 title: 'Laporan Laba / Rugi',
@@ -190,6 +194,7 @@ export const menuSections = [
                 activeRoute: 'reports.profit-loss',
                 icon: TrendingUp,
                 roles: ['super_admin', 'admin'],
+                planFeature: 'profit_loss',
             },
             {
                 title: 'Analisis Produk',
@@ -251,6 +256,7 @@ export const menuSections = [
                 activeRoute: 'stock-transfer.*',
                 icon: ArrowLeftRight,
                 roles: ['super_admin', 'admin', 'warehouse'],
+                planFeature: 'multi_warehouse',
             },
             {
                 title: 'File Manager',
@@ -258,6 +264,7 @@ export const menuSections = [
                 activeRoute: 'file-manager.*',
                 icon: File,
                 roles: ['super_admin', 'admin', 'cashier', 'warehouse'],
+                planFeature: 'file_manager',
             },
             {
                 title: 'Sampah',
@@ -272,6 +279,7 @@ export const menuSections = [
                 activeRoute: 'activity-logs.*',
                 icon: History,
                 permissions: ['view_activity_logs'],
+                planFeature: 'activity_log',
             },
         ],
     },
