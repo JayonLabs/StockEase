@@ -16,17 +16,9 @@ beforeEach(function () {
     /** @var TestCase&object{company: Company, user: User} $this */
     $this->seed(RoleAndPermissionSeeder::class);
 
-    Plan::create([
-        'name' => 'Pemula',
-        'slug' => 'pemula',
-        'price_monthly' => 0,
-        'price_annual' => 0,
-        'max_products' => 100,
-        'max_users' => 3,
-        'max_warehouses' => 1,
-        'trial_days' => 0,
-        'sort_order' => 1,
-    ]);
+    // Pemula diperlukan sebagai fallback assignFreeSubscription
+    Plan::factory()->pemula()->create();
+    $enterprise = Plan::factory()->enterprise()->create();
 
     $this->company = Company::create([
         'name' => 'Toko Test',
@@ -36,8 +28,9 @@ beforeEach(function () {
     $this->user = User::factory()->create(['company_id' => $this->company->id]);
     $this->company->update(['owner_id' => $this->user->id]);
 
+    // Enterprise agar semua fitur (file_manager, dsb.) dapat diakses dalam test ini
     $this->company->subscription()->create([
-        'plan_id' => Plan::first()->id,
+        'plan_id' => $enterprise->id,
         'status' => 'active',
         'starts_at' => now(),
     ]);
@@ -77,7 +70,7 @@ it('still shares subscription data via inertia', function () {
         ->assertInertia(
             fn ($page) => $page
                 ->has('auth.subscription.plan')
-                ->where('auth.subscription.plan.slug', 'pemula')
+                ->where('auth.subscription.plan.slug', 'enterprise')
         );
 });
 

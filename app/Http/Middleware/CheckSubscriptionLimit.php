@@ -2,7 +2,6 @@
 
 namespace App\Http\Middleware;
 
-use App\Enums\Role;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -15,7 +14,13 @@ use Symfony\Component\HttpFoundation\Response;
 class CheckSubscriptionLimit
 {
     /**
-     * Handle an incoming request and check subscription limits for the given resource.
+     * Handle an incoming request and enforce subscription resource limits.
+     *
+     * Semua role tenant (termasuk super_admin sebagai pemilik toko) tunduk pada batas plan.
+     * Hanya user tanpa company (misalnya platform_owner) yang dilewati tanpa pengecekan.
+     * Penghitungan resource di-scope per-company agar tidak terpengaruh data company lain.
+     *
+     * @param  string  $resource  Jenis resource yang dibatasi: 'product', 'user', atau 'warehouse'.
      */
     public function handle(Request $request, Closure $next, string $resource): Response
     {
@@ -26,10 +31,6 @@ class CheckSubscriptionLimit
         }
 
         if (! $user->company_id) {
-            return $next($request);
-        }
-
-        if ($user->hasRole(Role::SuperAdmin->value)) {
             return $next($request);
         }
 
@@ -46,11 +47,11 @@ class CheckSubscriptionLimit
 
         $exceeded = match ($resource) {
             'product' => $plan->max_products !== null
-                && Product::count() >= $plan->max_products,
+                && Product::where('company_id', $company->id)->count() >= $plan->max_products,
             'user' => $plan->max_users !== null
                 && User::where('company_id', $company->id)->count() >= $plan->max_users,
             'warehouse' => $plan->max_warehouses !== null
-                && Warehouse::count() >= $plan->max_warehouses,
+                && Warehouse::where('company_id', $company->id)->count() >= $plan->max_warehouses,
             default => false,
         };
 

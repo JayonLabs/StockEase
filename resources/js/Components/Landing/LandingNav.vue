@@ -84,7 +84,7 @@ function isActive(component) {
 
             <div class="flex items-center gap-4">
                 <button
-                    class="p-2 rounded-full hover:bg-surface-variant dark:hover:bg-surface-container-high transition-colors"
+                    class="p-2 rounded-full hover:bg-surface-variant dark:hover:bg-white/10 transition-colors"
                     :aria-label="
                         isDark
                             ? 'Beralih ke mode terang'

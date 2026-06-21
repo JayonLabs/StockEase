@@ -85,7 +85,7 @@ function toggleFaq(i) {
         <!-- Hero -->
         <section class="px-10 max-w-360 mx-auto text-center mb-16">
             <h1
-                class="text-5xl font-bold text-on-surface mb-6"
+                class="text-5xl font-bold text-on-surface dark:text-inverse-on-surface mb-6"
                 style="letter-spacing: -0.02em"
             >
                 <span class="text-surface-tint dark:text-inverse-primary"
@@ -102,19 +102,21 @@ function toggleFaq(i) {
             <div class="flex items-center justify-center gap-4 mb-8">
                 <Label
                     for="billing"
-                    class="text-sm font-medium text-on-surface-variant"
-                    >Bulanan</Label
+                    class="text-sm font-medium text-on-surface-variant dark:text-surface-variant/90"
                 >
+                    Bulanan
+                </Label>
                 <Switch id="billing" v-model="isAnnual" />
                 <Label
                     for="billing"
-                    class="text-sm font-medium text-on-surface-variant"
+                    class="text-sm font-medium text-on-surface-variant dark:text-surface-variant/90"
                 >
                     Tahunan
                     <span
                         class="bg-secondary-container text-on-secondary-container dark:bg-secondary-container/30 dark:text-secondary-fixed-dim px-2 py-0.5 rounded-full text-xs font-bold ml-1"
-                        >Hemat 17%</span
                     >
+                        Hemat 17%
+                    </span>
                 </Label>
             </div>
         </section>
@@ -168,7 +170,7 @@ function toggleFaq(i) {
                                 :class="
                                     plan.sort_order === 2
                                         ? 'text-white'
-                                        : 'text-on-surface dark:text-on-surface'
+                                        : 'text-on-surface dark:text-inverse-on-surface'
                                 "
                                 >{{ displayPrice(plan) }}</span
                             >
@@ -239,7 +241,7 @@ function toggleFaq(i) {
                         :class="
                             plan.sort_order === 2
                                 ? 'w-full py-4 rounded-xl bg-white text-surface-tint font-bold hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all relative z-10 text-center block'
-                                : 'w-full py-4 rounded-xl border border-outline dark:border-outline-variant text-on-surface dark:text-on-surface hover:bg-surface-container-low dark:hover:bg-surface-container-high transition-colors font-semibold text-center block'
+                                : 'w-full py-4 rounded-xl border border-outline dark:border-outline/50 text-on-surface dark:text-inverse-on-surface hover:bg-surface-container-low dark:hover:bg-white/10 transition-colors font-semibold text-center block'
                         "
                     >
                         {{ ctaText(plan) }}
@@ -251,7 +253,7 @@ function toggleFaq(i) {
         <!-- Comparison table -->
         <section class="px-10 max-w-360 mx-auto mb-24 overflow-hidden">
             <h2
-                class="text-center text-3xl font-semibold text-on-surface dark:text-on-surface mb-12"
+                class="text-center text-3xl font-semibold text-on-surface dark:text-inverse-on-surface mb-12"
                 style="letter-spacing: -0.01em"
             >
                 Bandingkan fitur lengkap
@@ -263,7 +265,7 @@ function toggleFaq(i) {
                             class="border-b border-outline-variant/30 dark:border-outline/20"
                         >
                             <th
-                                class="py-6 px-4 font-bold text-sm text-on-surface dark:text-on-surface"
+                                class="py-6 px-4 font-bold text-sm text-on-surface dark:text-inverse-on-surface"
                             >
                                 Fitur
                             </th>
@@ -283,7 +285,7 @@ function toggleFaq(i) {
                     <tbody class="divide-y divide-outline-variant/30">
                         <tr v-for="row in comparison" :key="row.key">
                             <td
-                                class="py-6 px-4 text-on-surface dark:text-on-surface font-medium"
+                                class="py-6 px-4 text-on-surface dark:text-inverse-on-surface font-medium"
                             >
                                 {{ row.label }}
                             </td>
@@ -298,10 +300,12 @@ function toggleFaq(i) {
                             >
                                 <span
                                     v-if="row.plans[plan.slug]"
-                                    class="material-symbols-outlined text-surface-tint"
+                                    class="material-symbols-outlined text-surface-tint dark:text-lime-600"
                                     >check</span
                                 >
-                                <span v-else class="text-on-surface-variant/30"
+                                <span
+                                    v-else
+                                    class="text-on-surface-variant/30 dark:text-surface-variant/90"
                                     >—</span
                                 >
                             </td>
@@ -314,7 +318,7 @@ function toggleFaq(i) {
         <!-- Billing FAQ -->
         <section class="px-10 max-w-3xl mx-auto mb-24">
             <h2
-                class="text-center text-3xl font-semibold text-on-surface dark:text-on-surface mb-12"
+                class="text-center text-3xl font-semibold text-on-surface dark:text-inverse-on-surface mb-12"
                 style="letter-spacing: -0.01em"
             >
                 FAQ Penagihan
@@ -330,7 +334,7 @@ function toggleFaq(i) {
                         @click="toggleFaq(i)"
                     >
                         <span
-                            class="font-semibold text-on-surface dark:text-on-surface"
+                            class="font-semibold text-on-surface dark:text-inverse-on-surface"
                             >{{ faq.q }}</span
                         >
                         <span

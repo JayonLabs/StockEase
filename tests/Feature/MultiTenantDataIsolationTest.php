@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Company;
+use App\Models\Plan;
 use App\Models\User;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
@@ -17,15 +18,29 @@ beforeEach(function () {
     /** @var TestCase&object{companyA: Company, adminA: User, userA: User, companyB: Company, adminB: User, userB: User} $this */
     $this->seed(RoleAndPermissionSeeder::class);
 
+    // Buat plan yang dibutuhkan oleh middleware plan.feature
+    Plan::factory()->pemula()->create(); // fallback assignFreeSubscription
+    $enterprise = Plan::factory()->enterprise()->create(); // akses semua fitur
+
     // Company A
     $this->companyA = Company::create(['name' => 'Company A', 'slug' => 'company-a']);
     $this->adminA = User::factory()->create(['company_id' => $this->companyA->id, 'role' => 'admin']);
     $this->userA = User::factory()->create(['company_id' => $this->companyA->id, 'role' => 'cashier']);
+    $this->companyA->subscription()->create([
+        'plan_id' => $enterprise->id,
+        'status' => 'active',
+        'starts_at' => now(),
+    ]);
 
     // Company B
     $this->companyB = Company::create(['name' => 'Company B', 'slug' => 'company-b']);
     $this->adminB = User::factory()->create(['company_id' => $this->companyB->id, 'role' => 'admin']);
     $this->userB = User::factory()->create(['company_id' => $this->companyB->id, 'role' => 'cashier']);
+    $this->companyB->subscription()->create([
+        'plan_id' => $enterprise->id,
+        'status' => 'active',
+        'starts_at' => now(),
+    ]);
 });
 
 // ============================================================

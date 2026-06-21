@@ -110,8 +110,12 @@ const encodedStats = computed(() => props.stats ?? null);
     <Head title="Queue Worker Logs" />
 
     <div class="flex flex-1 flex-col gap-4 p-4">
-        <div class="rounded-xl bg-muted/50 h-full flex flex-col overflow-hidden">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 pb-0">
+        <div
+            class="rounded-xl bg-muted/50 h-full flex flex-col overflow-hidden"
+        >
+            <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 pb-0"
+            >
                 <div>
                     <h4 class="font-semibold text-lg">Queue Worker Logs</h4>
                     <p class="text-sm text-muted-foreground">
@@ -126,8 +130,15 @@ const encodedStats = computed(() => props.stats ?? null);
             <Separator class="my-3" />
 
             <template v-if="encodedStats">
-                <div class="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 text-sm text-muted-foreground">
-                    <span>File: <span class="font-mono text-xs">{{ encodedStats.file }}</span></span>
+                <div
+                    class="flex flex-wrap items-center gap-x-6 gap-y-1 px-4 text-sm text-muted-foreground"
+                >
+                    <span
+                        >File:
+                        <span class="font-mono text-xs">{{
+                            encodedStats.file
+                        }}</span></span
+                    >
                     <span>Size: {{ encodedStats.size }}</span>
                     <span>Lines: {{ encodedStats.lines }}</span>
                     <span>Modified: {{ encodedStats.modified }}</span>
@@ -136,7 +147,9 @@ const encodedStats = computed(() => props.stats ?? null);
 
             <Separator class="my-3" />
 
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-4">
+            <div
+                class="flex flex-col sm:flex-row items-start sm:items-center gap-3 px-4"
+            >
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <Label for="search-log" class="sr-only">Search</Label>
                     <Input
@@ -149,7 +162,10 @@ const encodedStats = computed(() => props.stats ?? null);
                     />
                 </div>
                 <div class="flex items-center gap-2">
-                    <Select v-model="activeLevel" @update:model-value="applyFilter">
+                    <Select
+                        v-model="activeLevel"
+                        @update:model-value="applyFilter"
+                    >
                         <SelectTrigger class="h-9 w-36">
                             <SelectValue placeholder="All Levels" />
                         </SelectTrigger>
@@ -169,7 +185,9 @@ const encodedStats = computed(() => props.stats ?? null);
                 >
                     Clear
                 </Button>
-                <div class="flex items-center gap-1 ml-auto text-xs text-muted-foreground">
+                <div
+                    class="flex items-center gap-1 ml-auto text-xs text-muted-foreground"
+                >
                     <Badge variant="outline" class="text-xs h-5">
                         Showing {{ lines.length }} of {{ stats?.lines || 0 }}
                     </Badge>
@@ -191,16 +209,27 @@ const encodedStats = computed(() => props.stats ?? null);
                         class="flex items-start py-0.5 rounded px-1"
                         :class="lineColorClass(line.level)"
                     >
-                        <span class="text-gray-500 dark:text-gray-600 select-none shrink-0 w-12 text-right mr-3">
+                        <span
+                            class="text-gray-500 dark:text-gray-600 select-none shrink-0 w-12 text-right mr-3"
+                        >
                             {{ index + 1 }}
                         </span>
-                        <span class="break-all whitespace-pre-wrap">{{ line.text }}</span>
+                        <span class="break-all whitespace-pre-wrap">{{
+                            line.text
+                        }}</span>
                     </div>
                 </template>
 
                 <template v-else>
-                    <div class="flex flex-col items-center justify-center h-full text-gray-500 py-12">
-                        <svg class="w-10 h-10 mb-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div
+                        class="flex flex-col items-center justify-center h-full text-gray-500 py-12"
+                    >
+                        <svg
+                            class="w-10 h-10 mb-3 opacity-40"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
                             <path
                                 stroke-linecap="round"
                                 stroke-linejoin="round"

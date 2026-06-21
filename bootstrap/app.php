@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckPlanFeature;
 use App\Http\Middleware\CheckSubscriptionLimit;
 use App\Http\Middleware\EnsureTenancyEnded;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => RoleMiddleware::class,
             'subscription.limit' => CheckSubscriptionLimit::class,
+            'plan.feature' => CheckPlanFeature::class,
             'ensure.tenancy.ended' => EnsureTenancyEnded::class,
         ]);
         //

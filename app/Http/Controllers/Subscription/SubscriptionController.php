@@ -26,7 +26,10 @@ class SubscriptionController extends Controller
     ) {}
 
     /**
-     * Display the subscription management page.
+     * Tampilkan halaman manajemen langganan beserta daftar semua plan aktif.
+     *
+     * Setiap plan disertai array `features` agar halaman dapat menampilkan
+     * daftar fitur dengan ikon ✓/✗ secara konsisten dengan halaman pricing.
      */
     public function index(): Response
     {
@@ -46,6 +49,7 @@ class SubscriptionController extends Controller
             'max_users' => $plan->max_users,
             'max_warehouses' => $plan->max_warehouses,
             'trial_days' => $plan->trial_days,
+            'features' => $plan->features ?? [],
         ]);
 
         return Inertia::render('Subscription/Index', [
@@ -55,7 +59,11 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Upgrade or change the current subscription plan.
+     * Upgrade atau ganti plan langganan company yang sedang aktif.
+     *
+     * Untuk plan gratis: langsung aktifkan tanpa pembayaran.
+     * Untuk plan berbayar: mulai trial jika plan memiliki trial_days,
+     * atau buat invoice dan Snap Token Midtrans untuk pembayaran langsung.
      */
     public function upgrade(SubscriptionUpgradeRequest $request): JsonResponse
     {
@@ -70,7 +78,7 @@ class SubscriptionController extends Controller
         $company = $user->company;
 
         if ($plan->isFree()) {
-            $subscription = $this->subscriptionService->createTrial($company, $plan);
+            $subscription = $this->subscriptionService->upgradePlan($company, $plan);
 
             return response()->json([
                 'message' => 'Berlangganan plan Pemula.',
@@ -78,7 +86,7 @@ class SubscriptionController extends Controller
             ]);
         }
 
-        $subscription = $this->subscriptionService->createTrial($company, $plan, $billingCycle);
+        $subscription = $this->subscriptionService->upgradePlan($company, $plan, $billingCycle);
 
         if ($subscription->status === 'trialing') {
             return response()->json([
@@ -105,7 +113,10 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * Cancel an active subscription.
+     * Batalkan subscription yang sedang aktif atau dalam masa trial.
+     *
+     * Aksi ini diotorisasi via SubscriptionPolicy; hanya super_admin company
+     * yang dapat membatalkan langganan mereka sendiri.
      */
     public function cancel(Subscription $subscription): RedirectResponse
     {

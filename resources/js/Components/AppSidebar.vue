@@ -10,8 +10,10 @@ import {
     SidebarHeader,
 } from '@/Components/ui/sidebar';
 
-const user = usePage().props.auth.user;
+const page = usePage();
+const user = page.props.auth.user;
 const userPermissions = user?.permissions || [];
+const planFeatures = page.props.auth.subscription?.plan?.features ?? {};
 </script>
 
 <template>
@@ -35,6 +37,7 @@ const userPermissions = user?.permissions || [];
                 :items="section.items"
                 :user-role="user.role"
                 :user-permissions="userPermissions"
+                :plan-features="planFeatures"
                 :collapsible="section.collapsible"
             />
         </SidebarContent>

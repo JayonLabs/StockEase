@@ -100,6 +100,9 @@ class HandleInertiaRequests extends Middleware
                 'max_products' => $subscription->plan->max_products,
                 'max_users' => $subscription->plan->max_users,
                 'max_warehouses' => $subscription->plan->max_warehouses,
+                'features' => collect($subscription->plan->features ?? [])
+                    ->pluck('included', 'key')
+                    ->all(),
             ],
         ];
     }

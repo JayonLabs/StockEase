@@ -18,7 +18,11 @@ class LandingController extends Controller
      */
     public function index(): Response
     {
-        return Inertia::render('Landing/Index');
+        return Inertia::render('Landing/Index', $this->seoProps(
+            title: 'StockEase — Sederhanakan Penjualan, Inventaris & Pembayaran',
+            description: 'Sistem ERP & POS cerdas untuk bisnis ritel Indonesia. Kelola stok real-time, transaksi cepat, dan laporan otomatis. Coba gratis sekarang.',
+            routeName: 'landing',
+        ));
     }
 
     /**
@@ -28,7 +32,11 @@ class LandingController extends Controller
     {
         $data = Plan::forPricingPage();
 
-        return Inertia::render('Landing/Pricing', $data);
+        return Inertia::render('Landing/Pricing', array_merge($data, $this->seoProps(
+            title: 'Harga Paket StockEase — Sederhana & Transparan',
+            description: 'Pilih paket StockEase yang sesuai bisnis Anda. Mulai gratis tanpa kartu kredit, upgrade kapan saja seiring pertumbuhan bisnis.',
+            routeName: 'landing.pricing',
+        )));
     }
 
     /**
@@ -36,7 +44,11 @@ class LandingController extends Controller
      */
     public function why(): Response
     {
-        return Inertia::render('Landing/Why');
+        return Inertia::render('Landing/Why', $this->seoProps(
+            title: 'Kenapa StockEase — Dirancang untuk Presisi & Pertumbuhan',
+            description: 'Checkout di bawah 10 detik, inventaris prediktif real-time, dan laporan berbasis AI. Lihat perbandingan StockEase vs mesin kasir biasa.',
+            routeName: 'landing.why',
+        ));
     }
 
     /**
@@ -44,7 +56,11 @@ class LandingController extends Controller
      */
     public function testimonials(): Response
     {
-        return Inertia::render('Landing/Testimonials');
+        return Inertia::render('Landing/Testimonials', $this->seoProps(
+            title: 'Testimoni Pelanggan StockEase — 120+ Bisnis Ritel Berkembang',
+            description: 'Lebih dari 120 bisnis ritel Indonesia telah meningkatkan operasional mereka bersama StockEase. Baca cerita sukses nyata dari pelanggan kami.',
+            routeName: 'landing.testimonials',
+        ));
     }
 
     /**
@@ -52,7 +68,23 @@ class LandingController extends Controller
      */
     public function contact(): Response
     {
-        return Inertia::render('Landing/Contact');
+        return Inertia::render('Landing/Contact', $this->seoProps(
+            title: 'Hubungi StockEase — Tim Kami Siap Membantu',
+            description: 'Punya pertanyaan tentang StockEase? Tim kami merespons dalam 2–4 jam kerja. Kirim pesan atau jadwalkan demo langsung.',
+            routeName: 'landing.contact',
+        ));
+    }
+
+    private function seoProps(string $title, string $description, string $routeName): array
+    {
+        return [
+            'seo' => [
+                'title' => $title,
+                'description' => $description,
+                'canonical' => route($routeName),
+                'ogImage' => asset('img/StockEase-Logo.png'),
+            ],
+        ];
     }
 
     /**

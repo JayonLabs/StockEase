@@ -11,32 +11,32 @@ function toggleFaq(index) {
 const features = [
     {
         icon: 'inventory_2',
-        bg: 'bg-surface-tint/10',
-        color: 'text-surface-tint',
+        bg: 'bg-surface-tint/10 dark:bg-inverse-primary/15',
+        color: 'text-surface-tint dark:text-inverse-primary',
         title: 'Manajemen Inventaris',
         description:
             'Lacak stok secara real-time dengan notifikasi otomatis saat stok menipis. Kelola produk, kategori, satuan, dan promo dalam satu tempat.',
     },
     {
         icon: 'point_of_sale',
-        bg: 'bg-secondary/10',
-        color: 'text-secondary',
+        bg: 'bg-secondary/10 dark:bg-secondary-fixed-dim/20',
+        color: 'text-secondary dark:text-secondary-fixed-dim',
         title: 'Point of Sale (POS)',
         description:
             'Transaksi cepat dengan dukungan barcode scanner. Keranjang fleksibel, checkout instan, dan kirim invoice via email atau WhatsApp.',
     },
     {
         icon: 'account_balance_wallet',
-        bg: 'bg-primary-container/20',
-        color: 'text-surface-tint',
+        bg: 'bg-primary-container/20 dark:bg-inverse-primary/15',
+        color: 'text-surface-tint dark:text-inverse-primary',
         title: 'Multi-Pembayaran',
         description:
             'Dukung pembayaran tunai dan QRIS Midtrans. Riwayat transaksi lengkap dengan pencatatan otomatis untuk rekonsiliasi.',
     },
     {
         icon: 'shopping_cart',
-        bg: 'bg-tertiary/10',
-        color: 'text-tertiary',
+        bg: 'bg-tertiary/10 dark:bg-tertiary-fixed-dim/20',
+        color: 'text-tertiary dark:text-tertiary-fixed-dim',
         title: 'Manajemen Pembelian',
         description:
             'Catat pembelian dari supplier, lacak harga pokok, kelola stok masuk per gudang, dan pantau tanggal kedaluwarsa produk.',
@@ -51,8 +51,8 @@ const features = [
     },
     {
         icon: 'monitoring',
-        bg: 'bg-primary/10',
-        color: 'text-primary',
+        bg: 'bg-primary/10 dark:bg-inverse-primary/15',
+        color: 'text-primary dark:text-inverse-primary',
         title: 'Laporan & Analitik',
         description:
             'Laporan penjualan, pembelian, stok, laba rugi, dan pergerakan produk. Ekspor ke PDF & Excel untuk analisis mendalam.',
@@ -117,16 +117,17 @@ const faqs = [
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary-container/50 dark:bg-secondary-container/20 border border-secondary/20 dark:border-secondary/30 mb-8"
             >
                 <span
-                    class="material-symbols-outlined text-[18px] text-secondary"
+                    class="material-symbols-outlined text-[18px] text-secondary dark:text-secondary-fixed-dim"
                     >verified</span
                 >
-                <span class="text-sm font-medium text-on-secondary-container"
+                <span
+                    class="text-sm font-medium text-on-secondary-container dark:text-secondary-fixed-dim"
                     >Solusi perangkat lunak POS pintar Anda</span
                 >
             </div>
 
             <h1
-                class="text-5xl md:text-[64px] font-bold leading-tight mb-6 max-w-4xl mx-auto text-on-surface"
+                class="text-5xl md:text-[64px] font-bold leading-tight mb-6 max-w-4xl mx-auto text-on-surface dark:text-inverse-on-surface"
                 style="letter-spacing: -0.02em"
             >
                 Sederhanakan Penjualan, Inventaris &amp;
@@ -154,7 +155,7 @@ const faqs = [
                 </Link>
                 <Link
                     :href="`${route('landing')}#fitur`"
-                    class="border-2 border-outline-variant text-on-surface px-8 py-4 rounded-full text-sm font-semibold hover:bg-surface-variant transition-all"
+                    class="border-2 border-outline-variant dark:border-outline/50 text-on-surface dark:text-inverse-on-surface px-8 py-4 rounded-full text-sm font-semibold hover:bg-surface-variant dark:hover:bg-white/10 transition-all"
                 >
                     Lihat Fitur
                 </Link>
@@ -225,7 +226,7 @@ const faqs = [
         <div class="max-w-360 mx-auto px-10">
             <div class="text-center mb-16">
                 <h2
-                    class="text-3xl font-semibold mb-4 text-on-surface"
+                    class="text-3xl font-semibold mb-4 text-on-surface dark:text-inverse-on-surface"
                     style="letter-spacing: -0.01em"
                 >
                     Fitur Lengkap untuk Operasional Bisnis Anda
@@ -241,7 +242,7 @@ const faqs = [
                 <div
                     v-for="f in features"
                     :key="f.title"
-                    class="p-8 rounded-3xl bg-surface-container-lowest dark:bg-surface-container border border-outline-variant/20 hover:border-surface-tint/30 transition-all group"
+                    class="p-8 rounded-3xl bg-surface-container-lowest dark:bg-white/10 border border-outline-variant/20 dark:border-outline/20 hover:border-surface-tint/30 transition-all group"
                 >
                     <div
                         :class="[
@@ -257,7 +258,9 @@ const faqs = [
                             >{{ f.icon }}</span
                         >
                     </div>
-                    <h3 class="text-2xl font-semibold mb-3 text-on-surface">
+                    <h3
+                        class="text-2xl font-semibold mb-3 text-on-surface dark:text-inverse-on-surface"
+                    >
                         {{ f.title }}
                     </h3>
                     <p
@@ -281,7 +284,7 @@ const faqs = [
             >
                 <div>
                     <h2
-                        class="text-3xl font-semibold mb-4 text-on-surface"
+                        class="text-3xl font-semibold mb-4 text-on-surface dark:text-inverse-on-surface"
                         style="letter-spacing: -0.01em"
                     >
                         Dipercaya oleh bisnis dari berbagai skala dan jenis.
@@ -296,7 +299,8 @@ const faqs = [
                                 class="w-10 h-10 rounded-full border-2 border-white object-cover"
                             />
                         </div>
-                        <span class="text-sm font-medium text-on-surface"
+                        <span
+                            class="text-sm font-medium text-on-surface dark:text-inverse-on-surface"
                             >+120</span
                         >
                     </div>
@@ -327,7 +331,9 @@ const faqs = [
                             class="w-12 h-12 rounded-full object-cover"
                         />
                         <div>
-                            <p class="text-sm font-medium text-on-surface">
+                            <p
+                                class="text-sm font-medium text-on-surface dark:text-inverse-on-surface"
+                            >
                                 {{ t.name }}
                             </p>
                             <p class="text-xs font-semibold text-outline">
@@ -335,7 +341,9 @@ const faqs = [
                             </p>
                         </div>
                     </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-on-surface">
+                    <h4
+                        class="text-2xl font-semibold mb-3 text-on-surface dark:text-inverse-on-surface"
+                    >
                         {{ t.title }}
                     </h4>
                     <p
@@ -364,7 +372,7 @@ const faqs = [
         <div class="max-w-3xl mx-auto px-10">
             <div class="text-center mb-16">
                 <h2
-                    class="text-3xl font-semibold mb-4 text-on-surface"
+                    class="text-3xl font-semibold mb-4 text-on-surface dark:text-inverse-on-surface"
                     style="letter-spacing: -0.01em"
                 >
                     Pertanyaan yang Sering Diajukan
@@ -380,10 +388,10 @@ const faqs = [
                 <div
                     v-for="(faq, index) in faqs"
                     :key="index"
-                    class="bg-surface-container-lowest dark:bg-surface-container rounded-2xl border border-outline-variant/20 overflow-hidden"
+                    class="bg-surface-container-lowest dark:bg-white/10 rounded-2xl border border-outline-variant/20 dark:border-outline/20 overflow-hidden"
                 >
                     <button
-                        class="w-full flex items-center justify-between p-6 text-sm font-medium text-on-surface text-left"
+                        class="w-full flex items-center justify-between p-6 text-sm font-medium text-on-surface dark:text-inverse-on-surface text-left"
                         @click="toggleFaq(index)"
                     >
                         {{ faq.q }}

@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\Plan;
 use App\Models\Subscription;
 use App\Models\SubscriptionInvoice;
+use Illuminate\Support\Facades\Auth;
 use RuntimeException;
 
 class SubscriptionService
@@ -18,6 +19,7 @@ class SubscriptionService
         Plan $plan,
         string $billingCycle = 'monthly'
     ): Subscription {
+
         $existingActive = $company->activeSubscription();
         if ($existingActive) {
             throw new RuntimeException('Company sudah memiliki subscription aktif.');
@@ -45,6 +47,25 @@ class SubscriptionService
     }
 
     /**
+     * Switch a company to a different plan, cancelling any existing active or
+     * trialing subscription first so there is never more than one concurrent
+     * subscription per company.
+     */
+    public function upgradePlan(
+        Company $company,
+        Plan $plan,
+        string $billingCycle = 'monthly'
+    ): Subscription {
+        $existing = $company->activeSubscription();
+
+        if ($existing) {
+            $this->cancelSubscription($existing);
+        }
+
+        return $this->createTrial($company, $plan, $billingCycle);
+    }
+
+    /**
      * Assign the free "Pemula" plan to a company.
      */
     public function assignFreeSubscription(Company $company): Subscription
@@ -66,7 +87,7 @@ class SubscriptionService
 
         return SubscriptionInvoice::create([
             'subscription_id' => $subscription->id,
-            'user_id' => auth()->id(),
+            'user_id' => Auth::id(),
             'amount' => (float) $amount,
             'status' => 'pending',
         ]);

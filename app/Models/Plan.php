@@ -150,7 +150,11 @@ class Plan extends Model
     }
 
     /**
-     * Get the cached pricing page data for all active plans.
+     * Ambil data halaman pricing yang sudah di-cache untuk semua plan aktif.
+     *
+     * Cache key: 'plans_pricing' dengan flexible TTL 1 hari (stale) / 7 hari (expired).
+     * Wajib diinvalidasi via Cache::forget('plans_pricing') setiap kali data plan
+     * diperbarui melalui PlanSeeder atau admin panel agar perubahan segera terlihat.
      *
      * @return array<string, mixed>
      */
@@ -183,6 +187,23 @@ class Plan extends Model
     }
 
     /**
+     * Cek apakah fitur dengan kunci tertentu tersedia di plan ini.
+     *
+     * Digunakan oleh middleware CheckPlanFeature untuk memvalidasi
+     * akses pengguna ke route yang dibatasi berdasarkan plan.
+     */
+    public function hasFeature(string $key): bool
+    {
+        foreach ($this->features ?? [] as $feature) {
+            if (($feature['key'] ?? null) === $key) {
+                return (bool) ($feature['included'] ?? false);
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Get the label for a feature by its key.
      */
     private function featureLabelByKey(string $key): string
@@ -198,15 +219,11 @@ class Plan extends Model
 
     /**
      * Check if a feature is included by its key.
+     *
+     * @deprecated Gunakan hasFeature() yang bersifat publik.
      */
     private function featureIncludedByKey(string $key): bool
     {
-        foreach ($this->features ?? [] as $feature) {
-            if (($feature['key'] ?? null) === $key) {
-                return (bool) ($feature['included'] ?? false);
-            }
-        }
-
-        return false;
+        return $this->hasFeature($key);
     }
 }

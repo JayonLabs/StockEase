@@ -1,7 +1,7 @@
 <script setup>
-import { Link, usePage } from '@inertiajs/vue3';
+import { Link, router, usePage } from '@inertiajs/vue3';
 import { filterMenuByRole } from '@/lib/utils';
-import { ChevronDown } from 'lucide-vue-next';
+import { ChevronDown, Lock } from 'lucide-vue-next';
 import { computed } from 'vue';
 
 import {
@@ -27,6 +27,10 @@ const props = defineProps({
         type: Array,
         default: () => [],
     },
+    planFeatures: {
+        type: Object,
+        default: () => ({}),
+    },
     collapsible: {
         type: Boolean,
         default: false,
@@ -36,7 +40,12 @@ const props = defineProps({
 const page = usePage();
 
 const filteredItems = computed(() =>
-    filterMenuByRole(props.items, props.userRole, props.userPermissions),
+    filterMenuByRole(
+        props.items,
+        props.userRole,
+        props.userPermissions,
+        props.planFeatures,
+    ),
 );
 
 const hasItems = computed(() => filteredItems.value.length > 0);
@@ -47,6 +56,10 @@ const isItemActive = (item) => {
     return item.activeRoute
         ? route().current(item.activeRoute)
         : route().current(item.routeName);
+};
+
+const navigateToUpgrade = () => {
+    router.visit(route('subscription.index'));
 };
 </script>
 
@@ -74,7 +87,21 @@ const isItemActive = (item) => {
                                 v-for="item in filteredItems"
                                 :key="item.title"
                             >
+                                <!-- Item terkunci: tampil transparan dengan ikon gembok -->
                                 <SidebarMenuButton
+                                    v-if="item.locked"
+                                    class="cursor-pointer opacity-50"
+                                    :title="`Upgrade plan untuk mengakses ${item.title}`"
+                                    @click="navigateToUpgrade"
+                                >
+                                    <component :is="item.icon" />
+                                    <span>{{ item.title }}</span>
+                                    <Lock class="ml-auto h-3 w-3 shrink-0" />
+                                </SidebarMenuButton>
+
+                                <!-- Item normal -->
+                                <SidebarMenuButton
+                                    v-else
                                     as-child
                                     :is-active="isItemActive(item)"
                                 >
@@ -105,7 +132,21 @@ const isItemActive = (item) => {
                         v-for="item in filteredItems"
                         :key="item.title"
                     >
+                        <!-- Item terkunci: tampil transparan dengan ikon gembok -->
                         <SidebarMenuButton
+                            v-if="item.locked"
+                            class="cursor-pointer opacity-50"
+                            :title="`Upgrade plan untuk mengakses ${item.title}`"
+                            @click="navigateToUpgrade"
+                        >
+                            <component :is="item.icon" />
+                            <span>{{ item.title }}</span>
+                            <Lock class="ml-auto h-3 w-3 shrink-0" />
+                        </SidebarMenuButton>
+
+                        <!-- Item normal -->
+                        <SidebarMenuButton
+                            v-else
                             as-child
                             :is-active="isItemActive(item)"
                         >

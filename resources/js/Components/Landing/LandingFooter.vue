@@ -24,11 +24,11 @@ const year = new Date().getFullYear();
                     <img
                         src="/img/StockEase-Logo.png"
                         alt="StockEase"
-                        class="h-10 w-auto brightness-0 invert"
+                        class="h-10 w-auto"
                     />
-                    <span class="text-2xl font-black text-white"
-                        >StockEase</span
-                    >
+                    <span class="text-2xl font-black text-white">
+                        StockEase
+                    </span>
                 </div>
                 <p class="text-surface-variant/70 text-base mb-6 max-w-xs">
                     &copy; {{ year }} StockEase ERP. Seluruh hak cipta. Presisi
