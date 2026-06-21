@@ -12,10 +12,12 @@ use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\post;
 
 uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{plan: Plan, company: Company, user: User} $this */
     $this->plan = Plan::factory()->create([
         'slug' => 'test-plan',
         'max_products' => 2,
@@ -38,6 +40,7 @@ beforeEach(function () {
 });
 
 it('allows request when limit not exceeded', function () {
+    /** @var object{plan: Plan, company: Company, user: User} $this */
     actingAs($this->user)
         ->post(route('warehouse.store'), [
             'name' => 'Gudang Baru',
@@ -48,6 +51,7 @@ it('allows request when limit not exceeded', function () {
 });
 
 it('blocks warehouse creation when limit exceeded', function () {
+    /** @var object{plan: Plan, company: Company, user: User} $this */
     Warehouse::factory()->create(['company_id' => $this->company->id]);
 
     actingAs($this->user)
@@ -60,6 +64,7 @@ it('blocks warehouse creation when limit exceeded', function () {
 });
 
 it('blocks product creation when product limit exceeded', function () {
+    /** @var object{plan: Plan, company: Company, user: User} $this */
     Product::factory()->count(2)->create(['company_id' => $this->company->id]);
 
     $category = Category::factory()->create();
@@ -78,7 +83,8 @@ it('blocks product creation when product limit exceeded', function () {
         ->assertSessionHas('error');
 });
 
-it('allows super_admin to bypass subscription limit', function () {
+it('super_admin (store owner) is blocked when warehouse limit is reached', function () {
+    /** @var object{plan: Plan, company: Company, user: User} $this */
     $this->user->syncRoles('super_admin');
     Warehouse::factory()->create(['company_id' => $this->company->id]);
 
@@ -88,11 +94,48 @@ it('allows super_admin to bypass subscription limit', function () {
             'phone' => '08123456789',
             'address' => 'Jl. Super No. 1',
         ])
+        ->assertSessionHas('error');
+});
+
+it('warehouse limit is scoped per company, not global', function () {
+    /** @var object{plan: Plan, company: Company, user: User} $this */
+    $otherCompany = Company::factory()->create();
+    Warehouse::factory()->count(5)->create(['company_id' => $otherCompany->id]);
+
+    actingAs($this->user)
+        ->post(route('warehouse.store'), [
+            'name' => 'Gudang Company Sendiri',
+            'phone' => '08123456789',
+            'address' => 'Jl. Sendiri No. 1',
+        ])
+        ->assertSessionHas('success');
+});
+
+it('product limit is scoped per company, not global', function () {
+    /** @var object{plan: Plan, company: Company, user: User} $this */
+    $otherCompany = Company::factory()->create();
+    $category = Category::factory()->create();
+    $unit = Unit::factory()->create();
+
+    Product::factory()->count(10)->create(['company_id' => $otherCompany->id]);
+
+    actingAs($this->user)
+        ->post(route('products.store'), [
+            'name' => 'Produk Company Sendiri',
+            'sku' => 'SKU-TEST-001',
+            'barcode' => '1234567890',
+            'category_id' => $category->id,
+            'unit_id' => $unit->id,
+            'purchase_price' => 1000,
+            'selling_price' => 2000,
+            'stock' => 10,
+            'alert_stock' => 2,
+        ])
         ->assertSessionHas('success');
 });
 
 it('returns 403 when user is unauthenticated', function () {
-    $this->post(route('warehouse.store'), [
+    post(route('warehouse.store'), [
         'name' => 'Gudang Tanpa Login',
         'phone' => '08123456789',
         'address' => 'Jl. No Auth',
@@ -100,6 +143,7 @@ it('returns 403 when user is unauthenticated', function () {
 });
 
 it('returns json error when API expects JSON and limit exceeded', function () {
+    /** @var object{plan: Plan, company: Company, user: User} $this */
     Warehouse::factory()->create(['company_id' => $this->company->id]);
 
     actingAs($this->user)
@@ -113,7 +157,7 @@ it('returns json error when API expects JSON and limit exceeded', function () {
 });
 
 it('throws 403 when no user authenticated and route requires auth', function () {
-    $this->post(route('warehouse.store'), [
+    post(route('warehouse.store'), [
         'name' => 'Gudang Rahasia',
         'phone' => '08123456789',
         'address' => 'Jl. Rahasia',
@@ -121,6 +165,7 @@ it('throws 403 when no user authenticated and route requires auth', function () 
 });
 
 it('assigns free subscription when company has no current plan', function () {
+    /** @var object{plan: Plan, company: Company, user: User} $this */
     $this->company->subscription()->delete();
     $pemula = Plan::factory()->pemula()->create();
 
@@ -152,6 +197,7 @@ it('passes through when user has no company_id', function () {
 });
 
 it('blocks user creation when user limit exceeded', function () {
+    /** @var object{plan: Plan, company: Company, user: User} $this */
     // plan already has max_users: 1 and 1 user exists ($this->user)
     actingAs($this->user)
         ->post(route('users.store'), [
@@ -165,7 +211,7 @@ it('blocks user creation when user limit exceeded', function () {
 });
 
 it('returns json error for user limit exceeded on JSON request', function () {
-    /** @var object{user: User, plan: Plan} $this */
+    /** @var object{plan: Plan, company: Company, user: User} $this */
     actingAs($this->user)
         ->postJson(route('users.store'), [
             'name' => 'User JSON Limit',

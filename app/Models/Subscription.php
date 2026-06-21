@@ -11,10 +11,24 @@ class Subscription extends Model
 {
     use HasFactory;
 
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
     protected $fillable = [
-        'company_id', 'plan_id', 'status', 'billing_cycle',
-        'starts_at', 'ends_at', 'trial_ends_at', 'canceled_at',
-        'auto_renew', 'payment_method', 'payment_token', 'notes',
+        'company_id',
+        'plan_id',
+        'status',
+        'billing_cycle',
+        'starts_at',
+        'ends_at',
+        'trial_ends_at',
+        'canceled_at',
+        'auto_renew',
+        'payment_method',
+        'payment_token',
+        'notes',
     ];
 
     /**
