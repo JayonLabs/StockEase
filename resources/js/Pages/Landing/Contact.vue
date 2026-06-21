@@ -109,7 +109,9 @@ const faqs = [
                 <div
                     class="lg:col-span-7 glass-card rounded-xl border border-outline-variant/30 p-8 shadow-sm"
                 >
-                    <h2 class="text-2xl font-semibold mb-8 text-on-surface">
+                    <h2
+                        class="text-2xl font-semibold mb-8 text-on-surface dark:text-inverse-on-surface"
+                    >
                         Kirimkan Pesan kepada Kami
                     </h2>
                     <form class="space-y-6" @submit.prevent="submit">
@@ -117,7 +119,7 @@ const faqs = [
                             <div class="space-y-2">
                                 <Label
                                     for="name"
-                                    class="text-on-surface-variant ml-1"
+                                    class="text-on-surface-variant dark:text-surface-variant/80 ml-1"
                                     >Nama Lengkap</Label
                                 >
                                 <Input
@@ -137,7 +139,7 @@ const faqs = [
                             <div class="space-y-2">
                                 <Label
                                     for="email"
-                                    class="text-on-surface-variant ml-1"
+                                    class="text-on-surface-variant dark:text-surface-variant/80 ml-1"
                                     >Alamat Email</Label
                                 >
                                 <Input
@@ -158,7 +160,7 @@ const faqs = [
                         <div class="space-y-2">
                             <Label
                                 for="subject"
-                                class="text-on-surface-variant ml-1"
+                                class="text-on-surface-variant dark:text-surface-variant/80 ml-1"
                                 >Subjek</Label
                             >
                             <Input
@@ -178,7 +180,7 @@ const faqs = [
                         <div class="space-y-2">
                             <Label
                                 for="message"
-                                class="text-on-surface-variant ml-1"
+                                class="text-on-surface-variant dark:text-surface-variant/80 ml-1"
                                 >Pesan</Label
                             >
                             <textarea
@@ -186,7 +188,7 @@ const faqs = [
                                 v-model="form.message"
                                 rows="5"
                                 placeholder="Ceritakan lebih banyak tentang kebutuhan bisnis Anda..."
-                                class="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white/50 dark:bg-white/10 focus:ring-4 focus:ring-surface-tint/20 focus:border-surface-tint transition-all outline-none resize-none text-on-surface dark:text-on-surface text-sm"
+                                class="w-full px-4 py-3 rounded-xl border border-outline-variant bg-white/50 dark:bg-white/10 focus:ring-4 focus:ring-surface-tint/20 focus:border-surface-tint transition-all outline-none resize-none text-on-surface dark:text-inverse-on-surface text-sm"
                             ></textarea>
                             <p
                                 v-if="form.errors.message"
@@ -217,7 +219,9 @@ const faqs = [
                     <div
                         class="glass-card rounded-xl border border-outline-variant/30 p-8 shadow-sm flex-1"
                     >
-                        <h2 class="text-2xl font-semibold mb-8 text-on-surface">
+                        <h2
+                            class="text-2xl font-semibold mb-8 text-on-surface dark:text-inverse-on-surface"
+                        >
                             Informasi Kontak
                         </h2>
                         <div class="space-y-8">
@@ -236,14 +240,14 @@ const faqs = [
                                 </div>
                                 <div>
                                     <p
-                                        class="text-sm font-bold text-on-surface"
+                                        class="text-sm font-bold text-on-surface dark:text-inverse-on-surface"
                                     >
                                         {{ info.title }}
                                     </p>
                                     <p
                                         v-for="line in info.lines"
                                         :key="line"
-                                        class="text-base text-on-surface-variant"
+                                        class="text-base text-on-surface-variant dark:text-surface-variant/80"
                                     >
                                         {{ line }}
                                     </p>
@@ -270,7 +274,8 @@ const faqs = [
                                 class="material-symbols-outlined text-surface-tint"
                                 >pin_drop</span
                             >
-                            <span class="text-sm font-bold text-on-surface"
+                            <span
+                                class="text-sm font-bold text-on-surface dark:text-inverse-on-surface"
                                 >Lihat di Google Maps</span
                             >
                         </div>
@@ -285,7 +290,7 @@ const faqs = [
         >
             <div class="max-w-4xl mx-auto px-10">
                 <h2
-                    class="text-3xl font-semibold text-center mb-16 text-on-surface"
+                    class="text-3xl font-semibold text-center mb-16 text-on-surface dark:text-inverse-on-surface"
                     style="letter-spacing: -0.01em"
                 >
                     Pertanyaan yang Sering Diajukan
@@ -294,14 +299,14 @@ const faqs = [
                     <div
                         v-for="(faq, i) in faqs"
                         :key="i"
-                        class="bg-surface dark:bg-surface-container rounded-xl border border-outline-variant/20 overflow-hidden"
+                        class="bg-surface dark:bg-white/10 rounded-xl border border-outline-variant/20 dark:border-outline/20 overflow-hidden"
                     >
                         <button
-                            class="w-full p-6 text-left flex justify-between items-center hover:bg-surface-tint/5 transition-colors"
+                            class="w-full p-6 text-left flex justify-between items-center hover:bg-surface-tint/5 dark:hover:bg-white/5 transition-colors"
                             @click="toggleFaq(i)"
                         >
                             <span
-                                class="text-2xl font-semibold text-on-surface"
+                                class="text-2xl font-semibold text-on-surface dark:text-inverse-on-surface"
                                 >{{ faq.q }}</span
                             >
                             <span
@@ -312,7 +317,7 @@ const faqs = [
                         </button>
                         <div
                             v-show="activeFaq === i"
-                            class="px-6 pb-6 text-base text-on-surface-variant"
+                            class="px-6 pb-6 text-base text-on-surface-variant dark:text-surface-variant/80"
                         >
                             {{ faq.a }}
                         </div>

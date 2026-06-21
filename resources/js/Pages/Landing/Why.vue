@@ -52,7 +52,7 @@ const comparisonRows = [
                         Mengapa Pengecer Berpikiran Maju Memilih Kami
                     </span>
                     <h1
-                        class="text-5xl font-bold text-on-surface leading-tight"
+                        class="text-5xl font-bold text-on-surface dark:text-inverse-on-surface leading-tight"
                         style="letter-spacing: -0.02em"
                     >
                         Dirancang untuk
@@ -88,7 +88,7 @@ const comparisonRows = [
                                     >{{ stat.value }}</span
                                 >
                                 <span
-                                    class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider"
+                                    class="text-xs font-semibold text-on-surface-variant dark:text-surface-variant/60 uppercase tracking-wider"
                                     >{{ stat.label }}</span
                                 >
                             </div>
@@ -112,7 +112,7 @@ const comparisonRows = [
         <section class="px-10 max-w-360 mx-auto mb-32">
             <div class="text-center mb-16">
                 <h2
-                    class="text-3xl font-semibold mb-4 text-on-surface"
+                    class="text-3xl font-semibold mb-4 text-on-surface dark:text-inverse-on-surface"
                     style="letter-spacing: -0.01em"
                 >
                     Keunggulan StockEase
@@ -127,7 +127,7 @@ const comparisonRows = [
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <!-- Built for Scale -->
                 <div
-                    class="md:col-span-8 group relative bg-surface-container-low dark:bg-surface-container p-8 rounded-3xl border border-outline-variant/30 dark:border-outline/20 overflow-hidden hover:shadow-lg transition-all duration-300"
+                    class="md:col-span-8 group relative bg-surface-container-low dark:bg-white/10 p-8 rounded-3xl border border-outline-variant/30 dark:border-outline/20 overflow-hidden hover:shadow-lg transition-all duration-300"
                 >
                     <div
                         class="relative z-10 h-full flex flex-col justify-between"
@@ -142,7 +142,9 @@ const comparisonRows = [
                                     >trending_up</span
                                 >
                             </div>
-                            <h3 class="text-2xl font-semibold mb-4">
+                            <h3
+                                class="text-2xl font-semibold mb-4 text-on-surface dark:text-inverse-on-surface"
+                            >
                                 Dibangun untuk Skala Besar
                             </h3>
                             <p
@@ -155,11 +157,11 @@ const comparisonRows = [
                         </div>
                         <div class="mt-8 flex gap-3">
                             <span
-                                class="px-3 py-1 bg-white/50 rounded-lg text-xs font-semibold border border-outline-variant/20"
+                                class="px-3 py-1 bg-white/50 dark:bg-white/15 rounded-lg text-xs font-semibold border border-outline-variant/20 dark:border-outline/30 dark:text-inverse-on-surface"
                                 >Multi-lokasi</span
                             >
                             <span
-                                class="px-3 py-1 bg-white/50 rounded-lg text-xs font-semibold border border-outline-variant/20"
+                                class="px-3 py-1 bg-white/50 dark:bg-white/15 rounded-lg text-xs font-semibold border border-outline-variant/20 dark:border-outline/30 dark:text-inverse-on-surface"
                                 >Elastic Cloud</span
                             >
                         </div>
@@ -193,7 +195,9 @@ const comparisonRows = [
                         >
                             Keamanan Level Bank
                         </h3>
-                        <p class="text-base text-on-surface-variant/80">
+                        <p
+                            class="text-base text-on-surface-variant/80 dark:text-surface-variant/80"
+                        >
                             Enkripsi end-to-end, kepatuhan SOC 2, dan
                             perlindungan PCI-DSS Level 1 untuk setiap transaksi.
                         </p>
@@ -225,10 +229,14 @@ const comparisonRows = [
                         >
                             <span class="material-symbols-outlined">sync</span>
                         </div>
-                        <h3 class="text-2xl font-semibold mb-4">
+                        <h3
+                            class="text-2xl font-semibold mb-4 text-on-surface dark:text-inverse-on-surface"
+                        >
                             Sinkronisasi Real-time
                         </h3>
-                        <p class="text-base text-on-surface-variant">
+                        <p
+                            class="text-base text-on-surface-variant dark:text-surface-variant/80"
+                        >
                             Perbarui harga di kantor pusat, langsung terlihat di
                             setiap terminal. Tanpa jeda inventaris.
                         </p>
@@ -243,7 +251,7 @@ const comparisonRows = [
                 </div>
                 <!-- 24/7 Support -->
                 <div
-                    class="md:col-span-8 group relative bg-surface-container-highest dark:bg-surface-container p-8 rounded-3xl border border-outline-variant/30 dark:border-outline/20 flex flex-col md:flex-row gap-8 items-center hover:shadow-lg transition-all"
+                    class="md:col-span-8 group relative bg-surface-container-highest dark:bg-white/10 p-8 rounded-3xl border border-outline-variant/30 dark:border-outline/20 flex flex-col md:flex-row gap-8 items-center hover:shadow-lg transition-all"
                 >
                     <div class="md:w-1/2">
                         <div
@@ -253,10 +261,14 @@ const comparisonRows = [
                                 >support_agent</span
                             >
                         </div>
-                        <h3 class="text-2xl font-semibold mb-4">
+                        <h3
+                            class="text-2xl font-semibold mb-4 text-on-surface dark:text-inverse-on-surface"
+                        >
                             Dukungan Ahli 24/7
                         </h3>
-                        <p class="text-base text-on-surface-variant">
+                        <p
+                            class="text-base text-on-surface-variant dark:text-surface-variant/80"
+                        >
                             Manusia nyata, ahli ritel nyata. Kami membantu Anda
                             mengoptimalkan alur kerja bisnis Anda jam 3 pagi
                             atau jam 3 sore.
@@ -285,12 +297,14 @@ const comparisonRows = [
             <div class="max-w-360 mx-auto">
                 <div class="text-center mb-16">
                     <h2
-                        class="text-3xl font-semibold mb-4 text-on-surface"
+                        class="text-3xl font-semibold mb-4 text-on-surface dark:text-inverse-on-surface"
                         style="letter-spacing: -0.01em"
                     >
                         Peningkatan yang Layak untuk Bisnis Anda
                     </h2>
-                    <p class="text-base text-on-surface-variant">
+                    <p
+                        class="text-base text-on-surface-variant dark:text-surface-variant/80"
+                    >
                         Bagaimana StockEase dibandingkan dengan mesin kasir
                         tradisional.
                     </p>
@@ -300,21 +314,19 @@ const comparisonRows = [
                 >
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr
-                                class="bg-surface-container dark:bg-surface-container-high"
-                            >
+                            <tr class="bg-surface-container dark:bg-white/10">
                                 <th
-                                    class="p-6 text-2xl font-semibold border-b border-outline-variant/30"
+                                    class="p-6 text-2xl font-semibold border-b border-outline-variant/30 dark:text-inverse-on-surface"
                                 >
                                     Fitur
                                 </th>
                                 <th
-                                    class="p-6 text-2xl font-semibold border-b border-outline-variant/30 bg-surface-tint/5 text-surface-tint"
+                                    class="p-6 text-2xl font-semibold border-b border-outline-variant/30 bg-surface-tint/5 text-surface-tint dark:text-inverse-on-surface"
                                 >
                                     StockEase ERP
                                 </th>
                                 <th
-                                    class="p-6 text-2xl font-semibold border-b border-outline-variant/30 text-on-surface-variant opacity-60"
+                                    class="p-6 text-2xl font-semibold border-b border-outline-variant/30 text-on-surface-variant dark:text-inverse-on-surface opacity-60"
                                 >
                                     Mesin Kasir Tradisional
                                 </th>
@@ -327,7 +339,7 @@ const comparisonRows = [
                                 class="hover:bg-white/40 dark:hover:bg-white/5 transition-colors"
                             >
                                 <td
-                                    class="p-6 border-b border-outline-variant/30 font-bold"
+                                    class="p-6 border-b border-outline-variant/30 font-bold dark:text-inverse-on-surface"
                                 >
                                     {{ row.feature }}
                                 </td>
@@ -335,7 +347,7 @@ const comparisonRows = [
                                     class="p-6 border-b border-outline-variant/30 bg-surface-tint/5"
                                 >
                                     <div
-                                        class="flex items-center gap-2 text-surface-tint font-bold"
+                                        class="flex items-center gap-2 text-surface-tint font-bold dark:text-green-400"
                                     >
                                         <span
                                             class="material-symbols-outlined text-[20px]"
@@ -345,7 +357,7 @@ const comparisonRows = [
                                     </div>
                                 </td>
                                 <td
-                                    class="p-6 border-b border-outline-variant/30 text-on-surface-variant"
+                                    class="p-6 border-b border-outline-variant/30 text-on-surface-variant dark:text-surface-variant/80"
                                 >
                                     {{ row.theirs }}
                                 </td>
@@ -374,7 +386,7 @@ const comparisonRows = [
                     Siap untuk modernisasi?
                 </h2>
                 <p
-                    class="text-lg mb-10 text-white/80 dark:text-on-primary-fixed/70 max-w-2xl mx-auto relative z-10"
+                    class="text-lg mb-10 text-white/80 dark:text-on-primary-fixed/80 max-w-2xl mx-auto relative z-10"
                 >
                     Bergabunglah dengan 5.000+ bisnis yang telah meningkatkan
                     efisiensi mereka rata-rata 35% dalam bulan pertama.

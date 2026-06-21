@@ -22,7 +22,7 @@ const { isDark } = useLandingDarkMode();
         </Head>
 
         <div
-            class="bg-[#f8f9ff] dark:bg-inverse-surface text-on-surface transition-colors duration-300 min-h-screen"
+            class="bg-[#f8f9ff] dark:bg-inverse-surface text-on-surface dark:text-inverse-on-surface transition-colors duration-300 min-h-screen"
             style="font-family: 'Inter', sans-serif"
         >
             <LandingNav />

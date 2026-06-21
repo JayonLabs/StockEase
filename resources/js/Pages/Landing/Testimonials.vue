@@ -34,7 +34,7 @@ const reviews = [
                 >Kesuksesan Terbukti</span
             >
             <h1
-                class="text-5xl font-bold text-on-surface dark:text-on-surface mb-6 max-w-3xl mx-auto"
+                class="text-5xl font-bold text-on-surface dark:text-inverse-on-surface mb-6 max-w-3xl mx-auto"
                 style="letter-spacing: -0.02em"
             >
                 Cerita Nyata dari Bisnis yang Didukung StockEase
@@ -53,7 +53,7 @@ const reviews = [
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <!-- Large card -->
                 <div
-                    class="md:col-span-8 group relative overflow-hidden rounded-xl bg-white dark:bg-surface-container border border-outline-variant/30 dark:border-outline/20 shadow-sm transition-all hover:shadow-lg"
+                    class="md:col-span-8 group relative overflow-hidden rounded-xl bg-white dark:bg-white/10 border border-outline-variant/30 dark:border-outline/20 shadow-sm transition-all hover:shadow-lg"
                 >
                     <div class="grid md:grid-cols-2 h-full">
                         <div class="p-8 flex flex-col justify-between">
@@ -77,7 +77,7 @@ const reviews = [
                                     </div>
                                 </div>
                                 <h3
-                                    class="text-3xl font-semibold mb-4 text-on-surface dark:text-on-surface"
+                                    class="text-3xl font-semibold mb-4 text-on-surface dark:text-inverse-on-surface"
                                 >
                                     Bagaimana Butik X Meningkatkan Penjualan
                                     Tahunan 30%
@@ -104,7 +104,7 @@ const reviews = [
                                 </div>
                                 <div>
                                     <p
-                                        class="font-bold text-on-surface dark:text-on-surface"
+                                        class="font-bold text-on-surface dark:text-inverse-on-surface"
                                     >
                                         Sarah Jenkins
                                     </p>
@@ -176,7 +176,7 @@ const reviews = [
                 </div>
                 <!-- Metric card 1 -->
                 <div
-                    class="md:col-span-4 bg-white dark:bg-surface-container border border-outline-variant/30 dark:border-outline/20 rounded-xl p-8 shadow-sm flex flex-col justify-between"
+                    class="md:col-span-4 bg-white dark:bg-white/10 border border-outline-variant/30 dark:border-outline/20 rounded-xl p-8 shadow-sm flex flex-col justify-between"
                 >
                     <div>
                         <div class="text-surface-tint mb-4">
@@ -185,7 +185,7 @@ const reviews = [
                             >
                         </div>
                         <h4
-                            class="text-5xl font-bold text-on-surface dark:text-on-surface"
+                            class="text-5xl font-bold text-on-surface dark:text-inverse-on-surface"
                         >
                             45%
                         </h4>
@@ -198,14 +198,15 @@ const reviews = [
                     </div>
                     <div class="mt-6 flex items-center gap-3">
                         <div class="h-px grow bg-outline-variant/30"></div>
-                        <span class="text-xs font-bold text-surface-tint"
+                        <span
+                            class="text-xs font-bold text-surface-tint dark:text-inverse-primary"
                             >Studi Kasus FreshMart</span
                         >
                     </div>
                 </div>
                 <!-- Small testimonial -->
                 <div
-                    class="md:col-span-4 bg-surface-container-low dark:bg-surface-container rounded-xl p-8 relative"
+                    class="md:col-span-4 bg-surface-container-low dark:bg-white/10 rounded-xl p-8 relative"
                 >
                     <span
                         class="material-symbols-outlined text-primary-container absolute top-6 right-8 opacity-20 text-[64px]"
@@ -224,7 +225,9 @@ const reviews = [
                         ></div>
                         <div>
                             <p class="font-bold text-sm">Marcus Thorne</p>
-                            <p class="text-xs text-on-surface-variant">
+                            <p
+                                class="text-xs text-on-surface-variant dark:text-surface-variant/70"
+                            >
                                 Pemilik, Elite Auto Care
                             </p>
                         </div>
@@ -296,7 +299,9 @@ const reviews = [
                     </blockquote>
                     <div class="text-white">
                         <p class="text-2xl font-bold">Diana Rossini</p>
-                        <p class="text-on-surface-variant/70">
+                        <p
+                            class="text-on-surface-variant/70 dark:text-surface-variant/70"
+                        >
                             COO, Global Retail Partners
                         </p>
                     </div>
@@ -308,7 +313,7 @@ const reviews = [
         <section class="max-w-360 mx-auto px-10 mt-24">
             <div class="text-center mb-16">
                 <h2
-                    class="text-3xl font-semibold text-on-surface dark:text-on-surface mb-2"
+                    class="text-3xl font-semibold text-on-surface dark:text-inverse-on-surface mb-2"
                     style="letter-spacing: -0.01em"
                 >
                     Suara Industri
@@ -321,7 +326,7 @@ const reviews = [
                 <div
                     v-for="r in reviews"
                     :key="r.name"
-                    class="bg-white dark:bg-surface-container p-6 rounded-xl border border-outline-variant/30 dark:border-outline/20 hover:border-surface-tint/50 transition-colors"
+                    class="bg-white dark:bg-white/10 p-6 rounded-xl border border-outline-variant/30 dark:border-outline/20 hover:border-surface-tint/50 dark:hover:border-inverse-primary/50 transition-colors"
                 >
                     <div class="flex text-surface-tint mb-4">
                         <span
@@ -345,12 +350,12 @@ const reviews = [
                         </div>
                         <div>
                             <p
-                                class="text-xs font-semibold text-on-surface dark:text-on-surface"
+                                class="text-xs font-semibold text-on-surface dark:text-inverse-on-surface"
                             >
                                 {{ r.name }}
                             </p>
                             <p
-                                class="text-[10px] text-on-surface-variant uppercase"
+                                class="text-[10px] text-on-surface-variant dark:text-surface-variant/70 uppercase"
                             >
                                 {{ r.company }}
                             </p>
@@ -363,7 +368,7 @@ const reviews = [
         <!-- Final CTA -->
         <section class="max-w-360 mx-auto px-10 mt-32 mb-16">
             <div
-                class="bg-surface-container-highest dark:bg-surface-container rounded-3xl p-12 md:p-20 text-center relative overflow-hidden"
+                class="bg-surface-container-highest dark:bg-white/10 rounded-3xl p-12 md:p-20 text-center relative overflow-hidden"
             >
                 <div
                     class="absolute inset-0 opacity-10 pointer-events-none"
@@ -377,7 +382,7 @@ const reviews = [
                 ></div>
                 <div class="relative z-10">
                     <h2
-                        class="text-5xl font-bold text-on-surface dark:text-on-surface mb-6"
+                        class="text-5xl font-bold text-on-surface dark:text-inverse-on-surface mb-6"
                         style="letter-spacing: -0.02em"
                     >
                         Siap Menulis Cerita Sukses Anda?
@@ -401,7 +406,7 @@ const reviews = [
                         </Link>
                         <Link
                             href="#"
-                            class="bg-white dark:bg-surface-container-highest text-surface-tint dark:text-inverse-primary border border-surface-tint/20 dark:border-inverse-primary/20 px-10 py-4 rounded-full font-bold hover:bg-surface-tint/5 dark:hover:bg-inverse-primary/10 transition-all"
+                            class="bg-white dark:bg-white/15 text-surface-tint dark:text-inverse-primary border border-surface-tint/20 dark:border-inverse-primary/20 px-10 py-4 rounded-full font-bold hover:bg-surface-tint/5 dark:hover:bg-inverse-primary/10 transition-all"
                             >Hubungi Sales</Link
                         >
                     </div>
