@@ -219,10 +219,19 @@
 - kirim email ke admin sales di contact us page (Done)
 - refactor untuk queue log page itu hanya bisa diakses oleh platform owner (Done)
 
+<!-- TODO: 21/06/2026 -->
+
+- fix dark mode di landing page (Done)
+- buatkan landing pagenya biar SEO friendly dan mudah di crawl dengan domain my.id dan biar bisa paling atas di google search (Done)
+- fix error untuk upgrade langganan (Done)
+- fix untuk menu sesuai dengan plan user karena yang sekarang tidak sesuai (Done)
+- sesuaikan lagi untuk fitur yang di dapatkan untuk plan pemula (Done)
+- fix error di platform owner bagian plan (Done)
+- tambahkan aksi di manage plan platform owner (Done)
+- halaman profile untuk platform owner, bisa update email, password dll (Done)
+
 <!-- TODO: -->
 
-- fix dark mode di landing page
-- buatkan landing pagenya biar SEO friendly dan mudah di crawl dengan domain my.id dan biar bisa paling atas di google
 - kirim email terimakasih dan laporan untuk yang langganan platformnya
 - pastikan coverage test diatas 80 persen
 - isikan docblock untuk tiap method di code backendnya biar gampang nanti baca codenya
@@ -244,11 +253,13 @@ tolong improve testku ini biar minimal 80 persen dong aku jalaninnya pakai php a
 
 push branch develop ini ke github dan buatkan PR nya. jangan pakai 'git add .' melainkan commit messagenya sesuai dengan code yang berubah. untuk yang aku kerjakan yaitu
 
-- untuk UMKM itu 50 ribu aja perbulan tidak ada diskon untuk tahunan (Done)
-- untuk ada dashboard lain untuk platform ku ini biar bisa lihat berapa user yang langganan gitu dan ada metrik lainnya yang mendukung bisnis (Done)
-- refactor untuk dashboard owner itu pakai sidebar biar sama seperti page tenant (Done)
-- fix harga di pricing page 17% hemat untuk tahunan (Done)
-- kirim email ke admin sales di contact us page (Done)
-- refactor untuk queue log page itu hanya bisa diakses oleh platform owner (Done)
+- fix dark mode di landing page (Done)
+- buatkan landing pagenya biar SEO friendly dan mudah di crawl dengan domain my.id dan biar bisa paling atas di google search (Done)
+- fix error untuk upgrade langganan (Done)
+- fix untuk menu sesuai dengan plan user karena yang sekarang tidak sesuai (Done)
+- sesuaikan lagi untuk fitur yang di dapatkan untuk plan pemula (Done)
+- fix error di platform owner bagian plan (Done)
+- tambahkan aksi di manage plan platform owner (Done)
+- halaman profile untuk platform owner, bisa update email, password dll (Done)
 
 pastikan semuanya sudah di commit dan di push baru buatkan PR nya pakai gh cli. pakai conventional commit dengan bahasa inggris. jangan pakai emoji
