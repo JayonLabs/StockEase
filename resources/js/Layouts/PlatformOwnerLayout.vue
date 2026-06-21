@@ -43,7 +43,7 @@ function logout() {
                             }}</span>
                             <button
                                 @click="logout"
-                                class="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
+                                class="cursor-pointer inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-100"
                             >
                                 <LogOut class="h-4 w-4" />
                                 Logout

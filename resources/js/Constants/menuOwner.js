@@ -4,6 +4,7 @@ import {
     CreditCard,
     Package,
     ScrollText,
+    UserCircle,
 } from 'lucide-vue-next';
 
 export const ownerMenuSections = [
@@ -55,6 +56,19 @@ export const ownerMenuSections = [
                 routeName: 'platform.owner.queue-worker-logs.index',
                 activeRoute: 'platform.owner.queue-worker-logs.*',
                 icon: ScrollText,
+                roles: ['platform_owner'],
+            },
+        ],
+    },
+    {
+        label: 'Account',
+        collapsible: false,
+        items: [
+            {
+                title: 'Profile',
+                routeName: 'platform.owner.profile.edit',
+                activeRoute: 'platform.owner.profile.*',
+                icon: UserCircle,
                 roles: ['platform_owner'],
             },
         ],
