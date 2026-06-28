@@ -28,20 +28,19 @@ use Illuminate\Support\Facades\DB;
  */
 abstract class TestCase extends BaseTestCase
 {
+    // Seed roles/permissions once after migrations, not per-test.
+    // LazilyRefreshDatabase commits this before the first test transaction,
+    // so all tests see the data without re-seeding on every setUp().
+    protected bool $seed = true;
+
+    protected string $seeder = RoleAndPermissionSeeder::class;
+
     protected function setUp(): void
     {
         parent::setUp();
 
-        // FAIL-SAFE: Memastikan database yang digunakan adalah 'testing'
-        if (app()->environment() !== 'testing') {
-            // Cobalah untuk memaksa environment ke testing jika belum
-        }
-
-        // Jika terdeteksi 'stockease', hentikan test seketika.
         if (DB::connection()->getDatabaseName() === 'stockease') {
             throw new \Exception('BAHAYA: Testing mencoba mengakses database utama (stockease)! Koneksi dihentikan untuk melindungi data Anda.');
         }
-
-        $this->seed(RoleAndPermissionSeeder::class);
     }
 }

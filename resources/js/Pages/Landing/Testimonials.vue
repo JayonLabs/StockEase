@@ -413,7 +413,8 @@ const reviews = [
                     <p
                         class="mt-8 text-xs font-semibold text-on-surface-variant dark:text-surface-variant/60"
                     >
-                        Tanpa kartu kredit. Uji coba gratis 14 hari.
+                        Tanpa kartu kredit. Uji coba gratis 14 hari untuk
+                        Pemula.
                     </p>
                 </div>
             </div>

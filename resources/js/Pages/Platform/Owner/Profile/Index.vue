@@ -192,7 +192,9 @@ function submitPassword() {
                                 <button
                                     type="button"
                                     class="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-300"
-                                    @click="toggleVisibility('current_password')"
+                                    @click="
+                                        toggleVisibility('current_password')
+                                    "
                                 >
                                     <EyeOff
                                         v-if="showPassword.current_password"
@@ -218,7 +220,9 @@ function submitPassword() {
                                     ref="passwordInput"
                                     v-model="passwordForm.password"
                                     :type="
-                                        showPassword.password ? 'text' : 'password'
+                                        showPassword.password
+                                            ? 'text'
+                                            : 'password'
                                     "
                                     autocomplete="new-password"
                                     class="border-zinc-700 bg-zinc-800 pr-10 text-zinc-100 placeholder:text-zinc-500 focus:border-emerald-500 focus:ring-emerald-500"
@@ -236,7 +240,9 @@ function submitPassword() {
                                     <Eye v-else class="h-4 w-4" />
                                 </button>
                             </div>
-                            <InputError :message="passwordForm.errors.password" />
+                            <InputError
+                                :message="passwordForm.errors.password"
+                            />
                         </div>
 
                         <div>
@@ -262,11 +268,15 @@ function submitPassword() {
                                     type="button"
                                     class="absolute inset-y-0 right-0 flex items-center pr-3 text-zinc-500 hover:text-zinc-300"
                                     @click="
-                                        toggleVisibility('password_confirmation')
+                                        toggleVisibility(
+                                            'password_confirmation',
+                                        )
                                     "
                                 >
                                     <EyeOff
-                                        v-if="showPassword.password_confirmation"
+                                        v-if="
+                                            showPassword.password_confirmation
+                                        "
                                         class="h-4 w-4"
                                     />
                                     <Eye v-else class="h-4 w-4" />

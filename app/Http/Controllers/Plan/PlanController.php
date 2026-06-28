@@ -16,7 +16,7 @@ class PlanController extends Controller
      */
     public function index(): Response
     {
-        return Inertia::render('Plan/Index', [
+        return Inertia::render('Admin/Plans/Index', [
             'plans' => Plan::orderBy('sort_order')->get(),
         ]);
     }

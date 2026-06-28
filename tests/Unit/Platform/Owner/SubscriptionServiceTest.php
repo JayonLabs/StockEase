@@ -11,11 +11,13 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $this->plan = Plan::factory()->pemula()->create();
     $this->planPro = Plan::factory()->profesional()->create();
 });
 
 it('returns paginated subscriptions with company and plan', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $companies = Company::factory()->count(3)->create();
     foreach ($companies as $company) {
         Subscription::factory()->create([
@@ -34,6 +36,7 @@ it('returns paginated subscriptions with company and plan', function () {
 });
 
 it('orders subscriptions by latest first', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create();
     Subscription::factory()->create([
         'company_id' => $company->id,
@@ -54,6 +57,7 @@ it('orders subscriptions by latest first', function () {
 });
 
 it('filters by status', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create();
     Subscription::factory()->create([
         'company_id' => $company->id,
@@ -73,6 +77,7 @@ it('filters by status', function () {
 });
 
 it('returns single subscription with relations', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create();
     $subscription = Subscription::factory()->create([
         'company_id' => $company->id,
@@ -89,12 +94,14 @@ it('returns single subscription with relations', function () {
 });
 
 it('returns null for non-existent subscription', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $result = app(SubscriptionService::class)->findById(99999);
 
     expect($result)->toBeNull();
 });
 
 it('respects per page parameter', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create();
     Subscription::factory()->count(30)->create([
         'company_id' => $company->id,
@@ -108,6 +115,7 @@ it('respects per page parameter', function () {
 });
 
 it('filters subscriptions by status with total matching', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create();
     Subscription::factory()->create([
         'company_id' => $company->id,

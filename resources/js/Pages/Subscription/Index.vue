@@ -5,6 +5,17 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Separator } from '@/Components/ui/separator';
 import { ref, computed } from 'vue';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/Components/ui/alert-dialog';
 import axios from 'axios';
 import { toast } from 'vue-sonner';
 import { formatPrice } from '@/lib/utils';
@@ -30,16 +41,21 @@ import {
 
 const props = defineProps({
     currentSubscription: { type: Object, default: null },
+    pendingSubscription: { type: Object, default: null },
     plans: { type: Array, required: true },
+    hadTrial: { type: Boolean, default: false },
 });
 
 const isUpgrading = ref(null);
+const isRetrying = ref(false);
 const selectedBilling = ref('monthly');
 const snapScriptLoaded = ref(false);
+const cancelDialogOpen = ref(false);
 
 const currentPlan = computed(() => props.currentSubscription?.plan);
 const subscriptionStatus = computed(() => props.currentSubscription?.status);
 const isTrialing = computed(() => subscriptionStatus.value === 'trialing');
+const hasPendingPayment = computed(() => !!props.pendingSubscription);
 
 const resourceSummary = (plan) => {
     const items = [];
@@ -56,7 +72,8 @@ const resourceSummary = (plan) => {
             ? 'Gudang Unlimited'
             : `${plan.max_warehouses} Gudang`,
     );
-    if (plan.trial_days > 0) items.push(`Trial ${plan.trial_days} Hari`);
+    if (plan.trial_days > 0 && !props.hadTrial)
+        items.push(`Trial ${plan.trial_days} Hari`);
     return items;
 };
 
@@ -65,6 +82,18 @@ const sortedFeatures = (plan) =>
         .filter((f) => f.card_order !== undefined)
         .sort((a, b) => a.card_order - b.card_order);
 
+const openSnapPopup = (snapToken) => {
+    window.snap.pay(snapToken, {
+        onSuccess: () => {
+            toast.success('Pembayaran berhasil!');
+            setTimeout(() => window.location.reload(), 1500);
+        },
+        onPending: () => toast.info('Menunggu pembayaran...'),
+        onError: () => toast.error('Pembayaran gagal'),
+        onClose: () => toast.info('Popup pembayaran ditutup. Lanjutkan nanti di halaman ini.'),
+    });
+};
+
 const upgrade = async (planId, billingCycle) => {
     isUpgrading.value = planId;
     try {
@@ -72,20 +101,16 @@ const upgrade = async (planId, billingCycle) => {
             plan_id: planId,
             billing_cycle: billingCycle,
         });
-        toast.success(response.data.message);
+
+        if (response.data.message) {
+            toast.success(response.data.message);
+        }
 
         if (response.data.snap_token) {
             if (!snapScriptLoaded.value) {
                 await loadSnapScript();
             }
-            window.snap.pay(response.data.snap_token, {
-                onSuccess: () => {
-                    toast.success('Pembayaran berhasil!');
-                    setTimeout(() => window.location.reload(), 1500);
-                },
-                onPending: () => toast.info('Menunggu pembayaran...'),
-                onError: () => toast.error('Pembayaran gagal'),
-            });
+            openSnapPopup(response.data.snap_token);
         } else {
             setTimeout(() => window.location.reload(), 1000);
         }
@@ -93,6 +118,26 @@ const upgrade = async (planId, billingCycle) => {
         toast.error(error.response?.data?.message ?? 'Gagal upgrade');
     } finally {
         isUpgrading.value = null;
+    }
+};
+
+const retryPayment = async () => {
+    isRetrying.value = true;
+    try {
+        const response = await axios.post(route('subscription.retry-payment'));
+
+        if (response.data.snap_token) {
+            if (!snapScriptLoaded.value) {
+                await loadSnapScript();
+            }
+            openSnapPopup(response.data.snap_token);
+        } else {
+            toast.error('Gagal memuat pembayaran. Coba refresh halaman.');
+        }
+    } catch (error) {
+        toast.error(error.response?.data?.message ?? 'Gagal melanjutkan pembayaran');
+    } finally {
+        isRetrying.value = false;
     }
 };
 
@@ -113,7 +158,7 @@ const loadSnapScript = () => {
 };
 
 const cancelSubscription = async (subscriptionId) => {
-    if (!confirm('Yakin ingin membatalkan subscription?')) return;
+    cancelDialogOpen.value = false;
     try {
         await axios.post(
             route('subscription.cancel', { subscription: subscriptionId }),
@@ -146,6 +191,17 @@ const getBillingLabel = (plan) => {
     }
     return '/bulan';
 };
+
+const planButtonLabel = (plan) => {
+    if (hasPendingPayment.value) return 'Menunggu Pembayaran';
+    if (currentPlan.value?.id === plan.id) return 'Plan Saat Ini';
+    if (plan.slug === 'enterprise') return 'Hubungi Sales';
+    if (plan.is_free) return 'Mulai Gratis';
+    if (plan.slug === 'pemula' && !props.hadTrial) return 'Mulai Gratis';
+    if (plan.trial_days > 0 && !props.hadTrial)
+        return `Mulai Trial ${plan.trial_days} Hari`;
+    return 'Langganan Sekarang';
+};
 </script>
 
 <template>
@@ -171,6 +227,88 @@ const getBillingLabel = (plan) => {
 
         <div class="flex flex-1 flex-col gap-4 p-4">
             <div class="space-y-6">
+                <!-- Pending Payment -->
+                <Card
+                    v-if="hasPendingPayment && !currentSubscription"
+                    class="border-yellow-400 bg-yellow-50 dark:bg-yellow-950/20"
+                >
+                    <CardHeader>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <CardTitle class="text-yellow-800 dark:text-yellow-200">
+                                    Menunggu Pembayaran
+                                </CardTitle>
+                                <CardDescription
+                                    >Pembayaran untuk
+                                    {{ pendingSubscription.plan?.name }} sedang
+                                    diproses</CardDescription
+                                >
+                            </div>
+                            <Badge
+                                variant="outline"
+                                class="text-yellow-600 border-yellow-600"
+                                >Pending</Badge
+                            >
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <div>
+                                <p class="text-sm text-muted-foreground">
+                                    Plan
+                                </p>
+                                <p class="text-lg font-semibold">
+                                    {{ pendingSubscription.plan?.name }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-muted-foreground">
+                                    Tagihan
+                                </p>
+                                <p class="text-lg font-semibold">
+                                    {{ formatPrice(pendingSubscription.invoice?.amount ?? 0) }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-muted-foreground">
+                                    Siklus
+                                </p>
+                                <p class="text-lg font-semibold">
+                                    {{
+                                        pendingSubscription.billing_cycle ===
+                                        'annual'
+                                            ? 'Tahunan'
+                                            : 'Bulanan'
+                                    }}
+                                </p>
+                            </div>
+                        </div>
+                    </CardContent>
+                    <CardFooter class="flex gap-2">
+                        <Button
+                            :disabled="isRetrying"
+                            @click="retryPayment"
+                        >
+                            <Loader2
+                                v-if="isRetrying"
+                                class="w-4 h-4 animate-spin mr-2"
+                            />
+                            Bayar Sekarang
+                        </Button>
+                        <Button
+                            variant="outline"
+                            :disabled="isRetrying"
+                            @click="
+                                cancelSubscription(
+                                    pendingSubscription.id,
+                                )
+                            "
+                        >
+                            Batalkan
+                        </Button>
+                    </CardFooter>
+                </Card>
+
                 <!-- Current Subscription -->
                 <Card v-if="currentSubscription">
                     <CardHeader>
@@ -256,12 +394,43 @@ const getBillingLabel = (plan) => {
                             subscriptionStatus === 'trialing'
                         "
                     >
-                        <Button
-                            variant="destructive"
-                            @click="cancelSubscription(currentSubscription.id)"
+                        <AlertDialog
+                            v-model:open="cancelDialogOpen"
                         >
-                            Batalkan Langganan
-                        </Button>
+                            <AlertDialogTrigger as-child>
+                                <Button variant="destructive">
+                                    Batalkan Langganan
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Batalkan Langganan
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Apakah Anda yakin ingin membatalkan
+                                        langganan? Tindakan ini tidak dapat
+                                        dibatalkan. Semua akses premium akan
+                                        dihentikan.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>
+                                        Batal
+                                    </AlertDialogCancel>
+                                    <AlertDialogAction
+                                        class="bg-destructive text-white hover:bg-destructive/90 dark:bg-destructive/60"
+                                        @click="
+                                            cancelSubscription(
+                                                currentSubscription.id,
+                                            )
+                                        "
+                                    >
+                                        Ya, Batalkan
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </CardFooter>
                 </Card>
 
@@ -333,7 +502,7 @@ const getBillingLabel = (plan) => {
                                     plan.description
                                 }}</CardDescription>
                             </CardHeader>
-                            <CardContent>
+                            <CardContent class="flex-1">
                                 <ul class="space-y-2">
                                     <!-- Ringkasan batas resource -->
                                     <li
@@ -372,34 +541,27 @@ const getBillingLabel = (plan) => {
                                     </li>
                                 </ul>
                             </CardContent>
-                            <CardFooter>
-                                <Button
-                                    class="w-full"
-                                    :disabled="
-                                        isUpgrading === plan.id ||
-                                        currentPlan?.id === plan.id
-                                    "
-                                    :variant="
-                                        currentPlan?.id === plan.id
-                                            ? 'outline'
-                                            : 'default'
-                                    "
-                                    @click="upgrade(plan.id, selectedBilling)"
-                                >
-                                    <Loader2
-                                        v-if="isUpgrading === plan.id"
-                                        class="w-4 h-4 animate-spin mr-2"
-                                    />
-                                    {{
-                                        currentPlan?.id === plan.id
-                                            ? 'Plan Saat Ini'
-                                            : plan.slug === 'pemula'
-                                              ? 'Mulai Gratis'
-                                              : plan.slug === 'enterprise'
-                                                ? 'Hubungi Sales'
-                                                : `Mulai Trial ${plan.trial_days} Hari`
-                                    }}
-                                </Button>
+                            <CardFooter class="mt-auto">
+                                    <Button
+                                        class="w-full"
+                                        :disabled="
+                                            isUpgrading === plan.id ||
+                                            currentPlan?.id === plan.id ||
+                                            hasPendingPayment
+                                        "
+                                        :variant="
+                                            currentPlan?.id === plan.id
+                                                ? 'outline'
+                                                : 'default'
+                                        "
+                                        @click="upgrade(plan.id, selectedBilling)"
+                                    >
+                                        <Loader2
+                                            v-if="isUpgrading === plan.id"
+                                            class="w-4 h-4 animate-spin mr-2"
+                                        />
+                                        {{ planButtonLabel(plan) }}
+                                    </Button>
                             </CardFooter>
                         </Card>
                     </div>

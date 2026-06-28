@@ -13,6 +13,7 @@ use function Pest\Laravel\get;
 uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
     $this->adminUser = User::factory()->create(['role' => 'admin']);
 
     $this->plan = Plan::factory()->profesional()->create();
@@ -40,18 +41,21 @@ describe('Authorization', function () {
     });
 
     it('redirects unauthenticated user from show', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         get(route('admin.subscriptions.show', $this->subscription))->assertRedirect(route('login'));
     });
 
     it('forbids cashier from accessing admin subscription index', function () {
         $cashier = User::factory()->create(['role' => 'cashier']);
 
+        /** @var User $cashier */
         actingAs($cashier)
             ->get(route('admin.subscriptions.index'))
             ->assertForbidden();
     });
 
     it('allows admin to access subscription index', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->get(route('admin.subscriptions.index'))
             ->assertOk();
@@ -64,24 +68,29 @@ describe('Authorization', function () {
 
 describe('Index', function () {
     it('renders the correct Inertia component', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->get(route('admin.subscriptions.index'))
-            ->assertInertia(fn (AssertableInertia $page) => $page
-                ->component('Admin/Subscriptions/Index')
-                ->has('subscriptions')
-                ->has('filters')
+            ->assertInertia(
+                fn (AssertableInertia $page) => $page
+                    ->component('Admin/Subscriptions/Index')
+                    ->has('subscriptions')
+                    ->has('filters')
             );
     });
 
     it('lists subscriptions with company and plan relations', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->get(route('admin.subscriptions.index'))
-            ->assertInertia(fn (AssertableInertia $page) => $page
-                ->has('subscriptions.data', 1)
+            ->assertInertia(
+                fn (AssertableInertia $page) => $page
+                    ->has('subscriptions.data', 1)
             );
     });
 
     it('filters subscriptions by status', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         Subscription::factory()->canceled()->create([
             'company_id' => Company::factory()->create()->id,
             'plan_id' => $this->plan->id,
@@ -89,13 +98,15 @@ describe('Index', function () {
 
         actingAs($this->adminUser)
             ->get(route('admin.subscriptions.index', ['status' => 'active']))
-            ->assertInertia(fn (AssertableInertia $page) => $page
-                ->has('subscriptions.data', 1)
-                ->where('filters.status', 'active')
+            ->assertInertia(
+                fn (AssertableInertia $page) => $page
+                    ->has('subscriptions.data', 1)
+                    ->where('filters.status', 'active')
             );
     });
 
     it('shows all subscriptions when no status filter applied', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         Subscription::factory()->canceled()->create([
             'company_id' => Company::factory()->create()->id,
             'plan_id' => $this->plan->id,
@@ -103,19 +114,22 @@ describe('Index', function () {
 
         actingAs($this->adminUser)
             ->get(route('admin.subscriptions.index'))
-            ->assertInertia(fn (AssertableInertia $page) => $page
-                ->has('subscriptions.data', 2)
+            ->assertInertia(
+                fn (AssertableInertia $page) => $page
+                    ->has('subscriptions.data', 2)
             );
     });
 
     it('paginates subscriptions', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         Subscription::factory()->count(30)->create(['plan_id' => $this->plan->id]);
 
         actingAs($this->adminUser)
             ->get(route('admin.subscriptions.index'))
-            ->assertInertia(fn (AssertableInertia $page) => $page
-                ->has('subscriptions.data', 25)
-                ->has('subscriptions.total')
+            ->assertInertia(
+                fn (AssertableInertia $page) => $page
+                    ->has('subscriptions.data', 25)
+                    ->has('subscriptions.total')
             );
     });
 });
@@ -126,23 +140,27 @@ describe('Index', function () {
 
 describe('Show', function () {
     it('renders the show component with subscription data', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->get(route('admin.subscriptions.show', $this->subscription))
             ->assertOk()
-            ->assertInertia(fn (AssertableInertia $page) => $page
-                ->component('Admin/Subscriptions/Show')
-                ->has('subscription')
-                ->where('subscription.id', $this->subscription->id)
+            ->assertInertia(
+                fn (AssertableInertia $page) => $page
+                    ->component('Admin/Subscriptions/Show')
+                    ->has('subscription')
+                    ->where('subscription.id', $this->subscription->id)
             );
     });
 
     it('loads related company, owner, plan, and invoices', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->get(route('admin.subscriptions.show', $this->subscription))
-            ->assertInertia(fn (AssertableInertia $page) => $page
-                ->has('subscription.company')
-                ->has('subscription.plan')
-                ->has('subscription.invoices')
+            ->assertInertia(
+                fn (AssertableInertia $page) => $page
+                    ->has('subscription.company')
+                    ->has('subscription.plan')
+                    ->has('subscription.invoices')
             );
     });
 });
@@ -153,6 +171,7 @@ describe('Show', function () {
 
 describe('Update', function () {
     it('updates subscription status successfully', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->put(route('admin.subscriptions.update', $this->subscription), [
                 'status' => 'canceled',
@@ -164,6 +183,7 @@ describe('Update', function () {
     });
 
     it('updates ends_at and notes', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         $endsAt = now()->addYear()->toDateString();
 
         actingAs($this->adminUser)
@@ -180,6 +200,7 @@ describe('Update', function () {
     });
 
     it('rejects invalid status value', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->put(route('admin.subscriptions.update', $this->subscription), [
                 'status' => 'invalid-status',
@@ -188,6 +209,7 @@ describe('Update', function () {
     });
 
     it('accepts all valid status values', function (string $status) {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->put(route('admin.subscriptions.update', $this->subscription), [
                 'status' => $status,
@@ -202,6 +224,7 @@ describe('Update', function () {
 
 describe('Assign', function () {
     it('assigns a plan to a user company', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         $freshCompany = Company::factory()->create();
         $freshUser = User::factory()->create([
             'company_id' => $freshCompany->id,
@@ -221,6 +244,7 @@ describe('Assign', function () {
     });
 
     it('returns error when user has no company', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         $userNoCompany = User::factory()->create();
 
         actingAs($this->adminUser)
@@ -233,6 +257,7 @@ describe('Assign', function () {
     });
 
     it('rejects missing user_id', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->post(route('admin.subscriptions.assign'), [
                 'plan_id' => $this->plan->id,
@@ -241,6 +266,7 @@ describe('Assign', function () {
     });
 
     it('rejects non-existent user_id', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->post(route('admin.subscriptions.assign'), [
                 'user_id' => 99999,
@@ -250,6 +276,7 @@ describe('Assign', function () {
     });
 
     it('rejects missing plan_id', function () {
+        /** @var object{adminUser: User, plan: Plan, targetCompany: Company, targetUser: User, subscription: Subscription} $this */
         actingAs($this->adminUser)
             ->post(route('admin.subscriptions.assign'), [
                 'user_id' => $this->targetUser->id,

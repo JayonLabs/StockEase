@@ -3,7 +3,6 @@
 use App\Models\Company;
 use App\Models\Plan;
 use App\Models\User;
-use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
@@ -16,8 +15,6 @@ uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{companyA: Company, adminA: User, userA: User, companyB: Company, adminB: User, userB: User} $this */
-    $this->seed(RoleAndPermissionSeeder::class);
-
     // Buat plan yang dibutuhkan oleh middleware plan.feature
     Plan::factory()->pemula()->create(); // fallback assignFreeSubscription
     $enterprise = Plan::factory()->enterprise()->create(); // akses semua fitur

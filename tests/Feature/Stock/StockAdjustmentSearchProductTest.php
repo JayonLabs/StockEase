@@ -4,7 +4,9 @@ namespace Tests\Feature\Stock;
 
 use App\Models\Category;
 use App\Models\Company;
+use App\Models\Plan;
 use App\Models\Product;
+use App\Models\Subscription;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\Warehouse;
@@ -16,8 +18,12 @@ use function Pest\Laravel\getJson;
 uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{company: Company, user: User} $this */
     $this->company = Company::factory()->create();
     $this->user = User::factory()->create(['role' => 'admin', 'company_id' => $this->company->id]);
+
+    $plan = Plan::factory()->pemula()->create();
+    Subscription::factory()->create(['company_id' => $this->company->id, 'plan_id' => $plan->id, 'status' => 'active']);
 
     $category = Category::factory()->create(['company_id' => $this->company->id]);
     $unit = Unit::factory()->create(['company_id' => $this->company->id]);
@@ -44,6 +50,7 @@ beforeEach(function () {
 });
 
 it('searches products by name', function () {
+    /** @var object{company: Company, user: User} $this */
     actingAs($this->user)
         ->getJson(route('stock-adjustment.search-product', ['search' => 'ABC']))
         ->assertOk()
@@ -52,6 +59,7 @@ it('searches products by name', function () {
 });
 
 it('returns empty results for non-matching search', function () {
+    /** @var object{company: Company, user: User} $this */
     actingAs($this->user)
         ->getJson(route('stock-adjustment.search-product', ['search' => 'NONEXISTENT']))
         ->assertOk()
@@ -59,6 +67,7 @@ it('returns empty results for non-matching search', function () {
 });
 
 it('returns products when search is partial', function () {
+    /** @var object{company: Company, user: User} $this */
     actingAs($this->user)
         ->getJson(route('stock-adjustment.search-product', ['search' => 'roduk']))
         ->assertOk()
@@ -71,6 +80,7 @@ it('returns products for authenticated user only', function () {
 });
 
 it('returns products with value/label format', function () {
+    /** @var object{company: Company, user: User} $this */
     actingAs($this->user)
         ->getJson(route('stock-adjustment.search-product', ['search' => 'ABC']))
         ->assertOk()
@@ -82,6 +92,7 @@ it('returns products with value/label format', function () {
 });
 
 it('filters by stock availability', function () {
+    /** @var object{company: Company, user: User} $this */
     actingAs($this->user)
         ->getJson(route('stock-adjustment.search-product'))
         ->assertOk()
@@ -107,6 +118,7 @@ it('includes warehouse_stock when warehouse_id is provided', function () {
 });
 
 it('does not include warehouse_stock when no warehouse_id given', function () {
+    /** @var object{company: Company, user: User} $this */
     actingAs($this->user)
         ->getJson(route('stock-adjustment.search-product', ['search' => 'ABC']))
         ->assertOk()

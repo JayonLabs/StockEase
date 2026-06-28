@@ -47,7 +47,7 @@ class PlanFactory extends Factory
         return $this->state(fn () => [
             'price_monthly' => 149000,
             'price_annual' => 1490000,
-            'trial_days' => 14,
+            'trial_days' => 0,
         ]);
     }
 
@@ -81,7 +81,7 @@ class PlanFactory extends Factory
                 ['key' => 'activity_log', 'label' => 'Log Aktivitas', 'included' => false],
                 ['key' => 'file_manager', 'label' => 'File Manager', 'included' => false],
             ],
-            'trial_days' => 0,
+            'trial_days' => 14,
             'sort_order' => 1,
         ]);
     }
@@ -116,7 +116,7 @@ class PlanFactory extends Factory
                 ['key' => 'activity_log', 'label' => 'Log Aktivitas', 'included' => true, 'card_order' => 9],
                 ['key' => 'file_manager', 'label' => 'File Manager', 'included' => false],
             ],
-            'trial_days' => 14,
+            'trial_days' => 0,
             'sort_order' => 2,
         ]);
     }
@@ -151,7 +151,7 @@ class PlanFactory extends Factory
                 ['key' => 'activity_log', 'label' => 'Log Aktivitas', 'included' => true, 'card_order' => 12],
                 ['key' => 'file_manager', 'label' => 'File Manager', 'included' => true, 'card_order' => 13],
             ],
-            'trial_days' => 14,
+            'trial_days' => 0,
             'sort_order' => 3,
         ]);
     }

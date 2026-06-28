@@ -13,12 +13,14 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{warehouseModel: Warehouse} $this */
     $user = User::factory()->create(['role' => 'admin']);
     Auth::login($user);
     $this->warehouseModel = Warehouse::factory()->create();
 });
 
 it('can get paginated adjustments', function () {
+    /** @var object{warehouseModel: Warehouse} $this */
     $product = Product::factory()->create();
     StockAdjustment::factory()->count(15)->create([
         'warehouse_id' => $this->warehouseModel->id,
@@ -34,6 +36,7 @@ it('can get paginated adjustments', function () {
 });
 
 it('can store a new stock adjustment', function () {
+    /** @var object{warehouseModel: Warehouse} $this */
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 10]);
     $product->syncStockFromWarehouses();
@@ -66,6 +69,7 @@ it('can store a new stock adjustment', function () {
 });
 
 it('eager loads user roles in a single query to prevent N+1', function () {
+    /** @var object{warehouseModel: Warehouse} $this */
     $product = Product::factory()->create();
     $sameUser = User::factory()->create(['role' => 'admin']);
     StockAdjustment::factory()->count(3)->create([
@@ -93,6 +97,7 @@ it('eager loads user roles in a single query to prevent N+1', function () {
 });
 
 it('does not run duplicate role queries when same user has multiple adjustments', function () {
+    /** @var object{warehouseModel: Warehouse} $this */
     $product = Product::factory()->create();
     $sameUser = User::factory()->create(['role' => 'warehouse']);
     StockAdjustment::factory()->count(5)->create([
@@ -117,6 +122,7 @@ it('does not run duplicate role queries when same user has multiple adjustments'
 });
 
 it('can handle negative stock adjustment', function () {
+    /** @var object{warehouseModel: Warehouse} $this */
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 10]);
     $product->syncStockFromWarehouses();
@@ -142,6 +148,7 @@ it('can handle negative stock adjustment', function () {
 });
 
 it('preserves signed qty for increase adjustments', function () {
+    /** @var object{warehouseModel: Warehouse} $this */
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 10]);
     $product->syncStockFromWarehouses();
@@ -163,6 +170,7 @@ it('preserves signed qty for increase adjustments', function () {
 });
 
 it('preserves signed qty for decrease adjustments', function () {
+    /** @var object{warehouseModel: Warehouse} $this */
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 15]);
     $product->syncStockFromWarehouses();
@@ -184,6 +192,7 @@ it('preserves signed qty for decrease adjustments', function () {
 });
 
 it('increase and decrease adjustments produce distinct log entries', function () {
+    /** @var object{warehouseModel: Warehouse} $this */
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 10]);
     $product->syncStockFromWarehouses();
@@ -217,6 +226,7 @@ it('increase and decrease adjustments produce distinct log entries', function ()
 });
 
 it('signed qty allows distinguishing direction in stock log', function () {
+    /** @var object{warehouseModel: Warehouse} $this */
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 10]);
     $product->syncStockFromWarehouses();

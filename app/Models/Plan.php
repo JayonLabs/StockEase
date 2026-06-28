@@ -12,6 +12,11 @@ class Plan extends Model
 {
     use HasFactory, SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::saved(fn () => Cache::forget('plans_pricing'));
+    }
+
     protected $fillable = [
         'name',
         'slug',
@@ -143,7 +148,7 @@ class Plan extends Model
                 'key' => $key,
                 'label' => $label,
                 'plans' => $plans->mapWithKeys(fn (Plan $plan) => [
-                    $plan->slug => $plan->featureIncludedByKey($key),
+                    $plan->slug => $plan->hasFeature($key),
                 ])->all(),
             ];
         })->values()->all();
@@ -153,8 +158,8 @@ class Plan extends Model
      * Ambil data halaman pricing yang sudah di-cache untuk semua plan aktif.
      *
      * Cache key: 'plans_pricing' dengan flexible TTL 1 hari (stale) / 7 hari (expired).
-     * Wajib diinvalidasi via Cache::forget('plans_pricing') setiap kali data plan
-     * diperbarui melalui PlanSeeder atau admin panel agar perubahan segera terlihat.
+     * Cache otomatis di-invalidate via booted() saved event setiap kali data plan
+     * diperbarui melalui PlanSeeder, factory, atau admin panel.
      *
      * @return array<string, mixed>
      */
@@ -215,15 +220,5 @@ class Plan extends Model
         }
 
         return $key;
-    }
-
-    /**
-     * Check if a feature is included by its key.
-     *
-     * @deprecated Gunakan hasFeature() yang bersifat publik.
-     */
-    private function featureIncludedByKey(string $key): bool
-    {
-        return $this->hasFeature($key);
     }
 }

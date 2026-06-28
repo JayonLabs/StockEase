@@ -41,7 +41,7 @@ class PlanSeeder extends Seeder
                 ['key' => 'activity_log', 'label' => 'Log Aktivitas', 'included' => false],
                 ['key' => 'file_manager', 'label' => 'File Manager', 'included' => false],
             ],
-            'trial_days' => 0,
+            'trial_days' => 14,
             'is_active' => true,
             'sort_order' => 1,
         ]);
@@ -74,7 +74,7 @@ class PlanSeeder extends Seeder
                 ['key' => 'activity_log', 'label' => 'Log Aktivitas', 'included' => true, 'card_order' => 9],
                 ['key' => 'file_manager', 'label' => 'File Manager', 'included' => false],
             ],
-            'trial_days' => 14,
+            'trial_days' => 0,
             'is_active' => true,
             'sort_order' => 2,
         ]);
@@ -107,7 +107,7 @@ class PlanSeeder extends Seeder
                 ['key' => 'activity_log', 'label' => 'Log Aktivitas', 'included' => true, 'card_order' => 12],
                 ['key' => 'file_manager', 'label' => 'File Manager', 'included' => true, 'card_order' => 13],
             ],
-            'trial_days' => 14,
+            'trial_days' => 0,
             'is_active' => true,
             'sort_order' => 3,
         ]);

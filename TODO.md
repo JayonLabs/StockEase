@@ -230,13 +230,37 @@
 - tambahkan aksi di manage plan platform owner (Done)
 - halaman profile untuk platform owner, bisa update email, password dll (Done)
 
+<!-- TODO: 28/06/2026 -->
+
+- fix test CI github error (Done)
+- update package untuk javascript (Done)
+- refactor untuk uji coba atau trial 14 hari itu hanya di plan pemula sisanya harus bayar (Done)
+- isikan popup atau alert jika limit dari langganannya udah tercapai untuk upgrade langganan (Done)
+- fix code warning di unit test (Done)
+- improve waktu eksekusi testing biar lebih cepat (Done)
+- fix query duplikat di subscription page (Done)
+- fix button card di subscription page itu biar sticky dibawah (Done)
+- improve alert ketika klik berhenti langganan di subscription page (Done)
+- fix bug ketika berhenti langganan itu otomatis kunci semua fitur dan paksa user untuk langganan (Done)
+- fix bug ga bisa logout (Done)
+- improve ketika user udah cancel langganan itu menu di sidebarnya buat isi icon lock dan warnanya abu-abu (Done)
+- fix bug cek untuk apakah user sudah pernah trial atau belum biar tidak muncul lagi untuk trial (Done)
+- fix bug beli langganan itu user belum bayar tapi langganannya langsung aktif (Done)
+
 <!-- TODO: -->
 
-- kirim email terimakasih dan laporan untuk yang langganan platformnya
+- update subscription_invoices status ketika user ga jadi bayar itu jadikan cancel
+- simpan snap token biar tidak generate terus jika payment pending atau user ingin bayar nanti biar deathline pembayaran ga di refresh terus
+- aktifkan route profile untuk yang belum langganan karena itu ga bisa di akses ketika belum langganan
+- kirim email terimakasih untuk yang langganan platformnya pas beli atau berlangganan
+- email verification untuk super admin atau yang langganan platformnya
+- forgot password untuk super admin atau yang langganan platformnya
+- notifikasi email bahwa langganan hampir berakhir dan akan berakhir
 - pastikan coverage test diatas 80 persen
 - isikan docblock untuk tiap method di code backendnya biar gampang nanti baca codenya
 - tambahin lagi beberapa laporan atau fitur di laporan penjualan
 - bikin API untuk mobile app
+- pencairan uang ke user yang langganan atau ke company
 
 <!-- AI Prompt -->
 
@@ -253,13 +277,19 @@ tolong improve testku ini biar minimal 80 persen dong aku jalaninnya pakai php a
 
 push branch develop ini ke github dan buatkan PR nya. jangan pakai 'git add .' melainkan commit messagenya sesuai dengan code yang berubah. untuk yang aku kerjakan yaitu
 
-- fix dark mode di landing page (Done)
-- buatkan landing pagenya biar SEO friendly dan mudah di crawl dengan domain my.id dan biar bisa paling atas di google search (Done)
-- fix error untuk upgrade langganan (Done)
-- fix untuk menu sesuai dengan plan user karena yang sekarang tidak sesuai (Done)
-- sesuaikan lagi untuk fitur yang di dapatkan untuk plan pemula (Done)
-- fix error di platform owner bagian plan (Done)
-- tambahkan aksi di manage plan platform owner (Done)
-- halaman profile untuk platform owner, bisa update email, password dll (Done)
+- fix test CI github error (Done)
+- update package untuk javascript (Done)
+- refactor untuk uji coba atau trial 14 hari itu hanya di plan pemula sisanya harus bayar (Done)
+- isikan popup atau alert jika limit dari langganannya udah tercapai untuk upgrade langganan (Done)
+- fix code warning di unit test (Done)
+- improve waktu eksekusi testing biar lebih cepat (Done)
+- fix query duplikat di subscription page (Done)
+- fix button card di subscription page itu biar sticky dibawah (Done)
+- improve alert ketika klik berhenti langganan di subscription page (Done)
+- fix bug ketika berhenti langganan itu otomatis kunci semua fitur dan paksa user untuk langganan (Done)
+- fix bug ga bisa logout (Done)
+- improve ketika user udah cancel langganan itu menu di sidebarnya buat isi icon lock dan warnanya abu-abu (Done)
+- fix bug cek untuk apakah user sudah pernah trial atau belum biar tidak muncul lagi untuk trial (Done)
+- fix bug beli langganan itu user belum bayar tapi langganannya langsung aktif (Done)
 
 pastikan semuanya sudah di commit dan di push baru buatkan PR nya pakai gh cli. pakai conventional commit dengan bahasa inggris. jangan pakai emoji

@@ -54,6 +54,17 @@ class SubscriptionFactory extends Factory
     }
 
     /**
+     * Indicate that the subscription is pending payment.
+     */
+    public function pendingPayment(): static
+    {
+        return $this->state(fn () => [
+            'status' => 'pending_payment',
+            'ends_at' => null,
+        ]);
+    }
+
+    /**
      * Indicate that the subscription has expired.
      */
     public function expired(): static

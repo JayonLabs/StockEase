@@ -11,10 +11,12 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: ExpiryReportService} $this */
     $this->service = new ExpiryReportService;
 });
 
 it('gets paginated expiry items', function () {
+    /** @var object{service: ExpiryReportService} $this */
     PurchaseItem::factory()->count(15)->create([
         'expiry_date' => now()->addDays(15),
     ]);
@@ -26,6 +28,7 @@ it('gets paginated expiry items', function () {
 });
 
 it('filters expiry items by search on product name', function () {
+    /** @var object{service: ExpiryReportService} $this */
     $product = Product::factory()->create(['name' => 'Susu Segar']);
     PurchaseItem::factory()->create([
         'product_id' => $product->id,
@@ -41,6 +44,7 @@ it('filters expiry items by search on product name', function () {
 });
 
 it('filters expiry items by search on sku', function () {
+    /** @var object{service: ExpiryReportService} $this */
     $product = Product::factory()->create(['sku' => 'SKU-001']);
     PurchaseItem::factory()->create([
         'product_id' => $product->id,
@@ -56,6 +60,7 @@ it('filters expiry items by search on sku', function () {
 });
 
 it('filters expired items', function () {
+    /** @var object{service: ExpiryReportService} $this */
     PurchaseItem::factory()->create([
         'expiry_date' => now()->subDays(5),
     ]);
@@ -69,6 +74,7 @@ it('filters expired items', function () {
 });
 
 it('filters near-expired items within 30 days', function () {
+    /** @var object{service: ExpiryReportService} $this */
     PurchaseItem::factory()->create([
         'expiry_date' => now()->addDays(15),
     ]);
@@ -82,6 +88,7 @@ it('filters near-expired items within 30 days', function () {
 });
 
 it('orders expiry items by expiry date ascending', function () {
+    /** @var object{service: ExpiryReportService} $this */
     PurchaseItem::factory()->create([
         'expiry_date' => now()->addDays(30),
     ]);
@@ -95,6 +102,7 @@ it('orders expiry items by expiry date ascending', function () {
 });
 
 it('excludes items without expiry date', function () {
+    /** @var object{service: ExpiryReportService} $this */
     PurchaseItem::factory()->create([
         'expiry_date' => null,
     ]);
@@ -108,6 +116,7 @@ it('excludes items without expiry date', function () {
 });
 
 it('loads product and purchase supplier relationships', function () {
+    /** @var object{service: ExpiryReportService} $this */
     $product = Product::factory()->create(['name' => 'Energy Drink']);
     $supplier = Supplier::factory()->create(['name' => 'PT Maju']);
     $purchase = Purchase::factory()->create(['supplier_id' => $supplier->id]);

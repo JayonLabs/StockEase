@@ -7,6 +7,7 @@ import { useForm, usePage } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import InputError from '@/Components/InputError.vue';
 import { toast } from 'vue-sonner';
+import { useIsLimitHit } from '@/composables/useIsLimitHit';
 
 import {
     Dialog,
@@ -39,6 +40,7 @@ const form = useForm({
 
 const user = usePage().props.auth.user.name;
 const isDialogOpen = ref(false);
+const isLimitHit = useIsLimitHit();
 
 const showPassword = (input) => {
     const passwordInput = document.getElementById(input);
@@ -62,6 +64,7 @@ const submit = () => {
         showProgress: false,
         preserveScroll: true,
         onSuccess: () => {
+            if (isLimitHit.value) return;
             form.reset();
             toast.success('User berhasil ditambahkan', {
                 description: `User ${form.name} berhasil ditambahkan oleh ${user}`,

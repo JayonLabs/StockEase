@@ -12,6 +12,7 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: StockReportService} $this */
     $this->service = new StockReportService;
 });
 
@@ -31,6 +32,7 @@ function createProductWithPurchaseItem(array $productAttrs = [], array $purchase
 }
 
 it('gets paginated filtered stocks', function () {
+    /** @var object{service: StockReportService} $this */
     createProductWithPurchaseItem();
     createProductWithPurchaseItem();
     createProductWithPurchaseItem();
@@ -41,6 +43,7 @@ it('gets paginated filtered stocks', function () {
 });
 
 it('filters stocks by category', function () {
+    /** @var object{service: StockReportService} $this */
     $category = Category::factory()->create();
     createProductWithPurchaseItem(['category_id' => $category->id]);
     createProductWithPurchaseItem(); // other category
@@ -51,6 +54,7 @@ it('filters stocks by category', function () {
 });
 
 it('skips category filter when value is semua-kategori', function () {
+    /** @var object{service: StockReportService} $this */
     createProductWithPurchaseItem();
     createProductWithPurchaseItem();
 
@@ -60,6 +64,7 @@ it('skips category filter when value is semua-kategori', function () {
 });
 
 it('filters stocks by supplier', function () {
+    /** @var object{service: StockReportService} $this */
     $supplier = Supplier::factory()->create();
     createProductWithPurchaseItem([], ['purchase_attrs' => ['supplier_id' => $supplier->id]]);
     createProductWithPurchaseItem();
@@ -70,6 +75,7 @@ it('filters stocks by supplier', function () {
 });
 
 it('skips supplier filter when value is semua-supplier', function () {
+    /** @var object{service: StockReportService} $this */
     createProductWithPurchaseItem();
     createProductWithPurchaseItem();
 
@@ -79,6 +85,7 @@ it('skips supplier filter when value is semua-supplier', function () {
 });
 
 it('transforms product data through paginator', function () {
+    /** @var object{service: StockReportService} $this */
     $category = Category::factory()->create(['name' => 'Alat Tulis']);
     $supplier = Supplier::factory()->create(['name' => 'PT Alat']);
     $product = Product::factory()->create([
@@ -106,6 +113,7 @@ it('transforms product data through paginator', function () {
 });
 
 it('excludes products with soft-deleted purchase items', function () {
+    /** @var object{service: StockReportService} $this */
     $product = Product::factory()->create(['stock' => 10]);
     PurchaseItem::factory()->create([
         'product_id' => $product->id,
@@ -119,6 +127,7 @@ it('excludes products with soft-deleted purchase items', function () {
 });
 
 it('gets filtered stocks for export', function () {
+    /** @var object{service: StockReportService} $this */
     $category = Category::factory()->create(['name' => 'Export Category']);
     $product = createProductWithPurchaseItem(['category_id' => $category->id]);
 
@@ -131,6 +140,7 @@ it('gets filtered stocks for export', function () {
 });
 
 it('prepares export filters with resolved names', function () {
+    /** @var object{service: StockReportService} $this */
     $category = Category::factory()->create(['name' => 'Makanan']);
     $supplier = Supplier::factory()->create(['name' => 'PT Indo']);
 
@@ -146,6 +156,7 @@ it('prepares export filters with resolved names', function () {
 });
 
 it('prepares export filters with default labels', function () {
+    /** @var object{service: StockReportService} $this */
     $filters = $this->service->prepareExportFilters([
         'category' => 'semua-kategori',
         'supplier' => 'semua-supplier',
@@ -156,6 +167,7 @@ it('prepares export filters with default labels', function () {
 });
 
 it('includes only products that have purchase items', function () {
+    /** @var object{service: StockReportService} $this */
     $productWithPurchase = createProductWithPurchaseItem(['name' => 'Has Purchase']);
     Product::factory()->create(['name' => 'No Purchase', 'stock' => 10]);
 

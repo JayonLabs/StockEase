@@ -110,6 +110,96 @@ it('excludes inactive plans from comparison features', function () {
     expect($firstRow['plans'])->not->toHaveKey('inactive-plan');
 });
 
+it('returns empty array when no active plans exist', function () {
+    expect(Plan::comparisonFeatures())->toBe([]);
+});
+
+it('handles plans with null features in comparison', function () {
+    Plan::factory()->create(['features' => null, 'slug' => 'no-features', 'is_active' => true]);
+
+    $comparison = Plan::comparisonFeatures();
+
+    expect($comparison)->toBe([]);
+});
+
+it('handles plans with empty features array in comparison', function () {
+    Plan::factory()->create(['features' => [], 'slug' => 'empty-features', 'is_active' => true]);
+
+    $comparison = Plan::comparisonFeatures();
+
+    expect($comparison)->toBe([]);
+});
+
+// ---------------------------------------------------------------------------
+// hasFeature()
+// ---------------------------------------------------------------------------
+
+it('returns true when feature is included', function () {
+    $plan = Plan::factory()->create([
+        'features' => [
+            ['key' => 'purchasing', 'label' => 'Purchasing', 'included' => true],
+        ],
+    ]);
+
+    expect($plan->hasFeature('purchasing'))->toBeTrue();
+});
+
+it('returns false when feature is not included', function () {
+    $plan = Plan::factory()->create([
+        'features' => [
+            ['key' => 'purchasing', 'label' => 'Purchasing', 'included' => false],
+        ],
+    ]);
+
+    expect($plan->hasFeature('purchasing'))->toBeFalse();
+});
+
+it('returns false for non-existent feature key', function () {
+    $plan = Plan::factory()->pemula()->create();
+
+    expect($plan->hasFeature('nonexistent_feature'))->toBeFalse();
+});
+
+it('returns false when features is null', function () {
+    $plan = Plan::factory()->create(['features' => null]);
+
+    expect($plan->hasFeature('purchasing'))->toBeFalse();
+});
+
+it('returns false when features is empty array', function () {
+    $plan = Plan::factory()->create(['features' => []]);
+
+    expect($plan->hasFeature('purchasing'))->toBeFalse();
+});
+
+it('hasFeature correctly reflects pemula plan restrictions', function () {
+    $plan = Plan::factory()->pemula()->create();
+
+    expect($plan->hasFeature('purchasing'))->toBeFalse();
+    expect($plan->hasFeature('purchase_report'))->toBeFalse();
+    expect($plan->hasFeature('stock_report'))->toBeFalse();
+    expect($plan->hasFeature('profit_loss'))->toBeFalse();
+    expect($plan->hasFeature('multi_warehouse'))->toBeFalse();
+    expect($plan->hasFeature('file_manager'))->toBeFalse();
+    expect($plan->hasFeature('activity_log'))->toBeFalse();
+
+    expect($plan->hasFeature('pos'))->toBeTrue();
+    expect($plan->hasFeature('products'))->toBeTrue();
+    expect($plan->hasFeature('sales_report'))->toBeTrue();
+});
+
+it('hasFeature correctly reflects enterprise plan includes all features', function () {
+    $plan = Plan::factory()->enterprise()->create();
+
+    expect($plan->hasFeature('purchasing'))->toBeTrue();
+    expect($plan->hasFeature('purchase_report'))->toBeTrue();
+    expect($plan->hasFeature('stock_report'))->toBeTrue();
+    expect($plan->hasFeature('profit_loss'))->toBeTrue();
+    expect($plan->hasFeature('multi_warehouse'))->toBeTrue();
+    expect($plan->hasFeature('file_manager'))->toBeTrue();
+    expect($plan->hasFeature('activity_log'))->toBeTrue();
+});
+
 // ---------------------------------------------------------------------------
 // forPricingPage()
 // ---------------------------------------------------------------------------
@@ -177,7 +267,7 @@ it('factory pemula state creates correct default plan', function () {
     expect($plan->slug)->toBe('pemula');
     expect((int) $plan->price_monthly)->toBe(50000);
     expect((int) $plan->price_annual)->toBe(500000);
-    expect($plan->trial_days)->toBe(0);
+    expect($plan->trial_days)->toBe(14);
     expect($plan->is_active)->toBeTrue();
     expect($plan->isFree())->toBeFalse();
 });
@@ -188,7 +278,7 @@ it('factory profesional state creates correct plan', function () {
     expect($plan->slug)->toBe('profesional');
     expect((int) $plan->price_monthly)->toBe(149000);
     expect((int) $plan->price_annual)->toBe(1490000);
-    expect($plan->trial_days)->toBe(14);
+    expect($plan->trial_days)->toBe(0);
 });
 
 it('factory enterprise state creates correct plan', function () {
@@ -213,12 +303,12 @@ it('factory free state creates free plan', function () {
     expect($plan->trial_days)->toBe(0);
 });
 
-it('factory paid state creates paid plan with trial days', function () {
+it('factory paid state creates paid plan without trial days', function () {
     $plan = Plan::factory()->paid()->create();
 
     expect((int) $plan->price_monthly)->toBe(149000);
     expect((int) $plan->price_annual)->toBe(1490000);
-    expect($plan->trial_days)->toBe(14);
+    expect($plan->trial_days)->toBe(0);
 });
 
 // ---------------------------------------------------------------------------

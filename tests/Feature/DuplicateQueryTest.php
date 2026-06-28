@@ -3,7 +3,6 @@
 use App\Models\Company;
 use App\Models\Plan;
 use App\Models\User;
-use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
@@ -14,8 +13,6 @@ uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{company: Company, user: User} $this */
-    $this->seed(RoleAndPermissionSeeder::class);
-
     // Pemula diperlukan sebagai fallback assignFreeSubscription
     Plan::factory()->pemula()->create();
     $enterprise = Plan::factory()->enterprise()->create();

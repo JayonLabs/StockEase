@@ -19,7 +19,8 @@ class PaymentController extends Controller
      * Create a new controller instance.
      */
     public function __construct(
-        protected PaymentService $paymentService
+        protected PaymentService $paymentService,
+        protected SubscriptionService $subscriptionService,
     ) {}
 
     /**
@@ -72,6 +73,11 @@ class PaymentController extends Controller
 
     /**
      * Handle a Midtrans subscription notification.
+     *
+     * On settlement/capture the invoice is marked as paid and the subscription
+     * is activated. On deny/cancel/expire the invoice is marked as failed and
+     * the pending subscription is cancelled — the company falls back to the
+     * free plan so the user can retry from a clean state.
      */
     private function handleSubscriptionNotification(object $notification): void
     {
@@ -91,13 +97,13 @@ class PaymentController extends Controller
                 'paid_at' => now(),
             ]);
 
-            app(SubscriptionService::class)->activateSubscription(
+            $this->subscriptionService->activateSubscription(
                 $invoice->subscription
             );
         }
 
         if (in_array($transactionStatus, ['deny', 'cancel', 'expire'])) {
-            $invoice->update(['status' => 'failed']);
+            $this->subscriptionService->handleFailedPayment($invoice);
         }
     }
 }

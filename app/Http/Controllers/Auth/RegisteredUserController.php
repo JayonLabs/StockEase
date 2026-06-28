@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\Company;
+use App\Models\Plan;
 use App\Models\User;
 use App\Services\Subscription\SubscriptionService;
 use Illuminate\Http\RedirectResponse;
@@ -59,7 +60,8 @@ class RegisteredUserController extends Controller
 
             $user->syncRoles('super_admin');
 
-            $this->subscriptionService->assignFreeSubscription($company);
+            $pemula = Plan::where('slug', 'pemula')->firstOrFail();
+            $this->subscriptionService->createTrial($company, $pemula);
 
             return $user;
         });

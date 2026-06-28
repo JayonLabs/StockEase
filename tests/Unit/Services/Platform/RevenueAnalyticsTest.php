@@ -11,6 +11,7 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{analytics: RevenueAnalytics, subscription: Subscription} $this */
     $this->analytics = new RevenueAnalytics;
     $plan = Plan::factory()->pemula()->create();
     $company = Company::factory()->create();
@@ -22,6 +23,7 @@ beforeEach(function () {
 });
 
 it('calculates total revenue from paid invoices', function () {
+    /** @var object{analytics: RevenueAnalytics, subscription: Subscription} $this */
     SubscriptionInvoice::factory()->create([
         'subscription_id' => $this->subscription->id,
         'amount' => 50000,
@@ -37,10 +39,12 @@ it('calculates total revenue from paid invoices', function () {
 });
 
 it('returns zero when no invoices exist', function () {
+    /** @var object{analytics: RevenueAnalytics, subscription: Subscription} $this */
     expect($this->analytics->totalRevenue())->toBe(0.0);
 });
 
 it('handles multiple paid invoices correctly', function () {
+    /** @var object{analytics: RevenueAnalytics, subscription: Subscription} $this */
     SubscriptionInvoice::factory()->count(5)->create([
         'subscription_id' => $this->subscription->id,
         'amount' => 100000,
@@ -51,6 +55,7 @@ it('handles multiple paid invoices correctly', function () {
 });
 
 it('ignores unpaid invoices in revenue calculation', function () {
+    /** @var object{analytics: RevenueAnalytics, subscription: Subscription} $this */
     SubscriptionInvoice::factory()->create([
         'subscription_id' => $this->subscription->id,
         'amount' => 100000,
@@ -71,6 +76,7 @@ it('ignores unpaid invoices in revenue calculation', function () {
 });
 
 it('ignores refunded invoices in revenue calculation', function () {
+    /** @var object{analytics: RevenueAnalytics, subscription: Subscription} $this */
     SubscriptionInvoice::factory()->create([
         'subscription_id' => $this->subscription->id,
         'amount' => 50000,
@@ -86,6 +92,7 @@ it('ignores refunded invoices in revenue calculation', function () {
 });
 
 it('calculates revenue across multiple subscriptions', function () {
+    /** @var object{analytics: RevenueAnalytics, subscription: Subscription} $this */
     $company2 = Company::factory()->create();
     $plan2 = Plan::factory()->profesional()->create();
     $sub2 = Subscription::factory()->create([
@@ -109,6 +116,7 @@ it('calculates revenue across multiple subscriptions', function () {
 });
 
 it('returns revenue by month as array', function () {
+    /** @var object{analytics: RevenueAnalytics, subscription: Subscription} $this */
     SubscriptionInvoice::factory()->create([
         'subscription_id' => $this->subscription->id,
         'amount' => 50000,
@@ -129,6 +137,7 @@ it('returns revenue by month as array', function () {
 });
 
 it('returns empty array when no revenue data for requested period', function () {
+    /** @var object{analytics: RevenueAnalytics, subscription: Subscription} $this */
     $monthly = $this->analytics->revenueByMonth(3);
 
     expect($monthly)->toBe([]);

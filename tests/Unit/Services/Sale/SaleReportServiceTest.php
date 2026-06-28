@@ -11,10 +11,12 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: SaleReportService} $this */
     $this->service = new SaleReportService;
 });
 
 it('gets filtered sales by date range', function () {
+    /** @var object{service: SaleReportService} $this */
     Sale::factory()->create([
         'payment_method' => 'cash',
         'status' => 'completed',
@@ -35,6 +37,7 @@ it('gets filtered sales by date range', function () {
 });
 
 it('gets filtered sales by cashier', function () {
+    /** @var object{service: SaleReportService} $this */
     $user = User::factory()->create();
     Sale::factory()->create([
         'user_id' => $user->id,
@@ -53,6 +56,7 @@ it('gets filtered sales by cashier', function () {
 });
 
 it('skips cashier filter when value is semua-cashier', function () {
+    /** @var object{service: SaleReportService} $this */
     Sale::factory()->count(3)->create([
         'payment_method' => 'cash',
         'status' => 'completed',
@@ -64,6 +68,7 @@ it('skips cashier filter when value is semua-cashier', function () {
 });
 
 it('gets filtered sales by payment method', function () {
+    /** @var object{service: SaleReportService} $this */
     Sale::factory()->create([
         'payment_method' => 'cash',
         'status' => 'completed',
@@ -80,6 +85,7 @@ it('gets filtered sales by payment method', function () {
 });
 
 it('skips payment method filter when value is semua-metode', function () {
+    /** @var object{service: SaleReportService} $this */
     Sale::factory()->create(['payment_method' => 'cash', 'status' => 'completed']);
     Sale::factory()->create(['payment_method' => 'qris', 'status' => 'completed']);
 
@@ -89,6 +95,7 @@ it('skips payment method filter when value is semua-metode', function () {
 });
 
 it('excludes draft sales from filtered results', function () {
+    /** @var object{service: SaleReportService} $this */
     Sale::factory()->create(['payment_method' => 'pending', 'status' => 'draft']);
     Sale::factory()->create(['payment_method' => 'cash', 'status' => 'completed']);
 
@@ -98,12 +105,14 @@ it('excludes draft sales from filtered results', function () {
 });
 
 it('returns empty index report data when sales collection is empty', function () {
+    /** @var object{service: SaleReportService} $this */
     $data = $this->service->getIndexReportData(collect());
 
     expect($data)->toBe([]);
 });
 
 it('generates index report data from sales collection', function () {
+    /** @var object{service: SaleReportService} $this */
     $product = Product::factory()->create(['name' => 'Best Product']);
     $user = User::factory()->create(['name' => 'Cashier A']);
     Sale::factory()->count(3)->create([
@@ -129,6 +138,7 @@ it('generates index report data from sales collection', function () {
 });
 
 it('calculates best selling product in index report', function () {
+    /** @var object{service: SaleReportService} $this */
     $productA = Product::factory()->create(['name' => 'Product A']);
     $productB = Product::factory()->create(['name' => 'Product B']);
     $sale = Sale::factory()->create([
@@ -160,6 +170,7 @@ it('calculates best selling product in index report', function () {
 });
 
 it('generates pdf report data with filters', function () {
+    /** @var object{service: SaleReportService} $this */
     $product = Product::factory()->create(['name' => 'PDF Product']);
     $sale = Sale::factory()->create([
         'payment_method' => 'cash',
@@ -195,6 +206,7 @@ it('generates pdf report data with filters', function () {
 });
 
 it('resolves cashier name in pdf report data', function () {
+    /** @var object{service: SaleReportService} $this */
     $user = User::factory()->create(['name' => 'John Cashier']);
     Sale::factory()->create([
         'user_id' => $user->id,
@@ -218,6 +230,7 @@ it('resolves cashier name in pdf report data', function () {
 });
 
 it('generates excel report summary', function () {
+    /** @var object{service: SaleReportService} $this */
     Sale::factory()->create([
         'total' => 50000,
         'payment_method' => 'cash',
@@ -243,6 +256,7 @@ it('generates excel report summary', function () {
 });
 
 it('prepares excel filters with cashier name', function () {
+    /** @var object{service: SaleReportService} $this */
     $user = User::factory()->create(['name' => 'Excel Cashier']);
 
     $filters = $this->service->prepareExcelFilters([
@@ -255,6 +269,7 @@ it('prepares excel filters with cashier name', function () {
 });
 
 it('prepares excel filters with default cashier label', function () {
+    /** @var object{service: SaleReportService} $this */
     $filters = $this->service->prepareExcelFilters([
         'cashier' => 'semua-cashier',
         'start' => now()->toDateString(),

@@ -12,10 +12,12 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: PurchaseReportService} $this */
     $this->service = new PurchaseReportService;
 });
 
 it('gets filtered purchases by date range via created_at', function () {
+    /** @var object{service: PurchaseReportService} $this */
     Purchase::factory()->create(['created_at' => now()]);
     Purchase::factory()->create(['created_at' => now()->subDays(10)]);
 
@@ -28,6 +30,7 @@ it('gets filtered purchases by date range via created_at', function () {
 });
 
 it('gets filtered purchases by supplier', function () {
+    /** @var object{service: PurchaseReportService} $this */
     $supplier = Supplier::factory()->create();
     Purchase::factory()->create(['supplier_id' => $supplier->id]);
     Purchase::factory()->create();
@@ -39,6 +42,7 @@ it('gets filtered purchases by supplier', function () {
 });
 
 it('skips supplier filter when value is semua-supplier', function () {
+    /** @var object{service: PurchaseReportService} $this */
     Purchase::factory()->count(2)->create();
 
     $purchases = $this->service->getFilteredPurchases(['supplier' => 'semua-supplier']);
@@ -47,6 +51,7 @@ it('skips supplier filter when value is semua-supplier', function () {
 });
 
 it('gets filtered purchases by user', function () {
+    /** @var object{service: PurchaseReportService} $this */
     $user = User::factory()->create();
     Purchase::factory()->create(['user_id' => $user->id]);
     Purchase::factory()->create();
@@ -58,6 +63,7 @@ it('gets filtered purchases by user', function () {
 });
 
 it('skips user filter when value is semua-user', function () {
+    /** @var object{service: PurchaseReportService} $this */
     Purchase::factory()->count(2)->create();
 
     $purchases = $this->service->getFilteredPurchases(['user' => 'semua-user']);
@@ -66,12 +72,14 @@ it('skips user filter when value is semua-user', function () {
 });
 
 it('returns empty index report data when purchases collection is empty', function () {
+    /** @var object{service: PurchaseReportService} $this */
     $data = $this->service->getIndexReportData(collect());
 
     expect($data)->toBe([]);
 });
 
 it('generates index report data from purchases', function () {
+    /** @var object{service: PurchaseReportService} $this */
     $supplier = Supplier::factory()->create(['name' => 'Supplier A']);
     $purchase = Purchase::factory()->create([
         'supplier_id' => $supplier->id,
@@ -99,6 +107,7 @@ it('generates index report data from purchases', function () {
 });
 
 it('identifies top supplier in index report', function () {
+    /** @var object{service: PurchaseReportService} $this */
     $supplierA = Supplier::factory()->create(['name' => 'Top Supplier']);
     $supplierB = Supplier::factory()->create(['name' => 'Other Supplier']);
     Purchase::factory()->create([
@@ -119,6 +128,7 @@ it('identifies top supplier in index report', function () {
 });
 
 it('generates pdf report data from purchases', function () {
+    /** @var object{service: PurchaseReportService} $this */
     $product = Product::factory()->create(['name' => 'PDF Product']);
     $purchase = Purchase::factory()->create(['total' => 75000]);
     PurchaseItem::factory()->create([
@@ -146,6 +156,7 @@ it('generates pdf report data from purchases', function () {
 });
 
 it('resolves supplier name in pdf report data', function () {
+    /** @var object{service: PurchaseReportService} $this */
     $supplier = Supplier::factory()->create(['name' => 'PT Jaya']);
     $purchase = Purchase::factory()->create(['supplier_id' => $supplier->id]);
     PurchaseItem::factory()->create(['purchase_id' => $purchase->id]);
@@ -162,6 +173,7 @@ it('resolves supplier name in pdf report data', function () {
 });
 
 it('generates excel report summary', function () {
+    /** @var object{service: PurchaseReportService} $this */
     $supplier = Supplier::factory()->create(['name' => 'Supplier Excel']);
     $purchase = Purchase::factory()->create([
         'supplier_id' => $supplier->id,
@@ -185,6 +197,7 @@ it('generates excel report summary', function () {
 });
 
 it('prepares excel filters with resolved names', function () {
+    /** @var object{service: PurchaseReportService} $this */
     $user = User::factory()->create(['name' => 'Purchase User']);
     $supplier = Supplier::factory()->create(['name' => 'Purchase Supplier']);
 
@@ -200,6 +213,7 @@ it('prepares excel filters with resolved names', function () {
 });
 
 it('prepares excel filters with default labels', function () {
+    /** @var object{service: PurchaseReportService} $this */
     $filters = $this->service->prepareExcelFilters([
         'user' => 'semua-user',
         'supplier' => 'semua-supplier',

@@ -81,7 +81,9 @@ const openEdit = (plan) => {
     form.trial_days = plan.trial_days;
     form.is_active = plan.is_active;
     form.sort_order = plan.sort_order;
-    form.features = plan.features ? JSON.parse(JSON.stringify(plan.features)) : [];
+    form.features = plan.features
+        ? JSON.parse(JSON.stringify(plan.features))
+        : [];
     showSheet.value = true;
 };
 
@@ -102,7 +104,12 @@ const submit = () => {
 };
 
 const deletePlan = (plan) => {
-    if (!confirm(`Hapus plan "${plan.name}"? Tindakan ini tidak dapat dibatalkan.`)) return;
+    if (
+        !confirm(
+            `Hapus plan "${plan.name}"? Tindakan ini tidak dapat dibatalkan.`,
+        )
+    )
+        return;
     router.delete(route('platform.owner.plans.destroy', plan.id));
 };
 
@@ -142,13 +149,19 @@ const removeFeature = (index) => {
                         <TableHead class="text-zinc-500">Plan</TableHead>
                         <TableHead class="text-zinc-500">Price/Month</TableHead>
                         <TableHead class="text-zinc-500">Price/Year</TableHead>
-                        <TableHead class="text-zinc-500">Max Products</TableHead>
+                        <TableHead class="text-zinc-500"
+                            >Max Products</TableHead
+                        >
                         <TableHead class="text-zinc-500">Max Users</TableHead>
-                        <TableHead class="text-zinc-500">Max Warehouses</TableHead>
+                        <TableHead class="text-zinc-500"
+                            >Max Warehouses</TableHead
+                        >
                         <TableHead class="text-zinc-500">Trial</TableHead>
                         <TableHead class="text-zinc-500">Subscribers</TableHead>
                         <TableHead class="text-zinc-500">Active</TableHead>
-                        <TableHead class="text-zinc-500 w-24">Actions</TableHead>
+                        <TableHead class="text-zinc-500 w-24"
+                            >Actions</TableHead
+                        >
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -159,7 +172,9 @@ const removeFeature = (index) => {
                     >
                         <TableCell class="font-medium text-zinc-100">
                             <div>{{ plan.name }}</div>
-                            <div class="text-xs text-zinc-500">{{ plan.slug }}</div>
+                            <div class="text-xs text-zinc-500">
+                                {{ plan.slug }}
+                            </div>
                         </TableCell>
                         <TableCell class="text-zinc-400">
                             {{ formatPrice(plan.price_monthly) }}
@@ -251,7 +266,9 @@ const removeFeature = (index) => {
                 <form @submit.prevent="submit" class="px-6 py-4 space-y-6">
                     <!-- Basic Info -->
                     <div class="space-y-4">
-                        <h3 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+                        <h3
+                            class="text-sm font-semibold text-zinc-400 uppercase tracking-wider"
+                        >
                             Basic Info
                         </h3>
 
@@ -263,7 +280,10 @@ const removeFeature = (index) => {
                                     placeholder="Pemula"
                                     class="border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-600"
                                 />
-                                <p v-if="form.errors.name" class="text-xs text-red-400">
+                                <p
+                                    v-if="form.errors.name"
+                                    class="text-xs text-red-400"
+                                >
                                     {{ form.errors.name }}
                                 </p>
                             </div>
@@ -274,7 +294,10 @@ const removeFeature = (index) => {
                                     placeholder="pemula"
                                     class="border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-600"
                                 />
-                                <p v-if="form.errors.slug" class="text-xs text-red-400">
+                                <p
+                                    v-if="form.errors.slug"
+                                    class="text-xs text-red-400"
+                                >
                                     {{ form.errors.slug }}
                                 </p>
                             </div>
@@ -299,19 +322,30 @@ const removeFeature = (index) => {
                                     min="0"
                                     class="border-zinc-700 bg-zinc-800 text-zinc-100"
                                 />
-                                <p v-if="form.errors.sort_order" class="text-xs text-red-400">
+                                <p
+                                    v-if="form.errors.sort_order"
+                                    class="text-xs text-red-400"
+                                >
                                     {{ form.errors.sort_order }}
                                 </p>
                             </div>
                             <div class="space-y-1.5">
-                                <Label class="text-zinc-300">Status Aktif</Label>
+                                <Label class="text-zinc-300"
+                                    >Status Aktif</Label
+                                >
                                 <div class="flex items-center gap-2 h-9">
                                     <Switch
                                         :checked="form.is_active"
-                                        @update:checked="(val) => (form.is_active = val)"
+                                        @update:checked="
+                                            (val) => (form.is_active = val)
+                                        "
                                     />
                                     <span class="text-sm text-zinc-400">
-                                        {{ form.is_active ? 'Aktif' : 'Nonaktif' }}
+                                        {{
+                                            form.is_active
+                                                ? 'Aktif'
+                                                : 'Nonaktif'
+                                        }}
                                     </span>
                                 </div>
                             </div>
@@ -320,32 +354,44 @@ const removeFeature = (index) => {
 
                     <!-- Pricing -->
                     <div class="space-y-4">
-                        <h3 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+                        <h3
+                            class="text-sm font-semibold text-zinc-400 uppercase tracking-wider"
+                        >
                             Harga
                         </h3>
 
                         <div class="grid grid-cols-3 gap-4">
                             <div class="space-y-1.5">
-                                <Label class="text-zinc-300">Harga Bulanan (IDR)</Label>
+                                <Label class="text-zinc-300"
+                                    >Harga Bulanan (IDR)</Label
+                                >
                                 <Input
                                     v-model.number="form.price_monthly"
                                     type="number"
                                     min="0"
                                     class="border-zinc-700 bg-zinc-800 text-zinc-100"
                                 />
-                                <p v-if="form.errors.price_monthly" class="text-xs text-red-400">
+                                <p
+                                    v-if="form.errors.price_monthly"
+                                    class="text-xs text-red-400"
+                                >
                                     {{ form.errors.price_monthly }}
                                 </p>
                             </div>
                             <div class="space-y-1.5">
-                                <Label class="text-zinc-300">Harga Tahunan (IDR)</Label>
+                                <Label class="text-zinc-300"
+                                    >Harga Tahunan (IDR)</Label
+                                >
                                 <Input
                                     v-model.number="form.price_annual"
                                     type="number"
                                     min="0"
                                     class="border-zinc-700 bg-zinc-800 text-zinc-100"
                                 />
-                                <p v-if="form.errors.price_annual" class="text-xs text-red-400">
+                                <p
+                                    v-if="form.errors.price_annual"
+                                    class="text-xs text-red-400"
+                                >
                                     {{ form.errors.price_annual }}
                                 </p>
                             </div>
@@ -357,7 +403,10 @@ const removeFeature = (index) => {
                                     min="0"
                                     class="border-zinc-700 bg-zinc-800 text-zinc-100"
                                 />
-                                <p v-if="form.errors.trial_days" class="text-xs text-red-400">
+                                <p
+                                    v-if="form.errors.trial_days"
+                                    class="text-xs text-red-400"
+                                >
                                     {{ form.errors.trial_days }}
                                 </p>
                             </div>
@@ -366,9 +415,14 @@ const removeFeature = (index) => {
 
                     <!-- Resource Limits -->
                     <div class="space-y-4">
-                        <h3 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+                        <h3
+                            class="text-sm font-semibold text-zinc-400 uppercase tracking-wider"
+                        >
                             Limit Resource
-                            <span class="normal-case font-normal text-zinc-600 ml-1">(kosongkan = unlimited)</span>
+                            <span
+                                class="normal-case font-normal text-zinc-600 ml-1"
+                                >(kosongkan = unlimited)</span
+                            >
                         </h3>
 
                         <div class="grid grid-cols-2 gap-4">
@@ -418,7 +472,9 @@ const removeFeature = (index) => {
                     <!-- Features -->
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
-                            <h3 class="text-sm font-semibold text-zinc-400 uppercase tracking-wider">
+                            <h3
+                                class="text-sm font-semibold text-zinc-400 uppercase tracking-wider"
+                            >
                                 Fitur
                             </h3>
                             <Button
@@ -433,12 +489,19 @@ const removeFeature = (index) => {
                             </Button>
                         </div>
 
-                        <p v-if="form.errors.features" class="text-xs text-red-400">
+                        <p
+                            v-if="form.errors.features"
+                            class="text-xs text-red-400"
+                        >
                             {{ form.errors.features }}
                         </p>
 
-                        <div v-if="form.features.length === 0" class="text-sm text-zinc-600 py-2">
-                            Belum ada fitur. Klik "Tambah Fitur" untuk menambahkan.
+                        <div
+                            v-if="form.features.length === 0"
+                            class="text-sm text-zinc-600 py-2"
+                        >
+                            Belum ada fitur. Klik "Tambah Fitur" untuk
+                            menambahkan.
                         </div>
 
                         <div
@@ -466,7 +529,9 @@ const removeFeature = (index) => {
                                     class="border-zinc-700 bg-zinc-800 text-zinc-100 placeholder:text-zinc-600 text-xs h-8"
                                 />
                                 <p
-                                    v-if="form.errors[`features.${index}.label`]"
+                                    v-if="
+                                        form.errors[`features.${index}.label`]
+                                    "
                                     class="text-xs text-red-400 mt-0.5"
                                 >
                                     {{ form.errors[`features.${index}.label`] }}
@@ -482,7 +547,9 @@ const removeFeature = (index) => {
                             <div class="flex items-center h-8">
                                 <Switch
                                     :checked="feature.included"
-                                    @update:checked="(val) => (feature.included = val)"
+                                    @update:checked="
+                                        (val) => (feature.included = val)
+                                    "
                                 />
                             </div>
                             <Button
@@ -512,7 +579,13 @@ const removeFeature = (index) => {
                     :disabled="form.processing"
                     @click="submit"
                 >
-                    {{ form.processing ? 'Menyimpan...' : editingPlan ? 'Simpan Perubahan' : 'Buat Plan' }}
+                    {{
+                        form.processing
+                            ? 'Menyimpan...'
+                            : editingPlan
+                              ? 'Simpan Perubahan'
+                              : 'Buat Plan'
+                    }}
                 </Button>
             </SheetFooter>
         </SheetContent>

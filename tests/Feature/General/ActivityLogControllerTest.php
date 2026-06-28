@@ -5,8 +5,8 @@ use App\Models\Product;
 use App\Models\Unit;
 use App\Models\User;
 use Database\Factories\CompanyFactory;
-use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Spatie\Activitylog\Models\Activity;
@@ -21,8 +21,6 @@ uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
     /** @var TestCase&object{viewPermission:Permission} $this */
-    $this->seed(RoleAndPermissionSeeder::class);
-
     $this->viewPermission = Permission::findByName('view_activity_logs', 'web');
 
     $this->superAdmin = User::factory()->create();
@@ -642,9 +640,11 @@ describe('Edge Cases', function () {
         /** @var TestCase&object{viewPermission:Permission, superAdmin:User, admin:User, cashier:User} $this */
         actingAs($this->superAdmin);
 
+        Carbon::setTestNow(now()->subSecond());
         $category1 = Category::factory()->create(['name' => 'First']);
-        sleep(1);
+        Carbon::setTestNow(now()->addSecond());
         $category2 = Category::factory()->create(['name' => 'Second']);
+        Carbon::setTestNow(null);
 
         actingAs($this->superAdmin)
             ->get(route('activity-logs.index'))

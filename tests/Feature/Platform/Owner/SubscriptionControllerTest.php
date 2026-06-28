@@ -14,6 +14,7 @@ use function Pest\Laravel\seed;
 uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     seed(RoleAndPermissionSeeder::class);
 
     $this->plan = Plan::factory()->pemula()->create();
@@ -25,17 +26,21 @@ beforeEach(function () {
 // ---------------------------------------------------------------------------
 
 it('denies guests from subscriptions index', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     get(route('platform.owner.subscriptions.index'))
         ->assertRedirect(route('login'));
 });
 
 it('denies guests from subscriptions show', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     get(route('platform.owner.subscriptions.show', 1))
         ->assertRedirect(route('login'));
 });
 
 it('denies tenant users from subscriptions index', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create();
+    /** @var User $user */
     $user = User::factory()->create(['company_id' => $company->id]);
     $user->syncRoles('admin');
 
@@ -45,6 +50,7 @@ it('denies tenant users from subscriptions index', function () {
 });
 
 it('allows platform_owner to view subscriptions index', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     actingAs(createPlatformOwner())
         ->get(route('platform.owner.subscriptions.index'))
         ->assertOk();
@@ -55,6 +61,7 @@ it('allows platform_owner to view subscriptions index', function () {
 // ---------------------------------------------------------------------------
 
 it('renders correct component for subscriptions index', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     actingAs(createPlatformOwner())
         ->get(route('platform.owner.subscriptions.index'))
         ->assertInertia(fn ($page) => $page
@@ -63,6 +70,7 @@ it('renders correct component for subscriptions index', function () {
 });
 
 it('passes subscriptions as paginated data', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $companies = Company::factory()->count(5)->create();
     foreach ($companies as $company) {
         Subscription::factory()->create([
@@ -81,6 +89,7 @@ it('passes subscriptions as paginated data', function () {
 });
 
 it('includes company and plan relations', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create(['name' => 'Subscribed Co']);
     Subscription::factory()->create([
         'company_id' => $company->id,
@@ -98,6 +107,7 @@ it('includes company and plan relations', function () {
 });
 
 it('orders subscriptions by latest first', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create();
     $oldSub = Subscription::factory()->create([
         'company_id' => $company->id,
@@ -125,6 +135,7 @@ it('orders subscriptions by latest first', function () {
 // ---------------------------------------------------------------------------
 
 it('filters subscriptions by status', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create();
     Subscription::factory()->create([
         'company_id' => $company->id,
@@ -147,6 +158,7 @@ it('filters subscriptions by status', function () {
 });
 
 it('passes filters data to the page', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     actingAs(createPlatformOwner())
         ->get(route('platform.owner.subscriptions.index', ['status' => 'active']))
         ->assertInertia(fn ($page) => $page
@@ -160,6 +172,7 @@ it('passes filters data to the page', function () {
 // ---------------------------------------------------------------------------
 
 it('renders correct component for subscriptions show', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create();
     $subscription = Subscription::factory()->create([
         'company_id' => $company->id,
@@ -175,6 +188,7 @@ it('renders correct component for subscriptions show', function () {
 });
 
 it('shows subscription details on show page', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create(['name' => 'Detail Co']);
     $subscription = Subscription::factory()->create([
         'company_id' => $company->id,
@@ -193,6 +207,7 @@ it('shows subscription details on show page', function () {
 });
 
 it('includes company, plan, and invoices on subscription show', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create();
     $owner = User::factory()->create(['company_id' => $company->id]);
     $company->update(['owner_id' => $owner->id]);
@@ -213,6 +228,7 @@ it('includes company, plan, and invoices on subscription show', function () {
 });
 
 it('returns 404 for non-existent subscription', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     actingAs(createPlatformOwner())
         ->get(route('platform.owner.subscriptions.show', 99999))
         ->assertNotFound();
@@ -223,6 +239,7 @@ it('returns 404 for non-existent subscription', function () {
 // ---------------------------------------------------------------------------
 
 it('handles empty subscriptions list', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     actingAs(createPlatformOwner())
         ->get(route('platform.owner.subscriptions.index'))
         ->assertOk()
@@ -232,6 +249,7 @@ it('handles empty subscriptions list', function () {
 });
 
 it('handles filter with no matching subscriptions', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     actingAs(createPlatformOwner())
         ->get(route('platform.owner.subscriptions.index', ['status' => 'active']))
         ->assertOk()
@@ -241,6 +259,7 @@ it('handles filter with no matching subscriptions', function () {
 });
 
 it('shows subscription without company owner gracefully', function () {
+    /** @var object{plan: Plan, planPro: Plan} $this */
     $company = Company::factory()->create(['owner_id' => null]);
     $subscription = Subscription::factory()->create([
         'company_id' => $company->id,

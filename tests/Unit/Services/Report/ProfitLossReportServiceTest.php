@@ -10,10 +10,12 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: ProfitLossReportService} $this */
     $this->service = new ProfitLossReportService;
 });
 
 it('returns zero summary when no completed sales exist in date range', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     $summary = $this->service->getProfitLossSummary(now()->toDateString(), now()->toDateString());
 
     expect($summary['total_revenue'])->toEqual(0.0);
@@ -23,6 +25,7 @@ it('returns zero summary when no completed sales exist in date range', function 
 });
 
 it('calculates profit loss summary correctly', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     $product = Product::factory()->create();
     Sale::factory()->create([
         'total' => 100000,
@@ -40,6 +43,7 @@ it('calculates profit loss summary correctly', function () {
 });
 
 it('excludes non-completed sales from summary', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     Sale::factory()->create([
         'total' => 100000,
         'total_cost' => 60000,
@@ -60,6 +64,7 @@ it('excludes non-completed sales from summary', function () {
 });
 
 it('only includes sales within date range for summary', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     Sale::factory()->create([
         'total' => 100000,
         'total_cost' => 60000,
@@ -73,12 +78,14 @@ it('only includes sales within date range for summary', function () {
 });
 
 it('calculates profit margin correctly when revenue is zero', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     $summary = $this->service->getProfitLossSummary(now()->toDateString(), now()->toDateString());
 
     expect($summary['profit_margin'])->toEqual(0.0);
 });
 
 it('returns paginated product breakdown', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     $product1 = Product::factory()->create(['name' => 'Product A', 'sku' => 'SKU-A']);
     $product2 = Product::factory()->create(['name' => 'Product B', 'sku' => 'SKU-B']);
     $sale = Sale::factory()->create([
@@ -106,6 +113,7 @@ it('returns paginated product breakdown', function () {
 });
 
 it('orders product breakdown by profit descending', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     $product1 = Product::factory()->create(['name' => 'Low Profit']);
     $product2 = Product::factory()->create(['name' => 'High Profit']);
     $sale = Sale::factory()->create([
@@ -133,6 +141,7 @@ it('orders product breakdown by profit descending', function () {
 });
 
 it('excludes sales outside date range in product breakdown', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     $product = Product::factory()->create();
     $oldSale = Sale::factory()->create([
         'status' => 'completed',
@@ -152,6 +161,7 @@ it('excludes sales outside date range in product breakdown', function () {
 });
 
 it('returns chart data grouped by day', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     $sale1 = Sale::factory()->create([
         'total' => 10000,
         'total_cost' => 6000,
@@ -172,12 +182,14 @@ it('returns chart data grouped by day', function () {
 });
 
 it('returns empty chart data when no sales exist', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     $chartData = $this->service->getChartData(now()->toDateString(), now()->toDateString());
 
     expect($chartData)->toBeEmpty();
 });
 
 it('sums multiple sales on the same day in chart data', function () {
+    /** @var object{service: ProfitLossReportService} $this */
     Sale::factory()->create([
         'total' => 10000,
         'total_cost' => 5000,

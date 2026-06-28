@@ -15,11 +15,13 @@ use function Pest\Laravel\postJson;
 uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{admin: User} $this */
     Config::set('midtrans.server_key', 'test-server-key');
     $this->admin = User::factory()->create(['role' => 'admin']);
 });
 
 it('handles sale midtrans notification with valid signature', function () {
+    /** @var object{admin: User} $this */
     $sale = Sale::factory()->create(['user_id' => $this->admin->id]);
     $paymentTransaction = PaymentTransaction::factory()->create([
         'sale_id' => $sale->id,
@@ -141,6 +143,7 @@ it('rejects notification when transaction not found', function () {
 });
 
 it('rejects notification when gross amount does not match', function () {
+    /** @var object{admin: User} $this */
     $sale = Sale::factory()->create(['user_id' => $this->admin->id]);
     PaymentTransaction::factory()->create([
         'sale_id' => $sale->id,
@@ -166,6 +169,7 @@ it('rejects notification when gross amount does not match', function () {
 });
 
 it('ignores duplicate notification for already paid transaction', function () {
+    /** @var object{admin: User} $this */
     $sale = Sale::factory()->create(['user_id' => $this->admin->id]);
     PaymentTransaction::factory()->create([
         'sale_id' => $sale->id,

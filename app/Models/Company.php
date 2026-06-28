@@ -32,6 +32,7 @@ class Company extends BaseTenant
         'address',
         'phone',
         'is_active',
+        'had_trial',
     ];
 
     /**
@@ -43,6 +44,7 @@ class Company extends BaseTenant
     {
         return [
             'is_active' => 'boolean',
+            'had_trial' => 'boolean',
         ];
     }
 
@@ -53,7 +55,7 @@ class Company extends BaseTenant
      */
     public static function getCustomColumns(): array
     {
-        return ['id', 'name', 'slug', 'owner_id', 'address', 'phone', 'is_active', 'created_at', 'updated_at'];
+        return ['id', 'name', 'slug', 'owner_id', 'address', 'phone', 'is_active', 'had_trial', 'created_at', 'updated_at'];
     }
 
     /**
@@ -125,5 +127,14 @@ class Company extends BaseTenant
     public function currentPlan(): ?Plan
     {
         return $this->activeSubscription()?->plan;
+    }
+
+    /**
+     * Determine whether this company has ever started a trial subscription.
+     * Reads from the `had_trial` column set by SubscriptionService when a trial is created.
+     */
+    public function hadTrial(): bool
+    {
+        return (bool) $this->had_trial;
     }
 }

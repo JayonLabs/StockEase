@@ -32,6 +32,7 @@ it('denies guests from platform admin dashboard', function () {
 
 it('denies tenant users with super_admin role', function () {
     $company = Company::factory()->create();
+    /** @var User $user */
     $user = User::factory()->create(['company_id' => $company->id]);
     $user->syncRoles('super_admin');
 
@@ -45,6 +46,7 @@ it('denies tenant users with any tenant role', function () {
 
     foreach ($roles as $role) {
         $company = Company::factory()->create();
+        /** @var User $user */
         $user = User::factory()->create(['company_id' => $company->id]);
         $user->syncRoles($role);
 
