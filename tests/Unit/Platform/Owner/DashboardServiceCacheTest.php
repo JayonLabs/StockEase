@@ -10,10 +10,12 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: DashboardService} $this */
     $this->service = app(DashboardService::class);
 });
 
 it('caches overview data using Cache::flexible', function () {
+    /** @var object{service: DashboardService} $this */
     $companies = Company::factory()->count(3)->create();
     User::factory()->count(5)->create(['company_id' => $companies[0]->id]);
 
@@ -33,6 +35,7 @@ it('caches overview data using Cache::flexible', function () {
 });
 
 it('uses Cache::flexible with expected TTL values', function () {
+    /** @var object{service: DashboardService} $this */
     Cache::shouldReceive('flexible')
         ->once()
         ->with('platform_dashboard_overview', [300, 900], Mockery::on(fn ($c) => is_callable($c)))
@@ -45,6 +48,7 @@ it('uses Cache::flexible with expected TTL values', function () {
 });
 
 it('caches subscription breakdown', function () {
+    /** @var object{service: DashboardService} $this */
     Cache::shouldReceive('remember')
         ->once()
         ->with('platform_dashboard_subscriptions', 900, Mockery::on(fn ($c) => is_callable($c)))
@@ -59,6 +63,7 @@ it('caches subscription breakdown', function () {
 });
 
 it('does not cache getRecentRegistrations', function () {
+    /** @var object{service: DashboardService} $this */
     Company::factory()->create(['name' => 'RecentCo', 'created_at' => now()]);
 
     $result = $this->service->getRecentRegistrations();
@@ -68,6 +73,7 @@ it('does not cache getRecentRegistrations', function () {
 });
 
 it('limits recent registrations to specified count', function () {
+    /** @var object{service: DashboardService} $this */
     Company::factory()->count(25)->create();
 
     $result = $this->service->getRecentRegistrations(10);
@@ -76,6 +82,7 @@ it('limits recent registrations to specified count', function () {
 });
 
 it('limits active companies to specified count', function () {
+    /** @var object{service: DashboardService} $this */
     Company::factory()->count(25)->create(['is_active' => true]);
 
     $result = $this->service->getActiveCompanies(10);
@@ -84,12 +91,14 @@ it('limits active companies to specified count', function () {
 });
 
 it('returns empty array for growth trend when no snapshots', function () {
+    /** @var object{service: DashboardService} $this */
     $result = $this->service->getGrowthTrend();
 
     expect($result)->toBe([]);
 });
 
 it('returns empty array for recent registrations when none exist', function () {
+    /** @var object{service: DashboardService} $this */
     Company::query()->delete();
 
     $result = $this->service->getRecentRegistrations();
@@ -98,6 +107,7 @@ it('returns empty array for recent registrations when none exist', function () {
 });
 
 it('returns zero MRR when no active subscriptions exist', function () {
+    /** @var object{service: DashboardService} $this */
     $overview = $this->service->getOverview();
 
     expect($overview['mrr'])->toBe(0.0);

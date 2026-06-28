@@ -19,6 +19,7 @@ beforeEach(function () {
 
 it('ends tenancy if initialized', function () {
     $company = Company::factory()->create();
+    /** @var User $user */
     $user = User::factory()->create(['company_id' => $company->id]);
 
     tenancy()->initialize($company);
@@ -31,6 +32,7 @@ it('ends tenancy if initialized', function () {
 
 it('does nothing if tenancy not initialized', function () {
     $company = Company::factory()->create();
+    /** @var User $user */
     $user = User::factory()->create(['company_id' => $company->id]);
 
     actingAs($user)
@@ -41,6 +43,7 @@ it('does nothing if tenancy not initialized', function () {
 
 it('allows global queries after middleware runs', function () {
     $company = Company::factory()->create();
+    /** @var User $user */
     $user = User::factory()->create(['company_id' => $company->id]);
 
     tenancy()->initialize($company);

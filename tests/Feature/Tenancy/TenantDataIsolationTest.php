@@ -4,16 +4,20 @@ use App\Models\Category;
 use App\Models\Company;
 use App\Models\Plan;
 use App\Models\Product;
+use App\Models\Subscription;
 use App\Models\Unit;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 use function Pest\Laravel\actingAs;
+use function Pest\Laravel\get;
+use function Pest\Laravel\post;
 
 uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     if (tenancy()->initialized) {
         tenancy()->end();
     }
@@ -37,6 +41,10 @@ beforeEach(function () {
     $this->userB = User::factory()->create(['company_id' => $this->companyB->id]);
     $this->companyB->update(['owner_id' => $this->userB->id]);
 
+    $plan = Plan::where('slug', 'pemula')->first();
+    Subscription::factory()->create(['company_id' => $this->companyA->id, 'plan_id' => $plan->id, 'status' => 'active']);
+    Subscription::factory()->create(['company_id' => $this->companyB->id, 'plan_id' => $plan->id, 'status' => 'active']);
+
     $category = Category::factory()->create();
     $unit = Unit::factory()->create();
 
@@ -54,12 +62,14 @@ beforeEach(function () {
 });
 
 afterEach(function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     if (tenancy()->initialized) {
         tenancy()->end();
     }
 });
 
 it('user from company A only sees company A products via model query', function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     actingAs($this->userA);
     initTenancyFromUser($this->userA);
 
@@ -71,6 +81,7 @@ it('user from company A only sees company A products via model query', function 
 });
 
 it('user from company B only sees company B products via model query', function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     actingAs($this->userB);
     initTenancyFromUser($this->userB);
 
@@ -82,6 +93,7 @@ it('user from company B only sees company B products via model query', function 
 });
 
 it('user from company A cannot access company B products', function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     actingAs($this->userA);
     initTenancyFromUser($this->userA);
 
@@ -91,6 +103,7 @@ it('user from company A cannot access company B products', function () {
 });
 
 it('user from company B cannot access company A products', function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     actingAs($this->userB);
     initTenancyFromUser($this->userB);
 
@@ -100,6 +113,7 @@ it('user from company B cannot access company A products', function () {
 });
 
 it('user from company A count is unaffected by company B data', function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     Warehouse::factory()->create(['company_id' => $this->companyA->id]);
 
     actingAs($this->userA);
@@ -109,6 +123,7 @@ it('user from company A count is unaffected by company B data', function () {
 });
 
 it('user from company B count is unaffected by company A data', function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     Warehouse::factory()->create(['company_id' => $this->companyB->id]);
 
     actingAs($this->userB);
@@ -118,6 +133,7 @@ it('user from company B count is unaffected by company A data', function () {
 });
 
 it('user can create model with auto-filled company_id', function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     actingAs($this->userA);
     initTenancyFromUser($this->userA);
 
@@ -138,6 +154,7 @@ it('user can create model with auto-filled company_id', function () {
 });
 
 it('model create does not leak company_id between tenants', function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     actingAs($this->userA);
     initTenancyFromUser($this->userA);
 
@@ -159,13 +176,15 @@ it('model create does not leak company_id between tenants', function () {
 });
 
 it('products page only shows tenant-scoped data via HTTP', function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     $this->userA->assignRole('super_admin');
     actingAs($this->userA);
 
-    $this->get('/product')->assertSuccessful();
+    get('/product')->assertSuccessful();
 });
 
 it('checks subscription limit respects tenant isolation', function () {
+    /** @var object{companyA: Company, companyB: Company, userA: User, userB: User} $this */
     $plan = Plan::where('slug', 'pemula')->first();
     $this->companyA->subscription()->create([
         'plan_id' => $plan->id,
@@ -183,7 +202,7 @@ it('checks subscription limit respects tenant isolation', function () {
 
     actingAs($this->userA);
 
-    $response = $this->post(route('warehouse.store'), [
+    $response = post(route('warehouse.store'), [
         'name' => 'Gudang Kedua',
         'phone' => '08123456789',
         'address' => 'Jl. Merdeka No. 2',

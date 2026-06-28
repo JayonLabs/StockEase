@@ -10,6 +10,7 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{analytics: SubscriptionAnalytics} $this */
     $this->analytics = new SubscriptionAnalytics;
     Plan::factory()->pemula()->create();
     Plan::factory()->profesional()->create();
@@ -17,6 +18,7 @@ beforeEach(function () {
 });
 
 it('calculates total active subscriptions', function () {
+    /** @var object{analytics: SubscriptionAnalytics} $this */
     $companies = Company::factory()->count(3)->create();
     $plan = Plan::where('slug', 'pemula')->first();
 
@@ -32,6 +34,7 @@ it('calculates total active subscriptions', function () {
 });
 
 it('calculates subscription breakdown by plan', function () {
+    /** @var object{analytics: SubscriptionAnalytics} $this */
     $planPemula = Plan::where('slug', 'pemula')->first();
     $planPro = Plan::where('slug', 'profesional')->first();
     $companies = Company::factory()->count(3)->create();
@@ -64,6 +67,7 @@ it('calculates subscription breakdown by plan', function () {
 });
 
 it('excludes expired subscriptions from active count', function () {
+    /** @var object{analytics: SubscriptionAnalytics} $this */
     $plan = Plan::where('slug', 'pemula')->first();
     $company = Company::factory()->create();
 
@@ -82,6 +86,7 @@ it('excludes expired subscriptions from active count', function () {
 });
 
 it('calculates MRR correctly for monthly plans', function () {
+    /** @var object{analytics: SubscriptionAnalytics} $this */
     $plan = Plan::factory()->create(['price_monthly' => 150000, 'price_annual' => 0]);
     $company = Company::factory()->create();
 
@@ -96,6 +101,7 @@ it('calculates MRR correctly for monthly plans', function () {
 });
 
 it('calculates MRR correctly for annual plans', function () {
+    /** @var object{analytics: SubscriptionAnalytics} $this */
     $plan = Plan::factory()->create(['price_monthly' => 0, 'price_annual' => 2400000]);
     $company = Company::factory()->create();
 
@@ -111,10 +117,12 @@ it('calculates MRR correctly for annual plans', function () {
 });
 
 it('returns zero MRR when no active subscriptions', function () {
+    /** @var object{analytics: SubscriptionAnalytics} $this */
     expect($this->analytics->calculateMrr())->toBe(0.0);
 });
 
 it('handles mixed billing cycles in MRR calculation', function () {
+    /** @var object{analytics: SubscriptionAnalytics} $this */
     $planA = Plan::factory()->create(['price_monthly' => 100000, 'price_annual' => 0]);
     $planB = Plan::factory()->create(['price_monthly' => 0, 'price_annual' => 1200000]);
     $companies = Company::factory()->count(2)->create();
@@ -137,6 +145,7 @@ it('handles mixed billing cycles in MRR calculation', function () {
 });
 
 it('includes trialing subscriptions in MRR as potential revenue', function () {
+    /** @var object{analytics: SubscriptionAnalytics} $this */
     $plan = Plan::factory()->create(['price_monthly' => 100000, 'price_annual' => 0]);
     $company = Company::factory()->create();
 
@@ -151,6 +160,7 @@ it('includes trialing subscriptions in MRR as potential revenue', function () {
 });
 
 it('treats canceled subscriptions as zero MRR contributors', function () {
+    /** @var object{analytics: SubscriptionAnalytics} $this */
     $plan = Plan::factory()->create(['price_monthly' => 100000, 'price_annual' => 0]);
     $company = Company::factory()->create();
 

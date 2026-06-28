@@ -10,10 +10,12 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: PromotionService} $this */
     $this->service = new PromotionService;
 });
 
 it('gets paginated promotions', function () {
+    /** @var object{service: PromotionService} $this */
     Promotion::factory()->count(15)->create();
 
     $result = $this->service->getPaginatedPromotions([], 10);
@@ -23,6 +25,7 @@ it('gets paginated promotions', function () {
 });
 
 it('filters promotions by search query on name', function () {
+    /** @var object{service: PromotionService} $this */
     Promotion::factory()->create(['name' => 'Diskon Lebaran']);
     Promotion::factory()->create(['name' => 'Promo Akhir Tahun']);
 
@@ -33,6 +36,7 @@ it('filters promotions by search query on name', function () {
 });
 
 it('filters promotions by search query on product name', function () {
+    /** @var object{service: PromotionService} $this */
     $product = Product::factory()->create(['name' => 'Indomie']);
     Promotion::factory()->create(['product_id' => $product->id, 'name' => 'Promo Indomie']);
     Promotion::factory()->create(['name' => 'Promo Lain']);
@@ -44,6 +48,7 @@ it('filters promotions by search query on product name', function () {
 });
 
 it('filters promotions by search query on category name', function () {
+    /** @var object{service: PromotionService} $this */
     $category = Category::factory()->create(['name' => 'Minuman']);
     Promotion::factory()->create(['category_id' => $category->id, 'name' => 'Diskon Minuman']);
     Promotion::factory()->create(['name' => 'Diskon Makanan']);
@@ -55,6 +60,7 @@ it('filters promotions by search query on category name', function () {
 });
 
 it('filters promotions by start date', function () {
+    /** @var object{service: PromotionService} $this */
     Promotion::factory()->create(['start_date' => now()->subDays(10)]);
     Promotion::factory()->create(['start_date' => now()->addDays(10)]);
 
@@ -64,6 +70,7 @@ it('filters promotions by start date', function () {
 });
 
 it('filters promotions by end date', function () {
+    /** @var object{service: PromotionService} $this */
     Promotion::factory()->create(['end_date' => now()->addDays(1)]);
     Promotion::factory()->create(['end_date' => now()->addDays(30)]);
 
@@ -73,6 +80,7 @@ it('filters promotions by end date', function () {
 });
 
 it('returns empty paginator when no promotions match filters', function () {
+    /** @var object{service: PromotionService} $this */
     Promotion::factory()->create(['name' => 'Diskon Lebaran']);
 
     $result = $this->service->getPaginatedPromotions(['search' => 'TidakAda']);
@@ -81,6 +89,7 @@ it('returns empty paginator when no promotions match filters', function () {
 });
 
 it('loads category and product relationships', function () {
+    /** @var object{service: PromotionService} $this */
     $category = Category::factory()->create(['name' => 'Makanan']);
     $product = Product::factory()->create(['name' => 'Roti']);
     Promotion::factory()->create([

@@ -12,11 +12,13 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $this->service = new ShiftService;
     $this->user = User::factory()->create(['role' => 'cashier']);
 });
 
 it('opens a new shift for a user', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $shift = $this->service->openShift($this->user, 50000);
 
     expect($shift)->toBeInstanceOf(Shift::class);
@@ -27,12 +29,14 @@ it('opens a new shift for a user', function () {
 });
 
 it('throws exception when opening shift while one is still open', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $this->service->openShift($this->user, 50000);
 
     $this->service->openShift($this->user, 50000);
 })->throws(Exception::class, 'Anda masih memiliki shift yang terbuka');
 
 it('closes an open shift', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $shift = $this->service->openShift($this->user, 50000);
 
     $closed = $this->service->closeShift($shift, 60000, 'Tutup shift');
@@ -44,6 +48,7 @@ it('closes an open shift', function () {
 });
 
 it('throws exception when closing an already closed shift', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $shift = $this->service->openShift($this->user, 50000);
     $this->service->closeShift($shift, 60000);
 
@@ -51,6 +56,7 @@ it('throws exception when closing an already closed shift', function () {
 })->throws(Exception::class, 'Shift ini sudah ditutup sebelumnya');
 
 it('calculates expected cash correctly on close', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $shift = $this->service->openShift($this->user, 50000);
 
     Sale::factory()->create([
@@ -67,6 +73,7 @@ it('calculates expected cash correctly on close', function () {
 });
 
 it('excludes non-cash sales from expected cash calculation', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $shift = $this->service->openShift($this->user, 50000);
 
     Sale::factory()->create([
@@ -88,6 +95,7 @@ it('excludes non-cash sales from expected cash calculation', function () {
 });
 
 it('gets paginated shifts', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     Shift::factory()->count(15)->create(['user_id' => $this->user->id]);
 
     $shifts = $this->service->getPaginatedShifts(null, [], 10);
@@ -97,6 +105,7 @@ it('gets paginated shifts', function () {
 });
 
 it('filters shifts by search on user name', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $userA = User::factory()->create(['name' => 'Alice']);
     $userB = User::factory()->create(['name' => 'Bob']);
     Shift::factory()->create(['user_id' => $userA->id]);
@@ -108,6 +117,7 @@ it('filters shifts by search on user name', function () {
 });
 
 it('filters shifts by status', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     Shift::factory()->create(['user_id' => $this->user->id, 'status' => 'open']);
     Shift::factory()->create(['user_id' => $this->user->id, 'status' => 'closed']);
 
@@ -117,6 +127,7 @@ it('filters shifts by status', function () {
 });
 
 it('filters shifts by date range', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     Shift::factory()->create([
         'user_id' => $this->user->id,
         'opened_at' => now()->subDays(10),
@@ -135,6 +146,7 @@ it('filters shifts by date range', function () {
 });
 
 it('scopes shifts to user when role is cashier', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $cashier = User::factory()->create(['role' => 'cashier']);
     $otherUser = User::factory()->create(['role' => 'cashier']);
     Shift::factory()->create(['user_id' => $cashier->id]);
@@ -146,6 +158,7 @@ it('scopes shifts to user when role is cashier', function () {
 });
 
 it('shows all shifts when user role is admin', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $admin = User::factory()->create(['role' => 'admin']);
     Shift::factory()->count(3)->create(['user_id' => $this->user->id]);
 
@@ -155,6 +168,7 @@ it('shows all shifts when user role is admin', function () {
 });
 
 it('gets shift details with loaded relationships', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $shift = Shift::factory()->create(['user_id' => $this->user->id]);
 
     $details = $this->service->getShiftDetails($shift);
@@ -164,6 +178,7 @@ it('gets shift details with loaded relationships', function () {
 });
 
 it('checks if user has active shift', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     expect($this->service->hasActiveShift($this->user))->toBeFalse();
 
     $this->service->openShift($this->user, 50000);
@@ -172,12 +187,14 @@ it('checks if user has active shift', function () {
 });
 
 it('returns null getActiveShift when no open shift exists', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $active = $this->service->getActiveShift($this->user);
 
     expect($active)->toBeNull();
 });
 
 it('returns active shift for user', function () {
+    /** @var object{service: ShiftService, user: User} $this */
     $shift = $this->service->openShift($this->user, 50000);
 
     $active = $this->service->getActiveShift($this->user);

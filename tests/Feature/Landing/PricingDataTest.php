@@ -5,6 +5,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 
+use function Pest\Laravel\actingAs;
 use function Pest\Laravel\get;
 
 uses(LazilyRefreshDatabase::class);
@@ -20,10 +21,11 @@ it('renders pricing page with plans from database', function () {
 
     get(route('landing.pricing'))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('Landing/Pricing')
-            ->has('plans', 3)
-            ->has('comparison')
+        ->assertInertia(
+            fn ($page) => $page
+                ->component('Landing/Pricing')
+                ->has('plans', 3)
+                ->has('comparison')
         );
 });
 
@@ -33,10 +35,11 @@ it('passes correct plan names to pricing page', function () {
     Plan::factory()->enterprise()->create();
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.name', 'Pemula')
-            ->where('plans.1.name', 'Profesional')
-            ->where('plans.2.name', 'Enterprise')
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.name', 'Pemula')
+                ->where('plans.1.name', 'Profesional')
+                ->where('plans.2.name', 'Enterprise')
         );
 });
 
@@ -44,12 +47,13 @@ it('passes correct pricing data from database', function () {
     Plan::factory()->pemula()->create();
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.price_monthly', 50000)
-            ->where('plans.0.price_annual', 500000)
-            ->where('plans.0.annual_per_month', 41700)
-            ->where('plans.0.annual_savings_percent', 17)
-            ->where('plans.0.is_free', false)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.price_monthly', 50000)
+                ->where('plans.0.price_annual', 500000)
+                ->where('plans.0.annual_per_month', 41700)
+                ->where('plans.0.annual_savings_percent', 17)
+                ->where('plans.0.is_free', false)
         );
 });
 
@@ -58,9 +62,10 @@ it('excludes inactive plans from pricing page', function () {
     Plan::factory()->create(['slug' => 'archived', 'name' => 'Archived', 'is_active' => false]);
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->has('plans', 1)
-            ->where('plans.0.slug', 'pemula')
+        ->assertInertia(
+            fn ($page) => $page
+                ->has('plans', 1)
+                ->where('plans.0.slug', 'pemula')
         );
 });
 
@@ -68,9 +73,10 @@ it('shows no plans when all are inactive', function () {
     Plan::factory()->create(['name' => 'Old Plan', 'is_active' => false]);
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->has('plans', 0)
-            ->has('comparison', 0)
+        ->assertInertia(
+            fn ($page) => $page
+                ->has('plans', 0)
+                ->has('comparison', 0)
         );
 });
 
@@ -98,10 +104,11 @@ it('returns plans sorted by sort_order', function () {
     Plan::factory()->create(['name' => 'Last', 'sort_order' => 3]);
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.name', 'First')
-            ->where('plans.1.name', 'Middle')
-            ->where('plans.2.name', 'Last')
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.name', 'First')
+                ->where('plans.1.name', 'Middle')
+                ->where('plans.2.name', 'Last')
         );
 });
 
@@ -150,40 +157,43 @@ it('plan features only include card features', function () {
 // Caching behaviour
 // ---------------------------------------------------------------------------
 
-it('caches pricing page data', function () {
+it('auto-clears cache when plan is created', function () {
     Plan::factory()->pemula()->create();
 
-    $first = get(route('landing.pricing'));
-    $first->assertOk();
+    // Prime cache with Pemula
+    get(route('landing.pricing'))
+        ->assertInertia(fn ($page) => $page->has('plans', 1));
 
+    // Create a new plan — cache auto-clears via booted() saved event
     Plan::factory()->create(['name' => 'New Plan', 'slug' => 'new-plan', 'sort_order' => 2]);
 
-    $second = get(route('landing.pricing'));
-    $second->assertOk();
-
-    // Without cache clear, new plan should NOT appear (cached)
-    $second->assertInertia(fn ($page) => $page
-        ->has('plans', 1)
-    );
+    // Cache was cleared, so new plan appears immediately
+    get(route('landing.pricing'))
+        ->assertInertia(fn ($page) => $page->has('plans', 2));
 });
 
-it('clears cache when plan is updated', function () {
+it('auto-clears cache when plan is updated', function () {
     $plan = Plan::factory()->pemula()->create();
 
     // Prime cache
-    get(route('landing.pricing'));
+    get(route('landing.pricing'))
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.price_monthly', 50000)
+        );
 
-    // Update plan
+    // Update plan — cache auto-clears via booted() saved event
     $plan->update(['price_monthly' => 100000]);
 
-    // Still cached
+    // Cache was cleared, so fresh data appears immediately
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.price_monthly', 50000)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.price_monthly', 100000)
         );
 });
 
-it('returns fresh data after cache is cleared', function () {
+it('returns fresh data after cache is manually cleared', function () {
     $plan = Plan::factory()->pemula()->create();
 
     get(route('landing.pricing'));
@@ -192,8 +202,9 @@ it('returns fresh data after cache is cleared', function () {
     Cache::forget('plans_pricing');
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.price_monthly', 75000)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.price_monthly', 75000)
         );
 });
 
@@ -205,9 +216,10 @@ it('prices are integers in response', function () {
     Plan::factory()->pemula()->create();
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.price_monthly', fn ($v) => is_int($v))
-            ->where('plans.0.price_annual', fn ($v) => is_int($v))
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.price_monthly', fn ($v) => is_int($v))
+                ->where('plans.0.price_annual', fn ($v) => is_int($v))
         );
 });
 
@@ -222,9 +234,10 @@ it('handles annual price less than monthly x 12 correctly', function () {
     ]);
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.price_monthly', 100000)
-            ->where('plans.0.price_annual', 1000000)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.price_monthly', 100000)
+                ->where('plans.0.price_annual', 1000000)
         );
 });
 
@@ -232,10 +245,11 @@ it('handles zero annual price for free plan', function () {
     Plan::factory()->free()->create();
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.price_monthly', 0)
-            ->where('plans.0.price_annual', 0)
-            ->where('plans.0.is_free', true)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.price_monthly', 0)
+                ->where('plans.0.price_annual', 0)
+                ->where('plans.0.is_free', true)
         );
 });
 
@@ -251,9 +265,10 @@ it('renders pricing page for authenticated users', function () {
     \Pest\Laravel\actingAs($user)
         ->get(route('landing.pricing'))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->component('Landing/Pricing')
-            ->has('plans')
+        ->assertInertia(
+            fn ($page) => $page
+                ->component('Landing/Pricing')
+                ->has('plans')
         );
 });
 
@@ -261,11 +276,13 @@ it('passes auth user context to pricing page', function () {
     $user = User::factory()->create();
     Plan::factory()->pemula()->create();
 
-    \Pest\Laravel\actingAs($user)
+    /** @var User $user */
+    actingAs($user)
         ->get(route('landing.pricing'))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->where('auth.user.id', $user->id)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('auth.user.id', $user->id)
         );
 });
 
@@ -274,8 +291,9 @@ it('passes null user for guests on pricing page', function () {
 
     get(route('landing.pricing'))
         ->assertOk()
-        ->assertInertia(fn ($page) => $page
-            ->where('auth.user', null)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('auth.user', null)
         );
 });
 
@@ -317,10 +335,11 @@ it('ensures all seeded plans have valid annual pricing (annual < monthly x 12)',
     Plan::factory()->enterprise()->create();
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.price_annual', fn ($v) => $v < 50000 * 12)
-            ->where('plans.1.price_annual', fn ($v) => $v < 149000 * 12)
-            ->where('plans.2.price_annual', fn ($v) => $v < 299000 * 12)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.price_annual', fn ($v) => $v < 50000 * 12)
+                ->where('plans.1.price_annual', fn ($v) => $v < 149000 * 12)
+                ->where('plans.2.price_annual', fn ($v) => $v < 299000 * 12)
         );
 });
 
@@ -329,9 +348,10 @@ it('ensures annual_per_month is always less than monthly price for paid plans', 
     Plan::factory()->profesional()->create();
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.annual_per_month', fn ($v) => $v < 50000)
-            ->where('plans.1.annual_per_month', fn ($v) => $v < 149000)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.annual_per_month', fn ($v) => $v < 50000)
+                ->where('plans.1.annual_per_month', fn ($v) => $v < 149000)
         );
 });
 
@@ -340,9 +360,10 @@ it('passes annual_savings_percent for all paid plans', function () {
     Plan::factory()->profesional()->create();
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.annual_savings_percent', fn ($v) => $v > 0)
-            ->where('plans.1.annual_savings_percent', fn ($v) => $v > 0)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.annual_savings_percent', fn ($v) => $v > 0)
+                ->where('plans.1.annual_savings_percent', fn ($v) => $v > 0)
         );
 });
 
@@ -350,10 +371,11 @@ it('passes max_limits in pricing response', function () {
     Plan::factory()->pemula()->create();
 
     get(route('landing.pricing'))
-        ->assertInertia(fn ($page) => $page
-            ->where('plans.0.max_products', 100)
-            ->where('plans.0.max_users', 1)
-            ->where('plans.0.max_warehouses', 1)
+        ->assertInertia(
+            fn ($page) => $page
+                ->where('plans.0.max_products', 100)
+                ->where('plans.0.max_users', 1)
+                ->where('plans.0.max_warehouses', 1)
         );
 });
 

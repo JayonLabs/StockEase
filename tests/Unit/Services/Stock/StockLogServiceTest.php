@@ -9,10 +9,12 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: StockLogService} $this */
     $this->service = new StockLogService;
 });
 
 it('gets paginated stock logs', function () {
+    /** @var object{service: StockLogService} $this */
     StockLog::factory()->count(15)->create();
 
     $result = $this->service->getPaginatedStockLogs([], 10);
@@ -22,6 +24,7 @@ it('gets paginated stock logs', function () {
 });
 
 it('filters stock logs by search query on product name', function () {
+    /** @var object{service: StockLogService} $this */
     $product = Product::factory()->create(['name' => 'Beras']);
     StockLog::factory()->create([
         'product_id' => $product->id,
@@ -35,6 +38,7 @@ it('filters stock logs by search query on product name', function () {
 });
 
 it('filters stock logs by search on product sku', function () {
+    /** @var object{service: StockLogService} $this */
     $product = Product::factory()->create(['sku' => 'BRG-001']);
     StockLog::factory()->create(['product_id' => $product->id]);
     StockLog::factory()->create();
@@ -45,6 +49,7 @@ it('filters stock logs by search on product sku', function () {
 });
 
 it('filters stock logs by search on product barcode', function () {
+    /** @var object{service: StockLogService} $this */
     $product = Product::factory()->create(['barcode' => '899123456']);
     StockLog::factory()->create(['product_id' => $product->id]);
     StockLog::factory()->create();
@@ -55,6 +60,7 @@ it('filters stock logs by search on product barcode', function () {
 });
 
 it('filters stock logs by search on type', function () {
+    /** @var object{service: StockLogService} $this */
     $product = Product::factory()->create(['name' => 'ItemX', 'sku' => '11111111', 'barcode' => '0000000000000']);
     StockLog::factory()->create([
         'product_id' => $product->id,
@@ -75,6 +81,7 @@ it('filters stock logs by search on type', function () {
 });
 
 it('filters stock logs by search on reference type', function () {
+    /** @var object{service: StockLogService} $this */
     $product = Product::factory()->create(['name' => 'ItemY', 'sku' => '22222222', 'barcode' => '1111111111111']);
     StockLog::factory()->create([
         'product_id' => $product->id,
@@ -95,6 +102,7 @@ it('filters stock logs by search on reference type', function () {
 });
 
 it('filters stock logs by search on note', function () {
+    /** @var object{service: StockLogService} $this */
     $product = Product::factory()->create(['name' => 'ItemZ', 'sku' => '33333333', 'barcode' => '2222222222222']);
     StockLog::factory()->create([
         'product_id' => $product->id,
@@ -115,6 +123,7 @@ it('filters stock logs by search on note', function () {
 });
 
 it('filters stock logs by date range', function () {
+    /** @var object{service: StockLogService} $this */
     StockLog::factory()->create(['created_at' => now()->subDays(10)]);
     StockLog::factory()->create(['created_at' => now()]);
 
@@ -127,6 +136,7 @@ it('filters stock logs by date range', function () {
 });
 
 it('only applies date filter when both start and end are provided', function () {
+    /** @var object{service: StockLogService} $this */
     StockLog::factory()->count(5)->create();
 
     $result = $this->service->getPaginatedStockLogs(['start_date' => now()->toDateString()]);
@@ -135,6 +145,7 @@ it('only applies date filter when both start and end are provided', function () 
 });
 
 it('returns empty when no logs match filters', function () {
+    /** @var object{service: StockLogService} $this */
     StockLog::factory()->create(['type' => 'in']);
 
     $result = $this->service->getPaginatedStockLogs(['search' => 'NotFound']);
@@ -143,6 +154,7 @@ it('returns empty when no logs match filters', function () {
 });
 
 it('loads product relationship on stock logs', function () {
+    /** @var object{service: StockLogService} $this */
     $product = Product::factory()->create(['name' => 'Loaded Product']);
     StockLog::factory()->create(['product_id' => $product->id]);
 
@@ -154,6 +166,7 @@ it('loads product relationship on stock logs', function () {
 });
 
 it('orders stock logs by latest first', function () {
+    /** @var object{service: StockLogService} $this */
     $old = StockLog::factory()->create(['created_at' => now()->subDays(5)]);
     $new = StockLog::factory()->create(['created_at' => now()]);
 
@@ -163,6 +176,7 @@ it('orders stock logs by latest first', function () {
 });
 
 it('filters stock logs by exact numeric reference_id', function () {
+    /** @var object{service: StockLogService} $this */
     $product = Product::factory()->create(['name' => 'Item', 'sku' => '44444444', 'barcode' => '3333333333333']);
     $log1 = StockLog::factory()->create([
         'product_id' => $product->id,

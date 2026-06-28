@@ -12,6 +12,7 @@ use function Pest\Laravel\actingAs;
 
 uses(LazilyRefreshDatabase::class);
 
+/** @var object{companyA: Company, companyB: Company, platformAdmin: User} $this */
 beforeEach(function () {
     if (tenancy()->initialized) {
         tenancy()->end();
@@ -54,12 +55,14 @@ beforeEach(function () {
         ->create(['company_id' => $this->companyB->id]);
 });
 
+/** @var object{companyA: Company, companyB: Company, platformAdmin: User} $this */
 afterEach(function () {
     if (tenancy()->initialized) {
         tenancy()->end();
     }
 });
 
+/** @var object{companyA: Company, companyB: Company, platformAdmin: User} $this */
 it('platform admin sees all products across all companies', function () {
     actingAs($this->platformAdmin);
 
@@ -68,6 +71,7 @@ it('platform admin sees all products across all companies', function () {
     expect($count)->toBe(5);
 });
 
+/** @var object{companyA: Company, companyB: Company, platformAdmin: User} $this */
 it('platform admin can query products from any company', function () {
     actingAs($this->platformAdmin);
 
@@ -78,6 +82,7 @@ it('platform admin can query products from any company', function () {
         ->and($companyBProducts)->toBe(3);
 });
 
+/** @var object{companyA: Company, companyB: Company, platformAdmin: User} $this */
 it('platform admin can explicitly use withoutTenancy to get all data', function () {
     actingAs($this->platformAdmin);
 
@@ -86,6 +91,7 @@ it('platform admin can explicitly use withoutTenancy to get all data', function 
     expect($all)->toBe(5);
 });
 
+/** @var object{companyA: Company, companyB: Company, platformAdmin: User} $this */
 it('platform admin initialization does not set tenant context', function () {
     actingAs($this->platformAdmin);
 

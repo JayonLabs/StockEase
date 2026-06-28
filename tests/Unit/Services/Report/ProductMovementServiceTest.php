@@ -10,10 +10,12 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: ProductMovementService} $this */
     $this->service = new ProductMovementService;
 });
 
 it('returns fast moving products sorted by qty sold', function () {
+    /** @var object{service: ProductMovementService} $this */
     $product1 = Product::factory()->create(['name' => 'Fast Item', 'sku' => 'FAST', 'stock' => 20]);
     $product2 = Product::factory()->create(['name' => 'Slow Item', 'sku' => 'SLOW', 'stock' => 30]);
     $sale = Sale::factory()->create([
@@ -41,6 +43,7 @@ it('returns fast moving products sorted by qty sold', function () {
 });
 
 it('returns fast moving products with revenue', function () {
+    /** @var object{service: ProductMovementService} $this */
     $product = Product::factory()->create(['name' => 'Revenue Product', 'sku' => 'REV']);
     $sale = Sale::factory()->create([
         'status' => 'completed',
@@ -59,6 +62,7 @@ it('returns fast moving products with revenue', function () {
 });
 
 it('respects limit parameter for fast moving products', function () {
+    /** @var object{service: ProductMovementService} $this */
     Product::factory()->count(5)->create();
     $sale = Sale::factory()->create([
         'status' => 'completed',
@@ -71,6 +75,7 @@ it('respects limit parameter for fast moving products', function () {
 });
 
 it('returns slow moving products sorted by least sales', function () {
+    /** @var object{service: ProductMovementService} $this */
     $product1 = Product::factory()->create(['name' => 'Unsold Item', 'stock' => 15]);
     $product2 = Product::factory()->create(['name' => 'Rare Item', 'stock' => 10]);
     $sale = Sale::factory()->create([
@@ -92,6 +97,7 @@ it('returns slow moving products sorted by least sales', function () {
 });
 
 it('excludes products with zero stock from slow moving', function () {
+    /** @var object{service: ProductMovementService} $this */
     Product::factory()->create(['name' => 'No Stock', 'stock' => 0]);
     Product::factory()->create(['name' => 'Has Stock', 'stock' => 10]);
 
@@ -102,6 +108,7 @@ it('excludes products with zero stock from slow moving', function () {
 });
 
 it('builds chart data from fast and slow moving collections', function () {
+    /** @var object{service: ProductMovementService} $this */
     $fastMoving = collect([
         ['product_name' => 'Fast A', 'total_qty_sold' => 50],
     ]);
@@ -121,6 +128,7 @@ it('builds chart data from fast and slow moving collections', function () {
 });
 
 it('gets summary statistics', function () {
+    /** @var object{service: ProductMovementService} $this */
     $product1 = Product::factory()->create(['name' => 'Product 1', 'stock' => 10]);
     $product2 = Product::factory()->create(['name' => 'Product 2', 'stock' => 5]);
     Product::factory()->create(['name' => 'Product 3', 'stock' => 0]);
@@ -144,6 +152,7 @@ it('gets summary statistics', function () {
 });
 
 it('returns zero stats when no data exists', function () {
+    /** @var object{service: ProductMovementService} $this */
     $stats = $this->service->getSummaryStats(now()->toDateString(), now()->toDateString());
 
     expect($stats['total_qty_sold'])->toBe(0);

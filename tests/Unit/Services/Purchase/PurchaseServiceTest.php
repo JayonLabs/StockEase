@@ -19,7 +19,7 @@ use function Pest\Laravel\assertSoftDeleted;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $user = User::factory()->create(['role' => 'admin']);
     Auth::login($user);
     $this->warehouseModel = Warehouse::factory()->create();
@@ -87,7 +87,7 @@ it('can search products', function () {
 });
 
 it('can store a new purchase and increments stock', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $supplier = Supplier::factory()->create();
     $product1 = Product::factory()->create(['purchase_price' => 1000]);
     $product2 = Product::factory()->create(['purchase_price' => 500]);
@@ -139,7 +139,7 @@ it('can store a new purchase and increments stock', function () {
 });
 
 it('can update an existing purchase and adjust stock', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 20]);
@@ -186,7 +186,7 @@ it('can update an existing purchase and adjust stock', function () {
 });
 
 it('preserves signed qty in stock_log for purchase decrease adjustment', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 20]);
@@ -230,7 +230,7 @@ it('preserves signed qty in stock_log for purchase decrease adjustment', functio
 });
 
 it('can delete a purchase and revert stock', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 20]);
     $product->syncStockFromWarehouses();
@@ -262,7 +262,7 @@ it('can delete a purchase and revert stock', function () {
 // ─── N+1 query fix tests ───────────────────────────────────────────────
 
 it('does not execute N+1 queries when updating purchase with multiple items', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $supplier = Supplier::factory()->create();
     $products = Product::factory()->count(5)->create();
     $this->warehouseModel->products()->attach($products->pluck('id')->mapWithKeys(fn ($id) => [$id => ['stock' => 50]]));
@@ -310,7 +310,7 @@ it('does not execute N+1 queries when updating purchase with multiple items', fu
 });
 
 it('can add a new item to an existing purchase during update', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $supplier = Supplier::factory()->create();
     $productA = Product::factory()->create();
     $productB = Product::factory()->create();
@@ -351,7 +351,7 @@ it('can add a new item to an existing purchase during update', function () {
 });
 
 it('removes items not present in updated product_items', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $supplier = Supplier::factory()->create();
     $productA = Product::factory()->create();
     $productB = Product::factory()->create();
@@ -401,7 +401,7 @@ it('removes items not present in updated product_items', function () {
 });
 
 it('correctly updates total after modifying items', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 50]);
@@ -441,7 +441,7 @@ it('correctly updates total after modifying items', function () {
 // ─── Negative Stock Prevention ────────────────────────────────────────────────
 
 it('throws when removing purchase item would make warehouse stock negative', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 5]);
@@ -478,7 +478,7 @@ it('throws when removing purchase item would make warehouse stock negative', fun
 });
 
 it('throws when reducing purchase qty below available warehouse stock', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 20]);
@@ -522,7 +522,7 @@ it('throws when reducing purchase qty below available warehouse stock', function
 });
 
 it('allows reducing purchase qty when enough warehouse stock exists', function () {
-    /** @var TestCase $this */
+    /** @var object{warehouseModel: Warehouse} $this */
     $supplier = Supplier::factory()->create();
     $product = Product::factory()->create();
     $this->warehouseModel->products()->attach($product->id, ['stock' => 20]);

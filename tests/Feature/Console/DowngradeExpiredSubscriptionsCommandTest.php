@@ -11,12 +11,14 @@ use function Pest\Laravel\artisan;
 uses(LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{company: Company} $this */
     $plan = Plan::factory()->pemula()->create();
     $this->company = Company::factory()->create();
     User::factory()->create(['company_id' => $this->company->id]);
 });
 
 it('downgrades expired active subscriptions to pemula', function () {
+    /** @var object{company: Company} $this */
     $plan = Plan::factory()->profesional()->create();
     Subscription::create([
         'company_id' => $this->company->id,
@@ -42,6 +44,7 @@ it('downgrades expired active subscriptions to pemula', function () {
 });
 
 it('downgrades expired trialing subscriptions to pemula', function () {
+    /** @var object{company: Company} $this */
     $plan = Plan::factory()->profesional()->create();
     Subscription::create([
         'company_id' => $this->company->id,
@@ -60,6 +63,7 @@ it('downgrades expired trialing subscriptions to pemula', function () {
 });
 
 it('skips active subscriptions that have not ended', function () {
+    /** @var object{company: Company} $this */
     $plan = Plan::factory()->profesional()->create();
     Subscription::create([
         'company_id' => $this->company->id,
@@ -76,6 +80,7 @@ it('skips active subscriptions that have not ended', function () {
 });
 
 it('skips trialing subscriptions that have not ended', function () {
+    /** @var object{company: Company} $this */
     $plan = Plan::factory()->profesional()->create();
     Subscription::create([
         'company_id' => $this->company->id,
@@ -92,12 +97,14 @@ it('skips trialing subscriptions that have not ended', function () {
 });
 
 it('handles no expired subscriptions gracefully', function () {
+    /** @var object{company: Company} $this */
     artisan('subscription:downgrade-expired')
         ->expectsOutputToContain('0 subscription expired telah didowngrade')
         ->assertSuccessful();
 });
 
 it('downgrades multiple expired subscriptions at once', function () {
+    /** @var object{company: Company} $this */
     $planProf = Plan::factory()->profesional()->create();
     $planEnterprise = Plan::factory()->enterprise()->create();
 

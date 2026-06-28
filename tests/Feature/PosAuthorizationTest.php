@@ -4,9 +4,11 @@ use App\Enums\Role;
 use App\Enums\SaleStatus;
 use App\Enums\ShiftStatus;
 use App\Models\Company;
+use App\Models\Plan;
 use App\Models\Product;
 use App\Models\Sale;
 use App\Models\Shift;
+use App\Models\Subscription;
 use App\Models\User;
 use App\Models\Warehouse;
 use Database\Seeders\RoleAndPermissionSeeder;
@@ -45,6 +47,14 @@ function createCompanyOwner(): User
     ]);
 
     $company->update(['owner_id' => $user->id]);
+
+    $plan = Plan::factory()->pemula()->create();
+    Subscription::factory()->create([
+        'company_id' => $company->id,
+        'plan_id' => $plan->id,
+        'status' => 'active',
+        'starts_at' => now(),
+    ]);
 
     return $user;
 }

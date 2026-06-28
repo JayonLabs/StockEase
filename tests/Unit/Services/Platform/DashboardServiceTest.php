@@ -12,10 +12,12 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{service: DashboardService} $this */
     $this->service = app(DashboardService::class);
 });
 
 it('returns overview with correct counts from all tenants', function () {
+    /** @var object{service: DashboardService} $this */
     Company::factory()->count(3)->create(['is_active' => true]);
     Company::factory()->create(['is_active' => false]);
 
@@ -26,6 +28,7 @@ it('returns overview with correct counts from all tenants', function () {
 });
 
 it('counts all users across all tenants', function () {
+    /** @var object{service: DashboardService} $this */
     $companies = Company::factory()->count(2)->create();
     User::factory()->count(2)->create(['company_id' => $companies[0]->id]);
     User::factory()->count(3)->create(['company_id' => $companies[1]->id]);
@@ -37,6 +40,7 @@ it('counts all users across all tenants', function () {
 });
 
 it('returns subscription breakdown by plan', function () {
+    /** @var object{service: DashboardService} $this */
     $planPemula = Plan::factory()->pemula()->create();
     $planPro = Plan::factory()->profesional()->create();
     $companies = Company::factory()->count(3)->create();
@@ -60,6 +64,7 @@ it('returns subscription breakdown by plan', function () {
 });
 
 it('includes trialing subscriptions in active count', function () {
+    /** @var object{service: DashboardService} $this */
     $plan = Plan::factory()->pemula()->create();
     $company = Company::factory()->create();
 
@@ -75,6 +80,7 @@ it('includes trialing subscriptions in active count', function () {
 });
 
 it('excludes expired subscriptions from active count', function () {
+    /** @var object{service: DashboardService} $this */
     $plan = Plan::factory()->pemula()->create();
     $company = Company::factory()->create();
 
@@ -90,6 +96,7 @@ it('excludes expired subscriptions from active count', function () {
 });
 
 it('calculates MRR correctly for monthly plans', function () {
+    /** @var object{service: DashboardService} $this */
     $plan = Plan::factory()->create(['price_monthly' => 100000, 'price_annual' => 0]);
     $company = Company::factory()->create();
 
@@ -104,6 +111,7 @@ it('calculates MRR correctly for monthly plans', function () {
 });
 
 it('calculates MRR correctly for annual plans', function () {
+    /** @var object{service: DashboardService} $this */
     $plan = Plan::factory()->create(['price_monthly' => 0, 'price_annual' => 1200000]);
     $company = Company::factory()->create();
 
@@ -118,10 +126,12 @@ it('calculates MRR correctly for annual plans', function () {
 });
 
 it('returns zero MRR when no active subscriptions', function () {
+    /** @var object{service: DashboardService} $this */
     expect($this->service->getOverview()['mrr'])->toBe(0.0);
 });
 
 it('returns recent companies ordered by creation date', function () {
+    /** @var object{service: DashboardService} $this */
     Company::factory()->create(['name' => 'OldCo', 'created_at' => now()->subDays(5)]);
     Company::factory()->create(['name' => 'NewCo', 'created_at' => now()]);
 
@@ -133,6 +143,7 @@ it('returns recent companies ordered by creation date', function () {
 });
 
 it('caches overview data', function () {
+    /** @var object{service: DashboardService} $this */
     Cache::shouldReceive('flexible')
         ->once()
         ->with('platform_dashboard_overview', [300, 900], Mockery::on(fn ($c) => is_callable($c)))
@@ -144,6 +155,7 @@ it('caches overview data', function () {
 });
 
 it('handles empty database gracefully', function () {
+    /** @var object{service: DashboardService} $this */
     $overview = $this->service->getOverview();
 
     expect($overview['total_companies'])->toBe(0);
@@ -153,18 +165,21 @@ it('handles empty database gracefully', function () {
 });
 
 it('returns empty growth trend when no snapshots exist', function () {
+    /** @var object{service: DashboardService} $this */
     $trend = $this->service->getGrowthTrend();
 
     expect($trend)->toBe([]);
 });
 
 it('returns empty recent companies when none exist', function () {
+    /** @var object{service: DashboardService} $this */
     $recent = $this->service->getRecentRegistrations();
 
     expect($recent)->toBe([]);
 });
 
 it('returns subscription breakdown empty when no plans', function () {
+    /** @var object{service: DashboardService} $this */
     $breakdown = $this->service->getSubscriptionBreakdown();
 
     expect($breakdown)->toBeEmpty();

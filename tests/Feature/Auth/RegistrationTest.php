@@ -18,23 +18,23 @@ beforeEach(function () {
         [
             'name' => 'Pemula',
             'slug' => 'pemula',
-            'price_monthly' => 0,
-            'price_annual' => 0,
+            'price_monthly' => 50000,
+            'price_annual' => 500000,
             'max_products' => 100,
             'max_users' => 3,
             'max_warehouses' => 1,
-            'trial_days' => 0,
+            'trial_days' => 14,
             'sort_order' => 1,
         ],
         [
             'name' => 'Profesional',
             'slug' => 'profesional',
-            'price_monthly' => 299000,
-            'price_annual' => 249000,
+            'price_monthly' => 149000,
+            'price_annual' => 1490000,
             'max_products' => 1000,
             'max_users' => 10,
             'max_warehouses' => 3,
-            'trial_days' => 14,
+            'trial_days' => 0,
             'sort_order' => 2,
         ],
     ]);
@@ -59,7 +59,7 @@ it('registers a new user with company and subscription', function () {
 
     assertDatabaseHas('companies', ['name' => 'Toko Makmur Jaya']);
     assertDatabaseHas('users', ['name' => 'Budi Santoso', 'email' => 'budi@example.com']);
-    assertDatabaseHas('subscriptions', ['status' => 'active']);
+    assertDatabaseHas('subscriptions', ['status' => 'trialing']);
 
     $user = User::where('email', 'budi@example.com')->first();
     expect($user->company_id)->not->toBeNull();
@@ -141,4 +141,40 @@ it('creates company with unique slug', function () {
     $company = Company::where('name', 'Toko Makmur')->first();
     expect($company->slug)->toContain('toko-makmur');
     expect(strlen($company->slug))->toBeGreaterThan(11);
+});
+
+it('registration creates Pemula subscription with 14-day trial', function () {
+    post(route('register'), [
+        'name' => 'Trial User',
+        'email' => 'trial@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'company_name' => 'Trial Company',
+    ])->assertRedirect(route('dashboard'));
+
+    $company = Company::where('name', 'Trial Company')->first();
+    $subscription = $company->subscription;
+
+    expect($subscription)->not->toBeNull();
+    expect($subscription->plan->slug)->toBe('pemula');
+    expect($subscription->status)->toBe('trialing');
+    expect($subscription->trial_ends_at)->not->toBeNull();
+    expect($subscription->trial_ends_at->isFuture())->toBeTrue();
+
+    $expectedTrialEnd = now()->addDays(14);
+    expect($subscription->trial_ends_at->toDateString())->toBe($expectedTrialEnd->toDateString());
+});
+
+it('marks company as having used trial after registration so double trial is prevented', function () {
+    post(route('register'), [
+        'name' => 'Cegah Trial',
+        'email' => 'cegah@example.com',
+        'password' => 'password',
+        'password_confirmation' => 'password',
+        'company_name' => 'No Double Trial Co',
+    ])->assertRedirect(route('dashboard'));
+
+    $company = Company::where('name', 'No Double Trial Co')->first();
+
+    expect($company->hadTrial())->toBeTrue();
 });
