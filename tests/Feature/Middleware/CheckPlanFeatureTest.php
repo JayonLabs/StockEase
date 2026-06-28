@@ -299,10 +299,10 @@ it('JSON request to locked route returns 403 instead of redirect', function () {
 });
 
 // ===========================================================================
-// Auto-assign plan gratis jika belum ada langganan
+// Tidak ada langganan aktif — redirect tanpa membuat subscription baru
 // ===========================================================================
 
-it('automatically assigns free plan when no active subscription exists', function () {
+it('redirects to subscription page when no active subscription without creating new subscription', function () {
     /** @var object{company: Company, user: User, pemula: Plan, profesional: Plan, enterprise: Plan} $this */
     $this->company->subscription()->delete();
 
@@ -310,7 +310,7 @@ it('automatically assigns free plan when no active subscription exists', functio
         ->get(route('purchase.index'))
         ->assertRedirect(route('subscription.index'));
 
-    expect($this->company->fresh()->currentPlan()->slug)->toBe('pemula');
+    expect($this->company->fresh()->activeSubscription())->toBeNull();
 });
 
 // ===========================================================================

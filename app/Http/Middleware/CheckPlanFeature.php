@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use App\Enums\Role;
 use App\Models\User;
-use App\Services\Subscription\SubscriptionService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,7 +21,7 @@ class CheckPlanFeature
      * - Platform owner melewati semua pengecekan fitur.
      * - Semua role tenant (super_admin, admin, cashier, warehouse) dicek sesuai plan company-nya.
      * - Jika fitur tidak tersedia di plan, redirect ke halaman langganan (atau 403 JSON untuk API).
-     * - Jika belum ada langganan aktif, plan gratis (Pemula) akan otomatis ditetapkan.
+     * - Jika tidak ada langganan aktif, EnsureActiveSubscription sudah menangani redirect terlebih dahulu.
      */
     public function handle(Request $request, Closure $next, string $feature): Response
     {
@@ -50,8 +49,13 @@ class CheckPlanFeature
         $plan = $company->currentPlan();
 
         if (! $plan) {
-            app(SubscriptionService::class)->assignFreeSubscription($company);
-            $plan = $company->fresh()->currentPlan();
+            $message = 'Langganan Anda tidak aktif. Pilih plan untuk melanjutkan.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 402);
+            }
+
+            return redirect()->route('subscription.index')->with('error', $message);
         }
 
         if (! $plan->hasFeature($feature)) {

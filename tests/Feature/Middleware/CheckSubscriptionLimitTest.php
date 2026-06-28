@@ -164,22 +164,19 @@ it('throws 403 when no user authenticated and route requires auth', function () 
     ])->assertRedirect(route('login'));
 });
 
-it('assigns free subscription when company has no current plan', function () {
+it('redirects to subscription page when company has no active plan without creating new subscription', function () {
     /** @var object{plan: Plan, company: Company, user: User} $this */
     $this->company->subscription()->delete();
-    $pemula = Plan::factory()->pemula()->create();
-
-    Warehouse::factory()->create(['company_id' => $this->company->id]);
 
     actingAs($this->user)
         ->post(route('warehouse.store'), [
             'name' => 'Gudang No Plan',
             'phone' => '08123456789',
             'address' => 'Jl. No Plan',
-        ]);
+        ])
+        ->assertRedirect(route('subscription.index'));
 
-    // The middleware should assign the free plan automatically
-    expect($this->company->fresh()->currentPlan()->slug)->toBe('pemula');
+    expect($this->company->fresh()->activeSubscription())->toBeNull();
 });
 
 it('passes through when user has no company_id', function () {

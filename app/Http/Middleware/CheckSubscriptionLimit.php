@@ -5,7 +5,6 @@ namespace App\Http\Middleware;
 use App\Models\Product;
 use App\Models\User;
 use App\Models\Warehouse;
-use App\Services\Subscription\SubscriptionService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,8 +40,13 @@ class CheckSubscriptionLimit
 
         $plan = $company->currentPlan();
         if (! $plan) {
-            app(SubscriptionService::class)->assignFreeSubscription($company);
-            $plan = $company->fresh()->currentPlan();
+            $message = 'Langganan Anda tidak aktif. Upgrade plan Anda.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['message' => $message], 402);
+            }
+
+            return back()->with('error', $message);
         }
 
         $exceeded = match ($resource) {
