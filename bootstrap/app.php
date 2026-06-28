@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CheckPlanFeature;
 use App\Http\Middleware\CheckSubscriptionLimit;
+use App\Http\Middleware\EnsureActiveSubscription;
 use App\Http\Middleware\EnsureTenancyEnded;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\InitializeTenancyFromUser;
@@ -36,8 +37,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'subscription.limit' => CheckSubscriptionLimit::class,
             'plan.feature' => CheckPlanFeature::class,
             'ensure.tenancy.ended' => EnsureTenancyEnded::class,
+            'subscription.active' => EnsureActiveSubscription::class,
         ]);
-        //
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->respond(function (Response $response, Throwable $exception, Request $request) {

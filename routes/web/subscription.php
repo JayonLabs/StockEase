@@ -8,5 +8,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/subscription/upgrade', [SubscriptionController::class, 'upgrade'])->name('subscription.upgrade');
 
+    Route::post('/subscription/retry-payment', [SubscriptionController::class, 'retryPayment'])->name('subscription.retry-payment');
+
     Route::post('/subscription/{subscription}/cancel', [SubscriptionController::class, 'cancel'])->name('subscription.cancel');
 });

@@ -35,9 +35,11 @@ class HandleInertiaRequests extends Middleware
 
         if ($user) {
             $user->loadMissing('roles');
+
             if ($user->relationLoaded('roles')) {
                 $user->roles->loadMissing('permissions');
             }
+
             $user->loadMissing('permissions');
 
             $roleNames = $user->getRoleNames();

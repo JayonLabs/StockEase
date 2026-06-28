@@ -1,6 +1,9 @@
 <?php
 
+use App\Models\Company;
+use App\Models\Plan;
 use App\Models\Product;
+use App\Models\Subscription;
 use App\Models\User;
 use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -155,4 +158,134 @@ it('does not execute duplicate roles queries in the same request', function () {
 
     // Roles should be loaded only once (either by middleware or by share(), not both)
     expect($rolesQueries)->toHaveCount(1);
+});
+
+// ===========================================================================
+// Subscription shared data — kontrak yang digunakan frontend untuk mengunci sidebar
+// ===========================================================================
+
+describe('subscription shared data in auth prop', function () {
+    beforeEach(function () {
+        /** @var object{plan: Plan, company: Company, user: User} $this */
+        $this->plan = Plan::factory()->pemula()->create();
+        $this->company = Company::factory()->create();
+        $this->user = User::factory()->create(['company_id' => $this->company->id]);
+        $this->user->syncRoles('super_admin');
+    });
+
+    it('shares subscription data when subscription is active', function () {
+        /** @var object{plan: Plan, company: Company, user: User} $this */
+        $this->company->subscription()->create([
+            'plan_id' => $this->plan->id,
+            'status' => 'active',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDays(30),
+        ]);
+
+        actingAs($this->user)
+            ->get('/subscription')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('auth.subscription.status', 'active')
+                ->where('auth.subscription.plan.slug', $this->plan->slug)
+                ->has('auth.subscription.plan.features')
+            );
+    });
+
+    it('shares subscription data when subscription is trialing', function () {
+        /** @var object{plan: Plan, company: Company, user: User} $this */
+        $this->company->subscription()->create([
+            'plan_id' => $this->plan->id,
+            'status' => 'trialing',
+            'starts_at' => now()->subDay(),
+            'ends_at' => null,
+            'trial_ends_at' => now()->addDays(14),
+        ]);
+
+        actingAs($this->user)
+            ->get('/subscription')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('auth.subscription.status', 'trialing')
+                ->has('auth.subscription.plan')
+            );
+    });
+
+    it('returns null subscription when subscription is canceled', function () {
+        /** @var object{plan: Plan, company: Company, user: User} $this */
+        $this->company->subscription()->create([
+            'plan_id' => $this->plan->id,
+            'status' => 'canceled',
+            'canceled_at' => now(),
+        ]);
+
+        actingAs($this->user)
+            ->get('/subscription')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('auth.subscription', null)
+            );
+    });
+
+    it('returns null subscription when subscription is expired', function () {
+        /** @var object{plan: Plan, company: Company, user: User} $this */
+        $this->company->subscription()->create([
+            'plan_id' => $this->plan->id,
+            'status' => 'expired',
+            'starts_at' => now()->subMonths(2),
+            'ends_at' => now()->subDay(),
+        ]);
+
+        actingAs($this->user)
+            ->get('/subscription')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('auth.subscription', null)
+            );
+    });
+
+    it('returns null subscription when active subscription has expired ends_at', function () {
+        /** @var object{plan: Plan, company: Company, user: User} $this */
+        $this->company->subscription()->create([
+            'plan_id' => $this->plan->id,
+            'status' => 'active',
+            'starts_at' => now()->subMonths(2),
+            'ends_at' => now()->subDay(),
+        ]);
+
+        actingAs($this->user)
+            ->get('/subscription')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('auth.subscription', null)
+            );
+    });
+
+    it('returns null subscription when user has no subscription', function () {
+        /** @var object{plan: Plan, company: Company, user: User} $this */
+        actingAs($this->user)
+            ->get('/subscription')
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('auth.subscription', null)
+            );
+    });
+
+    it('shares plan features as key-value boolean map', function () {
+        /** @var object{plan: Plan, company: Company, user: User} $this */
+        $this->company->subscription()->create([
+            'plan_id' => $this->plan->id,
+            'status' => 'active',
+            'starts_at' => now()->subDay(),
+            'ends_at' => now()->addDays(30),
+        ]);
+
+        actingAs($this->user)
+            ->get('/subscription')
+            ->assertInertia(function (Assert $page) {
+                $features = $page->toArray()['props']['auth']['subscription']['plan']['features'];
+
+                expect($features)->toBeArray();
+
+                // Each value must be a boolean (not an array object)
+                foreach ($features as $key => $value) {
+                    expect($key)->toBeString();
+                    expect($value)->toBeBool();
+                }
+            });
+    });
 });

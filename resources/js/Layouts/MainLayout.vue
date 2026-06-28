@@ -2,6 +2,7 @@
 import AppSidebar from '@/Components/AppSidebar.vue';
 import { SidebarProvider } from '@/Components/ui/sidebar';
 import { Toaster } from '@/Components/ui/sonner';
+import UpgradePromptProvider from '@/Components/Subscription/UpgradePromptProvider.vue';
 import 'vue-sonner/style.css';
 </script>
 
@@ -12,5 +13,6 @@ import 'vue-sonner/style.css';
             <slot />
         </SidebarProvider>
         <Toaster rich-colors position="top-right" />
+        <UpgradePromptProvider />
     </div>
 </template>

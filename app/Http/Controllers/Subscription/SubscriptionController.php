@@ -30,13 +30,34 @@ class SubscriptionController extends Controller
      *
      * Setiap plan disertai array `features` agar halaman dapat menampilkan
      * daftar fitur dengan ikon ✓/✗ secara konsisten dengan halaman pricing.
+     *
+     * Jika subscription saat ini berstatus pending_payment, invoice yang
+     * masih pending beserta snap_token (jika tersedia) juga dikirim ke
+     * frontend agar user dapat melanjutkan atau membatalkan pembayaran.
      */
     public function index(): Response
     {
         $company = Auth::user()?->company;
         $activeSubscription = $company?->activeSubscription();
 
-        $plans = Plan::active()->get()->map(fn (Plan $plan) => [
+        // Jika tidak ada subscription aktif/trial, cek apakah ada yang
+        // pending_payment — user mungkin sedang dalam proses pembayaran.
+        $pendingSubscription = null;
+        $pendingInvoice = null;
+
+        if (! $activeSubscription && $company) {
+            $pendingSubscription = $company->subscription()
+                ->where('status', 'pending_payment')
+                ->with('plan')
+                ->latest()
+                ->first();
+
+            if ($pendingSubscription) {
+                $pendingInvoice = $this->subscriptionService->getPendingInvoice($pendingSubscription);
+            }
+        }
+
+        $plans = Plan::active()->get()->map(fn(Plan $plan) => [
             'id' => $plan->id,
             'name' => $plan->name,
             'slug' => $plan->slug,
@@ -49,12 +70,28 @@ class SubscriptionController extends Controller
             'max_users' => $plan->max_users,
             'max_warehouses' => $plan->max_warehouses,
             'trial_days' => $plan->trial_days,
+            'is_free' => $plan->isFree(),
             'features' => $plan->features ?? [],
         ]);
 
         return Inertia::render('Subscription/Index', [
             'currentSubscription' => $activeSubscription?->load('plan'),
+            'pendingSubscription' => $pendingSubscription ? [
+                'id' => $pendingSubscription->id,
+                'plan' => $pendingSubscription->plan,
+                'status' => $pendingSubscription->status,
+                'billing_cycle' => $pendingSubscription->billing_cycle,
+                'starts_at' => $pendingSubscription->starts_at,
+                'invoice' => $pendingInvoice ? [
+                    'id' => $pendingInvoice->id,
+                    'amount' => (int) $pendingInvoice->amount,
+                    'midtrans_order_id' => $pendingInvoice->midtrans_order_id,
+                    'status' => $pendingInvoice->status,
+                    'created_at' => $pendingInvoice->created_at,
+                ] : null,
+            ] : null,
             'plans' => $plans,
+            'hadTrial' => (bool) $company?->hadTrial(),
         ]);
     }
 
@@ -90,25 +127,33 @@ class SubscriptionController extends Controller
 
         if ($subscription->status === 'trialing') {
             return response()->json([
-                'message' => 'Trial 14 hari dimulai!',
+                'message' => 'Trial ' . $plan->trial_days . ' hari dimulai!',
                 'subscription' => $subscription,
             ]);
         }
 
-        $invoice = $this->subscriptionService->createInvoice($subscription);
-        $orderId = $this->subscriptionService->generateMidtransOrderId($invoice);
+        if ($subscription->status === 'pending_payment') {
+            $invoice = $this->subscriptionService->createInvoice($subscription);
+            $orderId = $this->subscriptionService->generateMidtransOrderId($invoice);
 
-        if (config('midtrans.server_key')) {
-            $snapToken = $this->paymentService->createSnapTokenForSubscription($invoice, $orderId, $user);
-        } else {
-            $snapToken = null;
+            if (config('midtrans.server_key')) {
+                $snapToken = $this->paymentService->createSnapTokenForSubscription($invoice, $orderId, $user);
+            } else {
+                $snapToken = null;
+            }
+
+            $invoice->update(['midtrans_order_id' => $orderId]);
+
+            return response()->json([
+                'snap_token' => $snapToken,
+                'order_id' => $orderId,
+                'message' => 'Silakan selesaikan pembayaran.',
+            ]);
         }
 
-        $invoice->update(['midtrans_order_id' => $orderId]);
-
         return response()->json([
-            'snap_token' => $snapToken,
-            'order_id' => $orderId,
+            'message' => 'Langganan berhasil diaktifkan.',
+            'subscription' => $subscription,
         ]);
     }
 
@@ -124,5 +169,57 @@ class SubscriptionController extends Controller
         $this->subscriptionService->cancelSubscription($subscription);
 
         return back()->with('success', 'Subscription dibatalkan.');
+    }
+
+    /**
+     * Lanjutkan pembayaran untuk subscription yang masih pending_payment.
+     *
+     * Membuat Snap Token baru untuk invoice yang masih pending agar user
+     * dapat membuka popup Midtrans tanpa harus memulai proses upgrade dari
+     * awal.
+     */
+    public function retryPayment(): JsonResponse
+    {
+        $user = Auth::user();
+
+        if (! $user->company) {
+            abort(403, 'Anda tidak terhubung ke organisasi.');
+        }
+
+        $pendingSubscription = $user->company->subscription()
+            ->where('status', 'pending_payment')
+            ->with('plan')
+            ->latest()
+            ->first();
+
+        if (! $pendingSubscription) {
+            return response()->json(['message' => 'Tidak ada pembayaran yang tertunda.'], 404);
+        }
+
+        $pendingInvoice = $this->subscriptionService->getPendingInvoice($pendingSubscription);
+
+        if (! $pendingInvoice) {
+            // Invoice sudah expired/dihapus — buat ulang
+            $pendingInvoice = $this->subscriptionService->createInvoice($pendingSubscription);
+            $orderId = $this->subscriptionService->generateMidtransOrderId($pendingInvoice);
+            $pendingInvoice->update(['midtrans_order_id' => $orderId]);
+        } else {
+            $orderId = $pendingInvoice->midtrans_order_id;
+        }
+
+        if (config('midtrans.server_key')) {
+            $snapToken = $this->paymentService->createSnapTokenForSubscription(
+                $pendingInvoice,
+                $orderId,
+                $user
+            );
+        } else {
+            $snapToken = null;
+        }
+
+        return response()->json([
+            'snap_token' => $snapToken,
+            'order_id' => $orderId,
+        ]);
     }
 }

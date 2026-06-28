@@ -63,7 +63,7 @@ const faqs = [
     },
     {
         q: 'Apakah ada uji coba gratis?',
-        a: 'Ya, paket Pemula gratis selamanya. Untuk paket Profesional, kami menawarkan uji coba gratis 14 hari dengan akses penuh ke semua fitur premium.',
+        a: 'Ya, paket Pemula menawarkan uji coba gratis 14 hari. Untuk paket Profesional dan Enterprise, Anda bisa langsung berlangganan dan menikmati semua fitur premium tanpa perlu uji coba.',
     },
     {
         q: 'Apa yang terjadi jika saya melampaui batas produk di paket Pemula?',

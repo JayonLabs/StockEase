@@ -12,7 +12,16 @@ use RuntimeException;
 class SubscriptionService
 {
     /**
-     * Create a trial subscription for a company.
+     * Create a trial, pending_payment, or active subscription for a company.
+     *
+     * - trialing if the plan offers trial days, is not free, and the company
+     *   has never used a trial before (`had_trial = false`).
+     * - pending_payment if the plan is paid and no trial is available.
+     * - active if the plan is free.
+     *
+     * After a trial is created the `had_trial` flag on the company is set to
+     * `true` so subsequent calls always produce a pending-payment or active
+     * subscription.
      */
     public function createTrial(
         Company $company,
@@ -25,18 +34,29 @@ class SubscriptionService
             throw new RuntimeException('Company sudah memiliki subscription aktif.');
         }
 
+        $willUseTrial = $plan->trial_days > 0 && ! $plan->isFree() && ! $company->hadTrial();
+
+        $status = match (true) {
+            $willUseTrial => 'trialing',
+            $plan->isFree() => 'active',
+            default => 'pending_payment',
+        };
+
         $subscription = Subscription::create([
             'company_id' => $company->id,
             'plan_id' => $plan->id,
-            'status' => $plan->trial_days > 0 && ! $plan->isFree() ? 'trialing' : 'active',
+            'status' => $status,
             'billing_cycle' => $billingCycle,
-            'trial_ends_at' => $plan->trial_days > 0 && ! $plan->isFree()
-                ? now()->addDays($plan->trial_days) : null,
+            'trial_ends_at' => $willUseTrial ? now()->addDays($plan->trial_days) : null,
             'starts_at' => now(),
-            'ends_at' => $plan->isFree() ? null : now()->addDays(
-                $billingCycle === 'annual' ? 365 : 30
-            ),
+            'ends_at' => ($status === 'pending_payment' || $plan->isFree())
+                ? null
+                : now()->addDays($billingCycle === 'annual' ? 365 : 30),
         ]);
+
+        if ($willUseTrial) {
+            $company->update(['had_trial' => true]);
+        }
 
         activity()
             ->performedOn($subscription)
@@ -47,9 +67,9 @@ class SubscriptionService
     }
 
     /**
-     * Switch a company to a different plan, cancelling any existing active or
-     * trialing subscription first so there is never more than one concurrent
-     * subscription per company.
+     * Switch a company to a different plan, cancelling any existing active,
+     * trialing, or pending_payment subscription first so there is never more
+     * than one concurrent subscription per company.
      */
     public function upgradePlan(
         Company $company,
@@ -62,17 +82,42 @@ class SubscriptionService
             $this->cancelSubscription($existing);
         }
 
-        return $this->createTrial($company, $plan, $billingCycle);
+        // Cancel any pending_payment subscription that activeSubscription()
+        // does not return so the company does not accumulate orphan records.
+        $pending = $company->subscription()
+            ->where('status', 'pending_payment')
+            ->first();
+
+        if ($pending) {
+            $this->cancelSubscription($pending);
+        }
+
+        return $this->createTrial($company->fresh(), $plan, $billingCycle);
     }
 
     /**
-     * Assign the free "Pemula" plan to a company.
+     * Assign the free "Pemula" plan to a company (always active, no trial).
+     * Used for downgrades and fallback assignments.
      */
     public function assignFreeSubscription(Company $company): Subscription
     {
         $plan = Plan::where('slug', 'pemula')->firstOrFail();
 
-        return $this->createTrial($company, $plan);
+        $subscription = Subscription::create([
+            'company_id' => $company->id,
+            'plan_id' => $plan->id,
+            'status' => 'active',
+            'billing_cycle' => 'monthly',
+            'starts_at' => now(),
+            'ends_at' => null,
+        ]);
+
+        activity()
+            ->performedOn($subscription)
+            ->withProperties(['plan' => $plan->name])
+            ->log('free_subscription_assigned');
+
+        return $subscription;
     }
 
     /**
@@ -115,6 +160,35 @@ class SubscriptionService
             'ends_at' => now()->addDays($cycleDays),
             'trial_ends_at' => null,
         ]);
+    }
+
+    /**
+     * Get the latest pending invoice for a subscription, if any.
+     */
+    public function getPendingInvoice(Subscription $subscription): ?SubscriptionInvoice
+    {
+        return $subscription->invoices()
+            ->where('status', 'pending')
+            ->latest()
+            ->first();
+    }
+
+    /**
+     * Handle a failed payment notification from the payment gateway. The
+     * invoice is always marked as failed. If the subscription is still in
+     * `pending_payment` state it is also cancelled and the company is
+     * reverted to the free plan so the user can retry from a clean slate.
+     */
+    public function handleFailedPayment(SubscriptionInvoice $invoice): void
+    {
+        $invoice->update(['status' => 'failed']);
+
+        if ($invoice->subscription->status !== 'pending_payment') {
+            return;
+        }
+
+        $this->cancelSubscription($invoice->subscription);
+        $this->assignFreeSubscription($invoice->subscription->company);
     }
 
     /**

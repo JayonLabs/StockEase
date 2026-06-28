@@ -3,6 +3,7 @@ import { Toaster } from '@/Components/ui/sonner';
 import { Head } from '@inertiajs/vue3';
 import { LogOut } from 'lucide-vue-next';
 import { router, usePage } from '@inertiajs/vue3';
+import UpgradePromptProvider from '@/Components/Subscription/UpgradePromptProvider.vue';
 import 'vue-sonner/style.css';
 
 import { SidebarProvider, SidebarTrigger } from '@/Components/ui/sidebar';
@@ -61,5 +62,6 @@ function logout() {
         </div>
 
         <Toaster rich-colors position="top-right" />
+        <UpgradePromptProvider />
     </SidebarProvider>
 </template>

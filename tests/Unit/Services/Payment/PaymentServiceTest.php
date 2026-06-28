@@ -11,12 +11,14 @@ use Tests\TestCase;
 uses(TestCase::class, LazilyRefreshDatabase::class);
 
 beforeEach(function () {
+    /** @var object{paymentService: PaymentService} $this */
     config(['midtrans.server_key' => 'test_server_key']);
 
     $this->paymentService = app(PaymentService::class);
 });
 
 it('can handle notification and update sale status to completed', function () {
+    /** @var object{paymentService: PaymentService} $this */
     $sale = Sale::factory()->create(['status' => 'pending', 'total' => 10000]);
     $product = Product::factory()->create(['stock' => 10]);
     SaleItem::create([
@@ -58,6 +60,7 @@ it('can handle notification and update sale status to completed', function () {
 });
 
 it('uses payment status enum values for non-paid notification statuses', function (string $transactionStatus, string $expectedStatus) {
+    /** @var object{paymentService: PaymentService} $this */
     $transaction = PaymentTransaction::factory()->create([
         'external_id' => 'ORDER-'.$transactionStatus,
         'amount' => 10000,
@@ -90,6 +93,7 @@ it('uses payment status enum values for non-paid notification statuses', functio
 ]);
 
 it('uses challenge enum value for challenged credit card captures', function () {
+    /** @var object{paymentService: PaymentService} $this */
     $transaction = PaymentTransaction::factory()->create([
         'external_id' => 'ORDER-CHALLENGE',
         'amount' => 10000,
@@ -117,6 +121,7 @@ it('uses challenge enum value for challenged credit card captures', function () 
 });
 
 it('throws exception for invalid signature', function () {
+    /** @var object{paymentService: PaymentService} $this */
     $notificationData = [
         'order_id' => 'ORDER-123',
         'status_code' => '200',
@@ -128,6 +133,7 @@ it('throws exception for invalid signature', function () {
 })->throws(Exception::class, 'Invalid signature');
 
 it('throws exception if transaction not found', function () {
+    /** @var object{paymentService: PaymentService} $this */
     $orderId = 'NON-EXISTENT';
     $statusCode = '200';
     $grossAmount = '10000.00';
@@ -144,6 +150,7 @@ it('throws exception if transaction not found', function () {
 })->throws(Exception::class, 'Transaksi tidak ditemukan');
 
 it('throws exception if gross amount mismatch', function () {
+    /** @var object{paymentService: PaymentService} $this */
     $transaction = PaymentTransaction::factory()->create([
         'external_id' => 'ORDER-123',
         'amount' => 10000,

@@ -94,7 +94,7 @@ const faqs = [
     },
     {
         q: 'Apakah ada versi gratis StockEase?',
-        a: 'Ya, kami menawarkan uji coba gratis 14 hari dengan akses penuh ke semua fitur premium sehingga Anda dapat merasakan manfaatnya langsung.',
+        a: 'Ya, paket Pemula menawarkan uji coba gratis 14 hari. Untuk paket Profesional dan Enterprise, Anda bisa langsung berlangganan tanpa perlu uji coba.',
     },
     {
         q: 'Apakah StockEase memiliki biaya bulanan?',

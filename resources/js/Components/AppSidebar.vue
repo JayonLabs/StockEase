@@ -2,6 +2,7 @@
 import { usePage } from '@inertiajs/vue3';
 import { menuSections } from '@/Constants/menu';
 import SidebarGroupMenu from '@/Components/SidebarGroupMenu.vue';
+import { computed } from 'vue';
 
 import {
     Sidebar,
@@ -14,6 +15,7 @@ const page = usePage();
 const user = page.props.auth.user;
 const userPermissions = user?.permissions || [];
 const planFeatures = page.props.auth.subscription?.plan?.features ?? {};
+const isSubscriptionActive = computed(() => !!page.props.auth.subscription);
 </script>
 
 <template>
@@ -39,6 +41,7 @@ const planFeatures = page.props.auth.subscription?.plan?.features ?? {};
                 :user-permissions="userPermissions"
                 :plan-features="planFeatures"
                 :collapsible="section.collapsible"
+                :is-subscription-active="isSubscriptionActive"
             />
         </SidebarContent>
 

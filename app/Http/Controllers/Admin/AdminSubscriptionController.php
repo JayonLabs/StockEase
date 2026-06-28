@@ -66,6 +66,9 @@ class AdminSubscriptionController extends Controller
 
     /**
      * Assign a subscription plan to a user's company.
+     *
+     * Admin assignments bypass the payment flow — the subscription is always
+     * created as active regardless of whether the plan is free or paid.
      */
     public function assign(Request $request): RedirectResponse
     {
@@ -81,7 +84,12 @@ class AdminSubscriptionController extends Controller
             return back()->with('error', 'User tidak memiliki company.');
         }
 
-        $this->subscriptionService->createTrial($company, $plan);
+        $subscription = $this->subscriptionService->createTrial($company, $plan);
+
+        // Admin-assigned plans skip payment — activate immediately
+        if ($subscription->status === 'pending_payment') {
+            $this->subscriptionService->activateSubscription($subscription);
+        }
 
         return back()->with('success', 'Subscription berhasil di-assign.');
     }
